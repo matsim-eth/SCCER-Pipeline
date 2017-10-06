@@ -1,6 +1,6 @@
 package playground.jmolloy;
 
-import contrib.baseline.lib.CSVReader;
+import com.opencsv.CSVReader;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -11,9 +11,8 @@ import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 import org.matsim.core.network.io.NetworkWriter;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.collections.Tuple;
 
-import javax.print.attribute.standard.Chromaticity;
+import java.io.FileReader;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -22,7 +21,6 @@ import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.IntStream;
 
 /**
  * Created by molloyj on 27.07.2017.
@@ -37,11 +35,13 @@ public class AddTypesToNetwork {
         	MatsimNetworkReader reader = new MatsimNetworkReader(sc_old.getNetwork());
         	reader.readFile("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\mmNetwork.xml");
 
-        CSVReader csvReader = new CSVReader("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\link_types.csv");
+        CSVReader csvReader = new CSVReader(
+                new FileReader("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\link_types.csv"),
+                ','
+        );
         String[] ss;
-        csvReader.skipLine();
-        csvReader.setDelimiter(",");
-        while ((ss = csvReader.readLine()) != null) {
+        csvReader.readNext();
+        while ((ss = csvReader.readNext()) != null) {
             Id<Link> id = Id.createLinkId(ss[0]);
             Link l = sc_old.getNetwork().getLinks().get(id);
 
