@@ -3,7 +3,7 @@
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2013 by the members listed in the COPYING,        *
+ * copyright       : (C) 2014 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -16,43 +16,27 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
+package playground.ivt.proj_sccer.vsp.handlers;
 
-package playground.jmolloy.externalitiesAnalysis.vsp.handlers;
+import org.matsim.core.events.handler.EventHandler;
 
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
-
-import playground.jmolloy.externalitiesAnalysis.vsp.DelayInfo;
+import playground.ivt.proj_sccer.vsp.CongestionEvent;
 
 /**
- * @author ikaddoura
+ * A common congestion pricing handler to handle different implementations of congestion pricing schemes.
+ * Available options are -
  *
+ * <list>
+ * <li> implv3
+ * <li> implv4
+ * <li> implv6
+ * </list>
+ * 
+ * @author ihab
  */
-public interface CongestionInternalization {
-	
-	/**
-	 * <p> This is the core method which can be implemented in different ways
-	 * in order to change the logic how to internalize delays.
-	 */
-	public void calculateCongestion(LinkLeaveEvent event, DelayInfo delayInfo);
 
-	/**
-	 * <p> The total delay calculated as 'link leave time minus freespeed leave time'
-	 */
-	public double getTotalDelay();
+public interface CongestionEventHandler extends EventHandler {
 	
-	/**
-	 * The total delay which is internalized, i.e. allocated to causing agents
-	 */
-	public double getTotalInternalizedDelay();
-	
-	/**
-	 * Total rounding error delay which is not internalized.
-	 */
-	public double getTotalRoundingErrorDelay();
-	
-	/**
-	 * Writes the basic information to a file
-	 */
-	public void writeCongestionStats(String fileName);
+	public void handleEvent(CongestionEvent event);
 	
 }

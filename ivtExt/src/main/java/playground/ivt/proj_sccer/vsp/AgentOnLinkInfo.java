@@ -1,4 +1,4 @@
-package playground.jmolloy.externalitiesAnalysis.vsp;
+package playground.ivt.proj_sccer.vsp;
 
 import org.junit.Assert;
 import org.matsim.api.core.v01.Id;

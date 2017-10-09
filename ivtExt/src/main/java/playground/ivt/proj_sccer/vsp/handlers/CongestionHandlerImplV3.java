@@ -20,7 +20,7 @@
 /**
  * 
  */
-package playground.jmolloy.externalitiesAnalysis.vsp.handlers;
+package playground.ivt.proj_sccer.vsp.handlers;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -29,8 +29,8 @@ import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
-import playground.jmolloy.externalitiesAnalysis.vsp.DelayInfo;
-import playground.jmolloy.externalitiesAnalysis.vsp.LinkCongestionInfo;
+import playground.ivt.proj_sccer.vsp.DelayInfo;
+import playground.ivt.proj_sccer.vsp.LinkCongestionInfo;
 
 import java.io.BufferedWriter;
 import java.io.File;

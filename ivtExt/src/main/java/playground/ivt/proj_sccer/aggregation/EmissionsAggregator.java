@@ -1,4 +1,4 @@
-package playground.jmolloy.externalitiesAnalysis.aggregation;
+package playground.ivt.proj_sccer.aggregation;
 
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.emissions.events.ColdEmissionEvent;

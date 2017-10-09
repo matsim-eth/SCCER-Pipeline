@@ -1,10 +1,10 @@
-package playground.jmolloy.externalitiesAnalysis.aggregation;
+package playground.ivt.proj_sccer.aggregation;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import playground.jmolloy.externalitiesAnalysis.vsp.CongestionEvent;
-import playground.jmolloy.externalitiesAnalysis.vsp.handlers.CongestionEventHandler;
+import playground.ivt.proj_sccer.vsp.CongestionEvent;
+import playground.ivt.proj_sccer.vsp.handlers.CongestionEventHandler;
 
 import java.util.*;
 

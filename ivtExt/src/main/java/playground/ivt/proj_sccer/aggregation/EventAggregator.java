@@ -1,4 +1,4 @@
-package playground.jmolloy.externalitiesAnalysis.aggregation;
+package playground.ivt.proj_sccer.aggregation;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;

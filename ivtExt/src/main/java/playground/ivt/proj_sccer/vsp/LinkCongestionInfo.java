@@ -20,7 +20,7 @@
 /**
  * 
  */
-package playground.jmolloy.externalitiesAnalysis.vsp;
+package playground.ivt.proj_sccer.vsp;
 
 import java.util.Deque;
 import java.util.LinkedHashMap;

@@ -1,4 +1,4 @@
-package playground.jmolloy;
+package playground.ivt.proj_sccer;
 
 import com.opencsv.CSVReader;
 import org.matsim.api.core.v01.Id;
@@ -25,6 +25,7 @@ import java.util.stream.Collectors;
 /**
  * Created by molloyj on 27.07.2017.
  */
+//TODO: document!!!!!!!!!!
 public class AddTypesToNetwork {
 
 

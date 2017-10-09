@@ -1,9 +1,9 @@
 /* *********************************************************************** *
- * project: org.matsim.*												   *
+ * project: org.matsim.*
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2008 by the members listed in the COPYING,        *
+ * copyright       : (C) 2013 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -16,24 +16,43 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package playground.jmolloy.externalitiesAnalysis.vsp.handlers;
 
-import org.matsim.api.core.v01.events.handler.*;
-import playground.jmolloy.externalitiesAnalysis.vsp.handlers.CongestionInternalization;
+package playground.ivt.proj_sccer.vsp.handlers;
+
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
+
+import playground.ivt.proj_sccer.vsp.DelayInfo;
 
 /**
- * @author nagel
+ * @author ikaddoura
  *
  */
-public interface CongestionHandler extends
-LinkEnterEventHandler,
-LinkLeaveEventHandler,
-TransitDriverStartsEventHandler,
-PersonDepartureEventHandler, 
-PersonStuckEventHandler,
-VehicleEntersTrafficEventHandler,
-PersonArrivalEventHandler,
-        CongestionInternalization,
-VehicleLeavesTrafficEventHandler {
+public interface CongestionInternalization {
+	
+	/**
+	 * <p> This is the core method which can be implemented in different ways
+	 * in order to change the logic how to internalize delays.
+	 */
+	public void calculateCongestion(LinkLeaveEvent event, DelayInfo delayInfo);
 
+	/**
+	 * <p> The total delay calculated as 'link leave time minus freespeed leave time'
+	 */
+	public double getTotalDelay();
+	
+	/**
+	 * The total delay which is internalized, i.e. allocated to causing agents
+	 */
+	public double getTotalInternalizedDelay();
+	
+	/**
+	 * Total rounding error delay which is not internalized.
+	 */
+	public double getTotalRoundingErrorDelay();
+	
+	/**
+	 * Writes the basic information to a file
+	 */
+	public void writeCongestionStats(String fileName);
+	
 }

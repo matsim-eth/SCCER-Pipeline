@@ -1,4 +1,4 @@
-package playground.jmolloy.externalitiesAnalysis;
+package playground.ivt.proj_sccer;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
@@ -14,9 +14,9 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.scenario.ScenarioUtils;
-import playground.jmolloy.externalitiesAnalysis.aggregation.CongestionAggregator;
-import playground.jmolloy.externalitiesAnalysis.vsp.handlers.CongestionHandler;
-import playground.jmolloy.externalitiesAnalysis.vsp.handlers.CongestionHandlerImplV3;
+import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
+import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
+import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 
 /**
  * Created by molloyj on 17.07.2017.

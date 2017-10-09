@@ -1,9 +1,9 @@
 /* *********************************************************************** *
- * project: org.matsim.*
+ * project: org.matsim.*												   *
  *                                                                         *
  * *********************************************************************** *
  *                                                                         *
- * copyright       : (C) 2014 by the members listed in the COPYING,        *
+ * copyright       : (C) 2008 by the members listed in the COPYING,        *
  *                   LICENSE and WARRANTY file.                            *
  * email           : info at matsim dot org                                *
  *                                                                         *
@@ -16,27 +16,23 @@
  *   See also COPYING, LICENSE and WARRANTY file                           *
  *                                                                         *
  * *********************************************************************** */
-package playground.jmolloy.externalitiesAnalysis.vsp.handlers;
+package playground.ivt.proj_sccer.vsp.handlers;
 
-import org.matsim.core.events.handler.EventHandler;
-
-import playground.jmolloy.externalitiesAnalysis.vsp.CongestionEvent;
+import org.matsim.api.core.v01.events.handler.*;
 
 /**
- * A common congestion pricing handler to handle different implementations of congestion pricing schemes.
- * Available options are -
+ * @author nagel
  *
- * <list>
- * <li> implv3
- * <li> implv4
- * <li> implv6
- * </list>
- * 
- * @author ihab
  */
+public interface CongestionHandler extends
+LinkEnterEventHandler,
+LinkLeaveEventHandler,
+TransitDriverStartsEventHandler,
+PersonDepartureEventHandler, 
+PersonStuckEventHandler,
+VehicleEntersTrafficEventHandler,
+PersonArrivalEventHandler,
+        CongestionInternalization,
+VehicleLeavesTrafficEventHandler {
 
-public interface CongestionEventHandler extends EventHandler {
-	
-	public void handleEvent(CongestionEvent event);
-	
 }

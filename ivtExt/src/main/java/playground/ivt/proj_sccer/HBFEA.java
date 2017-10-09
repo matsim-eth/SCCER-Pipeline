@@ -1,4 +1,4 @@
-package playground.jmolloy;
+package playground.ivt.proj_sccer;
 
 /**
  * Created by molloyj on 28.07.2017.
