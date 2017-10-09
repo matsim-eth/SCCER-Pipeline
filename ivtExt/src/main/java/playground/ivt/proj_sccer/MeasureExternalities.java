@@ -13,7 +13,9 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
+import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
+import playground.ivt.proj_sccer.aggregation.EmissionsAggregator;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
@@ -54,15 +56,19 @@ public class MeasureExternalities {
 
         eventsManager = new EventsManagerImpl();
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
+        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, bin_size_s);
+        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, bin_size_s, v2deh);
 
     //    setUpVehicles(scenario);
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
+        eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
+        eventsManager.addHandler(emissionsAggregator);
 
         //emissions
         //add emissions module
