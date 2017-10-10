@@ -42,7 +42,7 @@ public class MeasureExternalities {
 
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
     final private static String EVENTS_FILE = "800.events.xml.gz";
-    final private static String RUN_FOLDER = "C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\scenario\\";
+    final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
 
 
     private Config config;
