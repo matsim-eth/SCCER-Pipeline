@@ -1,7 +1,10 @@
 package playground.ivt.proj_sccer;
 
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
@@ -14,8 +17,14 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
+import org.matsim.core.events.handler.EventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.households.Household;
+import org.matsim.vehicles.Vehicle;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 import playground.ivt.proj_sccer.aggregation.EmissionsAggregator;
+import playground.ivt.proj_sccer.aggregation.EmissionsTally;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
@@ -62,13 +71,17 @@ public class MeasureExternalities {
         CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, bin_size_s);
         EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, bin_size_s, v2deh);
 
-    //    setUpVehicles(scenario);
+        setUpVehicles(scenario);
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
-        eventsManager.addHandler(emissionsAggregator);
+        //eventsManager.addHandler(emissionsAggregator);
+
+
+        EmissionsTally emissionsTally = new EmissionsTally(scenario, v2deh);
+        eventsManager.addHandler(emissionsTally);
 
         //emissions
         //add emissions module
@@ -80,7 +93,7 @@ public class MeasureExternalities {
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-
+        emissionsTally.ouputSummary();
 
         emissionModule.writeEmissionInformation();
         log.info("Total delay: " + congestionHandler.getTotalDelay());
@@ -110,7 +123,7 @@ public class MeasureExternalities {
         }
     }
 
-/*
+
     private void setUpVehicles(Scenario scenario) {
         //householdid, #autos, auto1, auto2, auto3
         //get household id of person. Assign next vehicle from household.
@@ -121,14 +134,15 @@ public class MeasureExternalities {
         car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-3END_EMISSIONS");
         scenario.getVehicles().addVehicleType(car);
 
-        for (Id<Household> hid : scenario.getHouseholds().getHouseholds().keySet()) {
-            Id<Vehicle> vid = Id.createVehicleId();
+        for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
+            Id<Vehicle> vid = Id.createVehicleId(pid);
             //easy option: add
             Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
+
             scenario.getVehicles().addVehicle(v);
-            scenario.getHouseholds().getHouseholds().get(hid).getVehicleIds().add(vid);
+            //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
         }
 
-    }*/
+    }
 
 }

@@ -33,7 +33,8 @@ public class EmissionsAggregator extends EventAggregator implements WarmEmission
 
         //example of getting driver of vehicle:
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
-        
+
+
         Map<ColdPollutant, Double> pollutants = event.getColdEmissions();
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
