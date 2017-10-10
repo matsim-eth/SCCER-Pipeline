@@ -90,7 +90,18 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     }
 
     public void outputSummary() {
-    	
-        System.out.println();
+    	for (Map.Entry<Id<Person>,List<Map<String, Double>>> pi2l2p : personId2Leg2Pollutant.entrySet()  ) {
+    		System.out.println("Person ID: " + pi2l2p.getKey().toString());
+    		int legCount = 0;
+    		for (Map<String, Double> leg : pi2l2p.getValue()) {
+    			legCount++;
+    			System.out.print("Leg #" + legCount + ": ");
+    	        for (Map.Entry<String, Double> p : leg.entrySet()) {
+    	        	System.out.print(p.getKey() + ": " + p.getValue() + ", ");
+    	        }
+    			System.out.println();
+    		}
+    	}
+    	System.out.println();
     }
 }
