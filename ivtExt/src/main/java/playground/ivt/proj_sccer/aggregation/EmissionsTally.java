@@ -25,8 +25,8 @@ import java.util.Map;
 public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonArrivalEventHandler {
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>();
-    Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>();
+    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
+    Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //tallied values within leg
 
     public EmissionsTally(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
@@ -34,15 +34,15 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
 
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
             personId2Leg2Pollutant.put(p, new ArrayList<>());
-            tempValues.put(p, new HashMap<>()); //instead of a double, we need to put a map from string to double
+            tempValues.put(p, new HashMap<>());
         });
     }
 
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
-        personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //this stays the same.
-        tempValues.put(pid, new HashMap<>()); //then we need to build a new map here
+        personId2Leg2Pollutant.get(pid).add(tempValues.get(pid));
+        tempValues.put(pid, new HashMap<>());
     }
 
     @Override
@@ -51,10 +51,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         if (personId == null) {
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
-//        double emissionCount = e.getColdEmissions().get(ColdPollutant.NOX);
-//        double oldValue = tempValues.get(personId);
-//        tempValues.put(personId, oldValue + emissionCount); //these three lines instead need to a be a loop through all cold pollutants
-        
+
         Map<ColdPollutant, Double> pollutants = e.getColdEmissions();
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
@@ -73,9 +70,6 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
-//        double emissionCount = e.getWarmEmissions().get(WarmPollutant.NOX);
-//        double oldValue = tempValues.get(personId);
-//        tempValues.put(personId, oldValue + emissionCount); //and the same here
         
         Map<WarmPollutant, Double> pollutants = e.getWarmEmissions();
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
