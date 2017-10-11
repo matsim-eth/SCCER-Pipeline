@@ -25,8 +25,9 @@ import java.util.Map;
 public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonArrivalEventHandler {
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
-    Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //tallied values within leg
+//    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); 
+    Map<Id<Person>,List<Map<String, Object>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
+    Map<Id<Person>, Map<String, Object>> tempValues = new HashMap<>(); //tallied values within leg
 
     public EmissionsTally(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
@@ -41,6 +42,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
+        tempValues.get(pid).put("Time", e.getTime());
         personId2Leg2Pollutant.get(pid).add(tempValues.get(pid));
         tempValues.put(pid, new HashMap<>());
     }
@@ -56,7 +58,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
             if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
+            	tempValues.get(personId).put(pollutant, (Double) tempValues.get(personId).get(pollutant) + p.getValue());
             }
             else {
             	tempValues.get(personId).put(pollutant, p.getValue());
@@ -75,7 +77,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
             if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
+            	tempValues.get(personId).put(pollutant, (Double) tempValues.get(personId).get(pollutant) + p.getValue());
             }
             else {
             	tempValues.get(personId).put(pollutant, p.getValue());
@@ -84,13 +86,13 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     }
 
     public void outputSummary() {
-    	for (Map.Entry<Id<Person>,List<Map<String, Double>>> pi2l2p : personId2Leg2Pollutant.entrySet()  ) {
+    	for (Map.Entry<Id<Person>,List<Map<String, Object>>> pi2l2p : personId2Leg2Pollutant.entrySet()  ) {
     		System.out.println("Person ID: " + pi2l2p.getKey().toString());
     		int legCount = 0;
-    		for (Map<String, Double> leg : pi2l2p.getValue()) {
+    		for (Map<String, Object> leg : pi2l2p.getValue()) {
     			legCount++;
     			System.out.print("Leg #" + legCount + ": ");
-    	        for (Map.Entry<String, Double> p : leg.entrySet()) {
+    	        for (Map.Entry<String, Object> p : leg.entrySet()) {
     	        	System.out.print(p.getKey() + ": " + p.getValue() + ", ");
     	        }
     			System.out.println();
