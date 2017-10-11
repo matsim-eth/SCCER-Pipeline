@@ -43,8 +43,9 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
         tempValues.get(pid).put("Time", e.getTime());
-        personId2Leg2Pollutant.get(pid).add(tempValues.get(pid));
-        tempValues.put(pid, new HashMap<>());
+        tempValues.get(pid).put("Mode", e.getLegMode());
+        personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
+        tempValues.put(pid, new HashMap<>()); //reset
     }
 
     @Override
@@ -53,6 +54,14 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         if (personId == null) {
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
+        
+        double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
+        if(tempValues.get(personId).containsKey("Distance")) {
+        	tempValues.get(personId).put("Distance", (Double) tempValues.get(personId).get("Distance") + linkLength);
+        }
+        else {
+        	tempValues.get(personId).put("Distance", linkLength);
+        } 
 
         Map<ColdPollutant, Double> pollutants = e.getColdEmissions();
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
@@ -71,6 +80,14 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         Id<Person> personId = drivers.getDriverOfVehicle(e.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
+        }
+        
+        double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
+        if(tempValues.get(personId).containsKey("Distance")) {
+        	tempValues.get(personId).put("Distance", (Double) tempValues.get(personId).get("Distance") + linkLength);
+        }
+        else {
+        	tempValues.get(personId).put("Distance", linkLength);
         }
         
         Map<WarmPollutant, Double> pollutants = e.getWarmEmissions();
