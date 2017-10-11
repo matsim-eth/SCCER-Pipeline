@@ -43,6 +43,8 @@ public class MeasureExternalities {
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
     final private static String EVENTS_FILE = "800.events.xml.gz";
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
+    
+    final private static String OUTPUT_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\";
 
 
     private Config config;
@@ -94,6 +96,7 @@ public class MeasureExternalities {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         emissionsTally.outputSummary();
+//        emissionsTally.writeCSVFile(OUTPUT_FOLDER);
 
         emissionModule.writeEmissionInformation();
         log.info("Total delay: " + congestionHandler.getTotalDelay());

@@ -14,6 +14,10 @@ import org.matsim.contrib.emissions.types.ColdPollutant;
 import org.matsim.contrib.emissions.types.WarmPollutant;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
+import com.opencsv.CSVWriter;
+
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -25,7 +29,6 @@ import java.util.Map;
 public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonArrivalEventHandler {
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-//    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); 
     Map<Id<Person>,List<Map<String, Object>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Object>> tempValues = new HashMap<>(); //tallied values within leg
 
@@ -116,5 +119,26 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     		}
     	}
     	System.out.println();
+    }
+    
+    public void writeCSVFile(String output) {
+    	for (Map.Entry<Id<Person>,List<Map<String, Object>>> person : personId2Leg2Pollutant.entrySet()  ) {
+    		try {
+    			String fileName = output + person.getKey().toString() + ".csv";
+    			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
+	    		for (Map<String, Object> leg : person.getValue()) {
+	    			String record = "";
+	    	        for (Map.Entry<String, Object> entry : leg.entrySet()) {
+	    	        	record = record + entry.getKey() + "," + entry.getValue().toString() + ",";
+	    	        }
+	    	        String[] records = record.split(",");
+	    	        writer.writeNext(records);
+	    		}
+	    		writer.close();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+    	}
     }
 }
