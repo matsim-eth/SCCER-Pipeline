@@ -81,7 +81,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         	tempValues.get(pid).put("EndTime", e.getTime());
         	personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
         }
-        tempValues.put(pid, new HashMap<>()); //reset
+        //reset
         for (String key : keys) {
         	tempValues.get(pid).put(key, 0.0);
         }
