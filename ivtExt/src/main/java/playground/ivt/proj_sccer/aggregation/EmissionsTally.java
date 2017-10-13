@@ -3,6 +3,7 @@ package playground.ivt.proj_sccer.aggregation;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.PersonArrivalEvent;
+import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
@@ -26,11 +27,11 @@ import java.util.Map;
 /**
  * Created by molloyj on 10.10.2017.
  */
-public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonArrivalEventHandler {
+public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEventHandler, PersonArrivalEventHandler, PersonDepartureEventHandler {
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    Map<Id<Person>,List<Map<String, Object>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
-    Map<Id<Person>, Map<String, Object>> tempValues = new HashMap<>(); //tallied values within leg
+    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
+    Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //tallied values within leg
 
     public EmissionsTally(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
@@ -41,13 +42,26 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
             tempValues.put(p, new HashMap<>());
         });
     }
+    
+    // Check if leg is traveled by car and get start time
+    @Override
+    public void handleEvent(PersonDepartureEvent e) {
+        Id<Person> pid = e.getPersonId();
+        if (e.getLegMode().equals("car")) {
+//        	tempValues.get(pid).put("Mode", e.getLegMode());
+        	tempValues.get(pid).put("StartTime", e.getTime());
+        }
+    }
 
+    // Get leg end time and append new leg to list
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
-        tempValues.get(pid).put("Time", e.getTime());
-        tempValues.get(pid).put("Mode", e.getLegMode());
-        personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
+        if (e.getLegMode().equals("car")) {
+//        	tempValues.get(pid).putIfAbsent("Mode", e.getLegMode());
+        	tempValues.get(pid).put("EndTime", e.getTime());
+        	personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
+        }
         tempValues.put(pid, new HashMap<>()); //reset
     }
 
@@ -60,7 +74,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         
         double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
         if(tempValues.get(personId).containsKey("Distance")) {
-        	tempValues.get(personId).put("Distance", (Double) tempValues.get(personId).get("Distance") + linkLength);
+        	tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
         }
         else {
         	tempValues.get(personId).put("Distance", linkLength);
@@ -70,7 +84,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
             if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, (Double) tempValues.get(personId).get(pollutant) + p.getValue());
+            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
             }
             else {
             	tempValues.get(personId).put(pollutant, p.getValue());
@@ -87,7 +101,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         
         double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
         if(tempValues.get(personId).containsKey("Distance")) {
-        	tempValues.get(personId).put("Distance", (Double) tempValues.get(personId).get("Distance") + linkLength);
+        	tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
         }
         else {
         	tempValues.get(personId).put("Distance", linkLength);
@@ -97,7 +111,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
             if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, (Double) tempValues.get(personId).get(pollutant) + p.getValue());
+            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
             }
             else {
             	tempValues.get(personId).put(pollutant, p.getValue());
@@ -106,13 +120,13 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     }
 
     public void outputSummary() {
-    	for (Map.Entry<Id<Person>,List<Map<String, Object>>> pi2l2p : personId2Leg2Pollutant.entrySet()  ) {
+    	for (Map.Entry<Id<Person>,List<Map<String, Double>>> pi2l2p : personId2Leg2Pollutant.entrySet()  ) {
     		System.out.println("Person ID: " + pi2l2p.getKey().toString());
     		int legCount = 0;
-    		for (Map<String, Object> leg : pi2l2p.getValue()) {
+    		for (Map<String, Double> leg : pi2l2p.getValue()) {
     			legCount++;
     			System.out.print("Leg #" + legCount + ": ");
-    	        for (Map.Entry<String, Object> p : leg.entrySet()) {
+    	        for (Map.Entry<String, Double> p : leg.entrySet()) {
     	        	System.out.print(p.getKey() + ": " + p.getValue() + ", ");
     	        }
     			System.out.println();
@@ -122,13 +136,13 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     }
     
     public void writeCSVFile(String output) {
-    	for (Map.Entry<Id<Person>,List<Map<String, Object>>> person : personId2Leg2Pollutant.entrySet()  ) {
+    	for (Map.Entry<Id<Person>,List<Map<String, Double>>> person : personId2Leg2Pollutant.entrySet()  ) {
     		try {
     			String fileName = output + person.getKey().toString() + ".csv";
     			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
-	    		for (Map<String, Object> leg : person.getValue()) {
+	    		for (Map<String, Double> leg : person.getValue()) {
 	    			String record = "";
-	    	        for (Map.Entry<String, Object> entry : leg.entrySet()) {
+	    	        for (Map.Entry<String, Double> entry : leg.entrySet()) {
 	    	        	record = record + entry.getKey() + "," + entry.getValue().toString() + ",";
 	    	        }
 	    	        String[] records = record.split(",");
