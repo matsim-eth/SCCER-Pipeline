@@ -32,18 +32,17 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     private final Vehicle2DriverEventHandler drivers;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //tallied values within leg
-    
-    List<String> keys = new ArrayList<>();
+    List<String> keys = new ArrayList<>(); //list of all leg data fields
 
     public EmissionsTally(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
         this.scenario = scenario;
         
+        // initialize data fields
         keys.add("StartTime");
         keys.add("EndTime");
         keys.add("Distance");
         for(WarmPollutant wp : WarmPollutant.values()) {
-
         	if(!keys.contains(wp.getText())) {
         		keys.add(wp.getText());
         	}
@@ -54,6 +53,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         	}
         }
 
+        // initialize maps
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
             personId2Leg2Pollutant.put(p, new ArrayList<>());
             tempValues.put(p, new HashMap<>());
@@ -66,7 +66,6 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     public void handleEvent(PersonDepartureEvent e) {
         Id<Person> pid = e.getPersonId();
         if (e.getLegMode().equals("car")) {
-//        	tempValues.get(pid).put("Mode", e.getLegMode());
         	tempValues.get(pid).put("StartTime", e.getTime());
         }
     }
@@ -76,7 +75,6 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
         if (e.getLegMode().equals("car")) {
-//        	tempValues.get(pid).putIfAbsent("Mode", e.getLegMode());
         	tempValues.get(pid).put("EndTime", e.getTime());
         	personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
         }
@@ -86,10 +84,10 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     @Override
     public void handleEvent(ColdEmissionEvent e) {
         Id<Person> personId = drivers.getDriverOfVehicle(e.getVehicleId());
-        if (personId == null) {
+        if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
-        
+
         double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
         if(tempValues.get(personId).containsKey("Distance")) {
         	tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
@@ -156,7 +154,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     public void writeCSVFile(String output) {
     	int count = 0;
     	for (Map.Entry<Id<Person>,List<Map<String, Double>>> person : personId2Leg2Pollutant.entrySet()  ) {
-    		if (count > 20) {
+    		if (count > 20) { //TODO: limit on how many output files. remove this after testing
     			break;
     		}
     		try {
@@ -181,7 +179,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
 	    	        writer.writeNext(records);
 	    		}
 	    		writer.close();
-	    		count++;
+	    		count++; //TODO: remove this after testing
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
