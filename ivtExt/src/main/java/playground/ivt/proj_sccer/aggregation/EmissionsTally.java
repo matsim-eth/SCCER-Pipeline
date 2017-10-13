@@ -57,6 +57,9 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
             personId2Leg2Pollutant.put(p, new ArrayList<>());
             tempValues.put(p, new HashMap<>());
+            for (String key : keys) {
+            	tempValues.get(p).put(key, 0.0);
+            }
         });
         
     }
@@ -79,6 +82,9 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         	personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
         }
         tempValues.put(pid, new HashMap<>()); //reset
+        for (String key : keys) {
+        	tempValues.get(pid).put(key, 0.0);
+        }
     }
 
     @Override
@@ -87,24 +93,16 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
-
+        
+        // add traveled distance
         double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
-        if(tempValues.get(personId).containsKey("Distance")) {
-        	tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
-        }
-        else {
-        	tempValues.get(personId).put("Distance", linkLength);
-        } 
+        tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
 
+        // add emissions
         Map<ColdPollutant, Double> pollutants = e.getColdEmissions();
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
-            if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
-            }
-            else {
-            	tempValues.get(personId).put(pollutant, p.getValue());
-            }         
+            tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
         }
     }
 
@@ -115,23 +113,15 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
         
+        // add traveled distance
         double linkLength = scenario.getNetwork().getLinks().get(e.getLinkId()).getLength();
-        if(tempValues.get(personId).containsKey("Distance")) {
-        	tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
-        }
-        else {
-        	tempValues.get(personId).put("Distance", linkLength);
-        }
+        tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
         
+        // add emissions
         Map<WarmPollutant, Double> pollutants = e.getWarmEmissions();
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
-            if(tempValues.get(personId).containsKey(pollutant)) {
-            	tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
-            }
-            else {
-            	tempValues.get(personId).put(pollutant, p.getValue());
-            }         
+            tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());       
         }
     }
 
