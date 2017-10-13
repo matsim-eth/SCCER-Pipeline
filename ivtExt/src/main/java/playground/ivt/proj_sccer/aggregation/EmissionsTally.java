@@ -32,15 +32,33 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     private final Vehicle2DriverEventHandler drivers;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Pollutant = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //tallied values within leg
+    
+    List<String> keys = new ArrayList<>();
 
     public EmissionsTally(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
         this.scenario = scenario;
+        
+        keys.add("StartTime");
+        keys.add("EndTime");
+        keys.add("Distance");
+        for(WarmPollutant wp : WarmPollutant.values()) {
+
+        	if(!keys.contains(wp.getText())) {
+        		keys.add(wp.getText());
+        	}
+        }
+        for(ColdPollutant cp : ColdPollutant.values()) {
+        	if(!keys.contains(cp.getText())) {
+        		keys.add(cp.getText());
+        	}
+        }
 
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
             personId2Leg2Pollutant.put(p, new ArrayList<>());
             tempValues.put(p, new HashMap<>());
         });
+        
     }
     
     // Check if leg is traveled by car and get start time
@@ -136,19 +154,34 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     }
     
     public void writeCSVFile(String output) {
+    	int count = 0;
     	for (Map.Entry<Id<Person>,List<Map<String, Double>>> person : personId2Leg2Pollutant.entrySet()  ) {
+    		if (count > 20) {
+    			break;
+    		}
     		try {
     			String fileName = output + person.getKey().toString() + ".csv";
     			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
+    			
+    	        // write header and records
+    			boolean headerWritten = false;
 	    		for (Map<String, Double> leg : person.getValue()) {
+	    			String fields = "";
 	    			String record = "";
-	    	        for (Map.Entry<String, Double> entry : leg.entrySet()) {
-	    	        	record = record + entry.getKey() + "," + entry.getValue().toString() + ",";
-	    	        }
+        	        for (String key : keys) {
+        	        	fields = fields + key + ",";
+        	        	record = record + leg.get(key).toString() + ",";
+        	        }
+        	        String[] header = fields.split(",");
 	    	        String[] records = record.split(",");
+        	        if (!headerWritten) {
+        	        	writer.writeNext(header);
+        	        	headerWritten = true;
+        	        } 
 	    	        writer.writeNext(records);
 	    		}
 	    		writer.close();
+	    		count++;
 			} catch (IOException e) {
 				// TODO Auto-generated catch block
 				e.printStackTrace();
