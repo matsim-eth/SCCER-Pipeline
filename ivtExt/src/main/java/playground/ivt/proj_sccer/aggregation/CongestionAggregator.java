@@ -1,11 +1,19 @@
 package playground.ivt.proj_sccer.aggregation;
 
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
+
+import com.opencsv.CSVWriter;
+
 import playground.ivt.proj_sccer.vsp.CongestionEvent;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionEventHandler;
 
+import java.io.FileWriter;
+import java.io.IOException;
 import java.util.*;
 
 /**
@@ -51,6 +59,37 @@ public class CongestionAggregator extends EventAggregator implements CongestionE
         	this.linkId2timeBin2numberCausingDelay.get(event.getLinkId())[bin] += 1.0;
         }
         
+    }
+    
+    public void writeCSVFile(String output) {
+        try {
+			String fileName = output + "average_caused_delay.csv";
+			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
+			
+	        // write header and records
+			String[] header = "LinkId,TimeBin,AverageCausedDelay".split(",");
+			writer.writeNext(header);
+			
+	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
+	            double[] a = e.getValue().get("delay").clone();
+	            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
+	            for (int i=0; i<counts.length; i++) {
+	            	if (counts[i] != 0.0) {
+	            		a[i] /= counts[i];
+	            	}
+	            	else {
+	            		a[i] = 0.0;
+	            	}
+	            	String record = e.getKey().toString() + "," + i + "," + a[i];
+	            	String[] records = record.split(",");
+	            	writer.writeNext(records);
+	            }
+	        }
+    		writer.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
     }
 
 
