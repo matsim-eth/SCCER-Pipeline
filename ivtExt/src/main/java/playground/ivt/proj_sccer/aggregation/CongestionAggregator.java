@@ -41,18 +41,16 @@ public class CongestionAggregator extends EventAggregator implements CongestionE
     @Override
     public void handleEvent(CongestionEvent event) {
 
-        //this.congestionEvents.add(event);
+    	// add delay
         int bin = getTimeBin(event.getEmergenceTime());
-        //this.linkId2timeBin2delaySum.putIfAbsent(event.getLinkId(), new double[num_bins]);
-        this.linkId2timeBin2values.get(event.getLinkId()).putIfAbsent("delay", new double[num_bins]);
         this.linkId2timeBin2values.get(event.getLinkId()).get("delay")[bin] += event.getDelay();
         
-        
-        // check if bin in link contains delay causing agent and add him if not
+        // add if delay caused by new agent
         if(!this.linkId2timeBin2personIdCausingDelay.get(event.getLinkId()).get(bin).contains(event.getCausingAgentId())) {
         	this.linkId2timeBin2personIdCausingDelay.get(event.getLinkId()).get(bin).add(event.getCausingAgentId());
+        	this.linkId2timeBin2numberCausingDelay.get(event.getLinkId())[bin] += 1.0;
         }
-        this.linkId2timeBin2numberCausingDelay.get(event.getLinkId())[bin] = this.linkId2timeBin2personIdCausingDelay.get(event.getLinkId()).get(bin).size();
+        
     }
 
 
