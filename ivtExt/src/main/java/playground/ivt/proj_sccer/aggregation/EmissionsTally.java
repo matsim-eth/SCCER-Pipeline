@@ -2,6 +2,7 @@ package playground.ivt.proj_sccer.aggregation;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.PersonArrivalEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
@@ -59,7 +60,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
             tempValues.put(p, new HashMap<>());
             for (String key : keys) {
             	tempValues.get(p).put(key, 0.0);
-            }
+            }           
         });
         
     }
@@ -68,7 +69,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     @Override
     public void handleEvent(PersonDepartureEvent e) {
         Id<Person> pid = e.getPersonId();
-        if (e.getLegMode().equals("car")) {
+        if (e.getLegMode().equals(TransportMode.car.toString())) {
         	tempValues.get(pid).put("StartTime", e.getTime());
         }
     }
@@ -77,13 +78,14 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
-        if (e.getLegMode().equals("car")) {
+        if (e.getLegMode().equals(TransportMode.car.toString())) {
         	tempValues.get(pid).put("EndTime", e.getTime());
         	personId2Leg2Pollutant.get(pid).add(tempValues.get(pid)); //add new leg
         }
         //reset
+        tempValues.put(pid, new HashMap<>());
         for (String key : keys) {
-        	tempValues.get(pid).put(key, 0.0);
+        	tempValues.get(pid).putIfAbsent(key, 0.0);
         }
     }
 
