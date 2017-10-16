@@ -9,6 +9,7 @@ import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -25,6 +26,8 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
     protected int num_bins; //30 hours, how do we split them
     protected Map<Id<Link>, Map<String, double[]>> linkId2timeBin2values = new HashMap<>();
     protected Map<Id<Link>, double[]> linkId2timeBin2enteringAndDepartingAgents = new HashMap<Id<Link>, double[]>();
+    protected Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2timeBin2personIdCausingDelay = new HashMap<>();
+    protected Map<Id<Link>, double[]> linkId2timeBin2numberCausingDelay = new HashMap<>();
     protected List<PersonDepartureEvent> personDepartureEvents = new ArrayList<PersonDepartureEvent>();
     private List<LinkEnterEvent> linkEnterEvents = new ArrayList<LinkEnterEvent>();
     private boolean setMethodsExecuted = false;
@@ -40,7 +43,13 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
     protected void setUpBinsForLinks(Scenario scenario) {
         scenario.getNetwork().getLinks().keySet().forEach(l -> {
             linkId2timeBin2values.put(l, new HashMap<>());
+            linkId2timeBin2values.get(l).putIfAbsent("delay", new double[num_bins]); //no nulls
             linkId2timeBin2enteringAndDepartingAgents.put(l, new double[num_bins]);
+            linkId2timeBin2personIdCausingDelay.put(l, new HashMap<>());
+            for(int bin = 0; bin<this.num_bins; bin++) {
+            	linkId2timeBin2personIdCausingDelay.get(l).put(bin, new ArrayList<>());
+            }
+            linkId2timeBin2numberCausingDelay.put(l, new double[num_bins]);
         });
     }
 
@@ -48,6 +57,9 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
     public void reset(int iteration) {
         this.linkId2timeBin2values.clear();
         this.linkId2timeBin2enteringAndDepartingAgents.clear();
+        
+        this.linkId2timeBin2personIdCausingDelay.clear();
+        this.linkId2timeBin2numberCausingDelay.clear();
 
         this.linkEnterEvents.clear();
         this.personDepartureEvents.clear();
@@ -70,8 +82,11 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
 		 * of the modulo operation is > 0. If it is 0, it is the last time value
 		 * which is part of the previous bin.
 		 */
-        int bin = (int) ((timeAfterSimStart/60) / binSize_s);
-        if (timeAfterSimStart % binSize_s != 0.0) bin++;
+//        int bin = (int) ((timeAfterSimStart/60) / binSize_s); //TODO: Not convinced this is correct based on above explanation
+//        if (timeAfterSimStart % binSize_s != 0.0) bin++;
+        
+        int bin = (int) (timeAfterSimStart / binSize_s);
+        if (timeAfterSimStart % binSize_s == 0.0) bin--;
 
         return bin;
     }
@@ -113,4 +128,20 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
         }
         return averageDelays;
     }
+    
+    public Map<Id<Link>, double[]> getLinkIdAverageCausedDelays() {
+        Map<Id<Link>, double[]> averageCausedDelays = new HashMap<>();
+        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
+            double[] a = e.getValue().get("delay").clone();
+            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
+            for (int i=0; i<counts.length; i++) {
+                a[i] /= counts[i];
+            }
+            averageCausedDelays.put(e.getKey(), a);
+        }
+        return averageCausedDelays;
+    }
+    
+    
+    
 }
