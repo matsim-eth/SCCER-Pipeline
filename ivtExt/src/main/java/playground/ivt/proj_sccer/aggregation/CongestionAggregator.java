@@ -132,43 +132,4 @@ public class CongestionAggregator implements CongestionEventHandler {
 		}
     }
     
-    public void loadCsvFile(String input) {
-    	linkId2timeBin2values.clear();
-    	CSVReader reader;
-		try {
-			reader = new CSVReader(new FileReader(input), ',');
-			// read line by line
-			String[] record = null;
-			
-			try {
-				while ((record = reader.readNext()) != null) {
-					Id<Link> lid = Id.createLinkId(record[0]);
-					int bin = Integer.parseInt(record[1]);
-					double delay = Double.parseDouble(record[2]);
-					
-					this.linkId2timeBin2values.putIfAbsent(lid, new HashMap<>());
-					this.linkId2timeBin2values.get(lid).putIfAbsent("avg_delay", new double[num_bins]);
-					this.linkId2timeBin2values.get(lid).get("avg_delay")[bin] = delay;
-				}
-			} catch (NumberFormatException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			} catch (IOException e) {
-				// TODO Auto-generated catch block
-				e.printStackTrace();
-			}
-			
-			try {
-				reader.close();
-			} catch (IOException e) {
-				log.error("Error while closing CSV file reader!");
-				e.printStackTrace();
-			}
-		} catch (FileNotFoundException e) {
-			log.error("CSV file not found!");
-			e.printStackTrace();
-		}
-    }
-
-
 }
