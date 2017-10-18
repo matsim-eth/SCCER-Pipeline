@@ -58,7 +58,7 @@ public class MeasureAverageCausedDelay {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         congestionAggregator.computeLinkAverageCausedDelays();
-        congestionAggregator.writeCsvFile(RUN_FOLDER + "output\\");
+        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory());
 
         log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
