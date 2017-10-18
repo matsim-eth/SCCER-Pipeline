@@ -27,6 +27,7 @@ import playground.ivt.proj_sccer.aggregation.EmissionsAggregator;
 import playground.ivt.proj_sccer.aggregation.EmissionsTally;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
+import playground.ivt.proj_sccer.aggregation.CongestionTally;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 
 /**
@@ -35,17 +36,12 @@ import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 public class MeasureExternalities {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
 
-
- //   final private static String CONFIG_FILE = "output_config.xml"; // "defaultIVTConfig_w_emissions.xml";
- //   final private static String EVENTS_FILE = "output_events.xml.gz";
- //   final private static String RUN_FOLDER = "C:\\Users\\molloyj\\Documents\\ARE_SP_2016\\zurich_1pc\\emissions\\example\\";
-
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-    final private static String EVENTS_FILE = "800.events.xml.gz";
+//    final private static String EVENTS_FILE = "800.events.xml.gz";
+    final private static String EVENTS_FILE = "test.events.xml\\test.events.xml";
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
     
-    final private static String OUTPUT_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\";
-
+    final private static String CONGESTION_FILE = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\average_caused_delay.csv";
 
     private Config config;
     private NoiseContext noiseContext;
@@ -65,42 +61,32 @@ public class MeasureExternalities {
         Scenario scenario = ScenarioUtils.loadScenario(config);
         ((NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME)).setTimeBinSizeNoiseComputation(bin_size_s);
 
+        setUpVehicles(scenario);
+        
         eventsManager = new EventsManagerImpl();
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, bin_size_s);
-        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, bin_size_s, v2deh);
-
-        setUpVehicles(scenario);
+        CongestionTally congestionTally = new CongestionTally(scenario, v2deh, bin_size_s);
+        
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
-
+        EmissionsTally emissionsTally = new EmissionsTally(scenario, v2deh);
+        
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionAggregator);
-        //eventsManager.addHandler(emissionsAggregator);
-
-
-        EmissionsTally emissionsTally = new EmissionsTally(scenario, v2deh);
+        eventsManager.addHandler(congestionTally);
         eventsManager.addHandler(emissionsTally);
 
-        //emissions
-        //add emissions module
+        congestionTally.loadCsvFile(CONGESTION_FILE);
 
    //     setUpNoise(scenario);
 
-        //add listener to tally emission events by (warm|cold)/link/userGroup/time
-
-
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
-
-        emissionsTally.outputSummary();
-//        emissionsTally.writeCSVFile(OUTPUT_FOLDER);
         
-//        congestionAggregator.getLinkIdAverageCausedDelays();
-        congestionAggregator.writeCsvFile(OUTPUT_FOLDER);
-
+        emissionsTally.writeCSVFile(config.controler().getOutputDirectory());
+        congestionTally.outputSummary();
+        
         emissionModule.writeEmissionInformation();
         log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
