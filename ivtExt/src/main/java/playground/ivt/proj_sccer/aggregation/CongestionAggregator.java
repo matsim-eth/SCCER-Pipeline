@@ -92,12 +92,17 @@ public class CongestionAggregator implements CongestionEventHandler {
         
     }
 
-    public void computeLinkIdAverageCausedDelays() {
+    public void computeLinkAverageCausedDelays() {
         for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
             double[] a = e.getValue().get("delay").clone();
             double[] counts = e.getValue().get("count").clone();
             for (int i=0; i<counts.length; i++) {
-                a[i] /= counts[i];
+            	if(counts[i] > 0.0) {
+            		a[i] /= counts[i];
+            	}
+            	else {
+            		a[i] = 0.0;
+            	}
             }
             linkId2timeBin2values.get(e.getKey()).put("avg_delay", a);
         }
