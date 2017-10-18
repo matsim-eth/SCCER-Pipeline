@@ -57,7 +57,7 @@ public class MeasureAverageCausedDelay {
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-        congestionAggregator.writeCSVFile(RUN_FOLDER + "output\\");
+        congestionAggregator.writeCsvFile(RUN_FOLDER + "output\\");
 
         log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();

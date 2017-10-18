@@ -3,15 +3,17 @@ package playground.ivt.proj_sccer.aggregation;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 
+import com.opencsv.CSVReader;
 import com.opencsv.CSVWriter;
 
 import playground.ivt.proj_sccer.vsp.CongestionEvent;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionEventHandler;
 
+import java.io.FileNotFoundException;
+import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -19,31 +21,60 @@ import java.util.*;
 /**
  * Created by molloyj on 18.07.2017.
  */
-public class CongestionAggregator extends EventAggregator implements CongestionEventHandler {
+public class CongestionAggregator implements CongestionEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
-
-    private List<CongestionEvent> congestionEvents = new ArrayList<CongestionEvent>();
-
-    private double vtts_car;
-    private double congestionTollFactor;
-
-    public CongestionAggregator(Scenario scenario, double congestionTollFactor, double binSize_s) {
-        super(scenario, binSize_s);
-        this.vtts_car = (scenario.getConfig().planCalcScore().getModes().get(TransportMode.car).getMarginalUtilityOfTraveling() - scenario.getConfig().planCalcScore().getPerforming_utils_hr()) / scenario.getConfig().planCalcScore().getMarginalUtilityOfMoney();
-        this.congestionTollFactor = congestionTollFactor;
-        log.info("VTTS_car: " + vtts_car);
-        log.info("Congestion toll factor: " + congestionTollFactor);
-
-    }
+    
+    private final Scenario scenario;
+    
+    protected final double binSize_s; //30 hours, how do we split them
+    protected int num_bins; //30 hours, how do we split them
+    
+    protected Map<Id<Link>, Map<String, double[]>> linkId2timeBin2values = new HashMap<>();
+    protected Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2timeBin2personIdCausingDelay = new HashMap<>();
 
     public CongestionAggregator(Scenario scenario, int binSize_s) {
-        this(scenario, 1.0, binSize_s);
+        this.num_bins = (int) (30 * 3600 / binSize_s);
+        this.binSize_s = binSize_s;
+        this.scenario = scenario;
+
+        setUpBinsForLinks(scenario);
+        log.info("Number of congestion bins: " + num_bins);
+    }
+    
+    protected void setUpBinsForLinks(Scenario scenario) {
+        scenario.getNetwork().getLinks().keySet().forEach(l -> {
+        	
+            linkId2timeBin2values.put(l, new HashMap<>());
+            linkId2timeBin2values.get(l).putIfAbsent("delay", new double[num_bins]);
+            linkId2timeBin2values.get(l).putIfAbsent("count", new double[num_bins]);
+            linkId2timeBin2values.get(l).putIfAbsent("avg_delay", new double[num_bins]);
+            
+            linkId2timeBin2personIdCausingDelay.put(l, new HashMap<>());
+            for(int bin = 0; bin<this.num_bins; bin++) {
+            	linkId2timeBin2personIdCausingDelay.get(l).put(bin, new ArrayList<>());
+            }
+        });
     }
 
-    @Override
-    public void reset(int iteration) {
-        this.congestionEvents.clear();
-        super.reset(iteration);
+    /*package*/ int getTimeBin(double time) {
+
+        double timeAfterSimStart = time;
+
+		/*
+		 * Agents who end their first activity before the simulation has started
+		 * will depart in the first time step.
+		 */
+        if (timeAfterSimStart <= 0.0) return 0;
+
+		/*
+		 * Calculate the bin for the given time. If the result
+		 * of the modulo operation is 0, it is the last time value
+		 * which is part of the previous bin.
+		 */  
+        int bin = (int) (timeAfterSimStart / binSize_s);
+        if (timeAfterSimStart % binSize_s == 0.0) bin--;
+
+        return bin;
     }
 
     @Override
@@ -56,64 +87,80 @@ public class CongestionAggregator extends EventAggregator implements CongestionE
         // add if delay caused by new agent
         if(!this.linkId2timeBin2personIdCausingDelay.get(event.getLinkId()).get(bin).contains(event.getCausingAgentId())) {
         	this.linkId2timeBin2personIdCausingDelay.get(event.getLinkId()).get(bin).add(event.getCausingAgentId());
-        	this.linkId2timeBin2numberCausingDelay.get(event.getLinkId())[bin] += 1.0;
+        	this.linkId2timeBin2values.get(event.getLinkId()).get("count")[bin] += 1.0;
         }
         
     }
-    
-    public Map<Id<Link>, double[]> getLinkIdAverageDelays() {
-        Map<Id<Link>, double[]> averageDelays = new HashMap<>();
+
+    public void computeLinkIdAverageCausedDelays() {
         for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
             double[] a = e.getValue().get("delay").clone();
-            double[] counts = linkId2timeBin2enteringAndDepartingAgents.get(e.getKey());
+            double[] counts = e.getValue().get("count").clone();
             for (int i=0; i<counts.length; i++) {
                 a[i] /= counts[i];
             }
-            averageDelays.put(e.getKey(), a);
+            linkId2timeBin2values.get(e.getKey()).put("avg_delay", a);
         }
-        return averageDelays;
     }
     
-    public Map<Id<Link>, double[]> getLinkIdAverageCausedDelays() {
-        Map<Id<Link>, double[]> averageCausedDelays = new HashMap<>();
-        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-            double[] a = e.getValue().get("delay").clone();
-            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
-            for (int i=0; i<counts.length; i++) {
-                a[i] /= counts[i];
-            }
-            averageCausedDelays.put(e.getKey(), a);
-        }
-        return averageCausedDelays;
-    }
-    
-    public void writeCSVFile(String output) {
-        try {
-			String fileName = output + "average_caused_delay.csv";
-			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
-			
+    public void writeCsvFile(String output) {
+		String fileName = output + "average_caused_delay.csv";
+		CSVWriter writer;
+		try {
+			writer = new CSVWriter(new FileWriter(fileName));
 	        // write header and records
 			String[] header = "LinkId,TimeBin,AverageCausedDelay".split(",");
 			writer.writeNext(header);
 			
 	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-	            double[] a = e.getValue().get("delay").clone();
-	            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
-	            for (int i=0; i<counts.length; i++) {
-	            	if (counts[i] != 0.0) {
-	            		a[i] /= counts[i];
-	            	}
-	            	else {
-	            		a[i] = 0.0;
-	            	}
-	            	String record = e.getKey().toString() + "," + i + "," + a[i];
+	            for (int i=0; i<e.getValue().get("avg_delay").length; i++) {
+	            	String record = e.getKey().toString() + "," + i + "," + e.getValue().get("avg_delay")[i];
 	            	String[] records = record.split(",");
 	            	writer.writeNext(records);
 	            }
 	        }
     		writer.close();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
+    		log.info("CSV created successfully!");
+		} catch (IOException e1) {
+			log.error("Error writing CSV file!");
+			e1.printStackTrace();
+		}
+    }
+    
+    public void loadCsvFile(String input) {
+    	linkId2timeBin2values.clear();
+    	CSVReader reader;
+		try {
+			reader = new CSVReader(new FileReader(input), ',');
+			// read line by line
+			String[] record = null;
+			
+			try {
+				while ((record = reader.readNext()) != null) {
+					Id<Link> lid = Id.createLinkId(record[0]);
+					int bin = Integer.parseInt(record[1]);
+					double delay = Double.parseDouble(record[2]);
+					
+					this.linkId2timeBin2values.putIfAbsent(lid, new HashMap<>());
+					this.linkId2timeBin2values.get(lid).putIfAbsent("avg_delay", new double[num_bins]);
+					this.linkId2timeBin2values.get(lid).get("avg_delay")[bin] = delay;
+				}
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+			
+			try {
+				reader.close();
+			} catch (IOException e) {
+				log.error("Error while closing CSV file reader!");
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			log.error("CSV file not found!");
 			e.printStackTrace();
 		}
     }

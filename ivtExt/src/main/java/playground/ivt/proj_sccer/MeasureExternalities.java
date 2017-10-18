@@ -99,7 +99,7 @@ public class MeasureExternalities {
 //        emissionsTally.writeCSVFile(OUTPUT_FOLDER);
         
 //        congestionAggregator.getLinkIdAverageCausedDelays();
-        congestionAggregator.writeCSVFile(OUTPUT_FOLDER);
+        congestionAggregator.writeCsvFile(OUTPUT_FOLDER);
 
         emissionModule.writeEmissionInformation();
         log.info("Total delay: " + congestionHandler.getTotalDelay());
