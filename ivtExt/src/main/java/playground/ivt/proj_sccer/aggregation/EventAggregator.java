@@ -81,10 +81,7 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
 		 * Calculate the bin for the given time. Increase it by one if the result
 		 * of the modulo operation is > 0. If it is 0, it is the last time value
 		 * which is part of the previous bin.
-		 */
-//        int bin = (int) ((timeAfterSimStart/60) / binSize_s); //TODO: Not convinced this is correct based on above explanation
-//        if (timeAfterSimStart % binSize_s != 0.0) bin++;
-        
+		 */  
         int bin = (int) (timeAfterSimStart / binSize_s);
         if (timeAfterSimStart % binSize_s == 0.0) bin--;
 
@@ -114,34 +111,4 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
             // other simulated modes are not accounted for
         }
     }
-
-
-    public Map<Id<Link>, double[]> getLinkIdAverageDelays() {
-        Map<Id<Link>, double[]> averageDelays = new HashMap<>();
-        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-            double[] a = e.getValue().get("delay").clone();
-            double[] counts = linkId2timeBin2enteringAndDepartingAgents.get(e.getKey());
-            for (int i=0; i<counts.length; i++) {
-                a[i] /= counts[i];
-            }
-            averageDelays.put(e.getKey(), a);
-        }
-        return averageDelays;
-    }
-    
-    public Map<Id<Link>, double[]> getLinkIdAverageCausedDelays() {
-        Map<Id<Link>, double[]> averageCausedDelays = new HashMap<>();
-        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-            double[] a = e.getValue().get("delay").clone();
-            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
-            for (int i=0; i<counts.length; i++) {
-                a[i] /= counts[i];
-            }
-            averageCausedDelays.put(e.getKey(), a);
-        }
-        return averageCausedDelays;
-    }
-    
-    
-    
 }

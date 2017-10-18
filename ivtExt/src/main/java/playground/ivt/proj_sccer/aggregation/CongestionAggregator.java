@@ -61,6 +61,32 @@ public class CongestionAggregator extends EventAggregator implements CongestionE
         
     }
     
+    public Map<Id<Link>, double[]> getLinkIdAverageDelays() {
+        Map<Id<Link>, double[]> averageDelays = new HashMap<>();
+        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
+            double[] a = e.getValue().get("delay").clone();
+            double[] counts = linkId2timeBin2enteringAndDepartingAgents.get(e.getKey());
+            for (int i=0; i<counts.length; i++) {
+                a[i] /= counts[i];
+            }
+            averageDelays.put(e.getKey(), a);
+        }
+        return averageDelays;
+    }
+    
+    public Map<Id<Link>, double[]> getLinkIdAverageCausedDelays() {
+        Map<Id<Link>, double[]> averageCausedDelays = new HashMap<>();
+        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
+            double[] a = e.getValue().get("delay").clone();
+            double[] counts = linkId2timeBin2numberCausingDelay.get(e.getKey());
+            for (int i=0; i<counts.length; i++) {
+                a[i] /= counts[i];
+            }
+            averageCausedDelays.put(e.getKey(), a);
+        }
+        return averageCausedDelays;
+    }
+    
     public void writeCSVFile(String output) {
         try {
 			String fileName = output + "average_caused_delay.csv";
