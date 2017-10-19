@@ -143,7 +143,7 @@ public class EmissionsTally implements WarmEmissionEventHandler, ColdEmissionEve
     	System.out.println();
     }
     
-    public void writeCSVFile(String output) {
+    public void writeCsvFile(String output) {
     	int count = 0;
     	for (Map.Entry<Id<Person>,List<Map<String, Double>>> person : personId2Leg2Pollutant.entrySet()  ) {
     		if (count > 20) { //TODO: limit on how many output files. remove this after testing
