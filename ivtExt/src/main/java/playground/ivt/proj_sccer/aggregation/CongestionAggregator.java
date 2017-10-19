@@ -119,9 +119,11 @@ public class CongestionAggregator implements CongestionEventHandler {
 			
 	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
 	            for (int i=0; i<e.getValue().get("avg_delay").length; i++) {
-	            	String record = e.getKey().toString() + "," + i + "," + e.getValue().get("avg_delay")[i];
-	            	String[] records = record.split(",");
-	            	writer.writeNext(records);
+	            	if (e.getValue().get("avg_delay")[i] != 0.0) {
+		            	String record = e.getKey().toString() + "," + i + "," + e.getValue().get("avg_delay")[i];
+		            	String[] records = record.split(",");
+		            	writer.writeNext(records);
+	            	}
 	            }
 	        }
     		writer.close();
