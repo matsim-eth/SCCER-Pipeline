@@ -37,8 +37,7 @@ public class MeasureExternalities {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
 
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-//    final private static String EVENTS_FILE = "800.events.xml.gz";
-    final private static String EVENTS_FILE = "test.events.xml\\test.events.xml";
+    final private static String EVENTS_FILE = "test.events.xml.gz";
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
     
     final private static String CONGESTION_FILE = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\average_caused_delay.csv";
