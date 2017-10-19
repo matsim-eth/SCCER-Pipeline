@@ -2,6 +2,7 @@ package playground.ivt.proj_sccer.aggregation;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -17,6 +18,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import com.opencsv.CSVReader;
+import com.opencsv.CSVWriter;
 
 public class CongestionTally implements LinkEnterEventHandler {
 	private static final Logger log = Logger.getLogger(CongestionTally.class);
@@ -73,7 +75,6 @@ public class CongestionTally implements LinkEnterEventHandler {
     }
     
     public void loadCsvFile(String input) {
-    	linkId2timeBin2values.clear();
     	CSVReader reader;
 		try {
 			reader = new CSVReader(new FileReader(input), ',');
@@ -86,7 +87,6 @@ public class CongestionTally implements LinkEnterEventHandler {
 						Id<Link> lid = Id.createLinkId(record[0]);
 						int bin = Integer.parseInt(record[1]);
 						double delay = Double.parseDouble(record[2]);
-						this.linkId2timeBin2values.putIfAbsent(lid, new double[num_bins]);
 						this.linkId2timeBin2values.get(lid)[bin] = delay;
 					}
 					count ++;
@@ -130,6 +130,28 @@ public class CongestionTally implements LinkEnterEventHandler {
     	for (Map.Entry<Id<Person>, Double> e : personId2causedDelay.entrySet()  ) {
     		System.out.println("Person " + e.getKey().toString() + " caused " + personId2causedDelay.get(e.getKey()).toString() + " seconds of delay.");
     	}
+    }
+    
+    public void writeCsvFile(String output) {
+		String fileName = output + "caused_delay.csv";
+		CSVWriter writer;
+		try {
+			writer = new CSVWriter(new FileWriter(fileName));
+	        // write header and records
+			String[] header = "PersonId,CausedDelay".split(",");
+			writer.writeNext(header);
+			
+	    	for (Map.Entry<Id<Person>, Double> e : personId2causedDelay.entrySet()  ) {
+	    		String record = e.getKey().toString() + "," + e.getValue().toString();
+	    		String[] records = record.split(",");
+            	writer.writeNext(records);
+	    	}
+    		writer.close();
+    		log.info("CSV created successfully!");
+		} catch (IOException e1) {
+			log.error("Error writing CSV file!");
+			e1.printStackTrace();
+		}
     }
 
 }

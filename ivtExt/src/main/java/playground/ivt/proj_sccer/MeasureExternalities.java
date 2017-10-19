@@ -83,11 +83,11 @@ public class MeasureExternalities {
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsTally.writeCSVFile(config.controler().getOutputDirectory());
-        congestionTally.outputSummary();
+        emissionsTally.writeCsvFile(config.controler().getOutputDirectory());
+        congestionTally.writeCsvFile(config.controler().getOutputDirectory());
         
         emissionModule.writeEmissionInformation();
-        log.info("Total delay: " + congestionHandler.getTotalDelay());
+//        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
     }
 
