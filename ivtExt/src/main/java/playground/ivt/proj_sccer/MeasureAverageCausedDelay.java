@@ -47,7 +47,7 @@ public class MeasureAverageCausedDelay {
     	
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, bin_size_s);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
         
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
