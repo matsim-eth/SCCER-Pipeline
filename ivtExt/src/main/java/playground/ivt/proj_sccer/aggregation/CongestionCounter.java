@@ -2,49 +2,41 @@ package playground.ivt.proj_sccer.aggregation;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import com.opencsv.CSVReader;
-import com.opencsv.CSVWriter;
 
-public class CongestionTally implements LinkEnterEventHandler {
-	private static final Logger log = Logger.getLogger(CongestionTally.class);
-	
+public class CongestionCounter extends ExternalityCounter {
+	private static final Logger log = Logger.getLogger(CongestionCounter.class);
     protected Map<Id<Link>, double[]> linkId2timeBin2values = new HashMap<>();
-    Map<Id<Person>, Double> personId2causedDelay = new HashMap<>();
 
-    private final Scenario scenario;
-    private final Vehicle2DriverEventHandler drivers;
-    
 	protected final int num_bins;
 	protected int binSize_s;
 
-    public CongestionTally(Scenario scenario, Vehicle2DriverEventHandler drivers, int binSize_s) {
+    public CongestionCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, int binSize_s) {
+    	super(scenario, drivers);
+
         this.num_bins = (int) (30 * 3600 / binSize_s);
         this.binSize_s = binSize_s;
-        this.scenario = scenario;
-        this.drivers = drivers;
 
         setUpBinsForLinks(scenario);
         log.info("Number of congestion bins: " + num_bins);
-        
-        // initialize maps
-        scenario.getPopulation().getPersons().keySet().forEach(p -> {
-        	personId2causedDelay.put(p, 0.0);         
-        });
+    }
+    
+    @Override
+    protected void initializeFields() {
+    	super.initializeFields();
+        keys.add("Delay");
     }
 
     protected void setUpBinsForLinks(Scenario scenario) {
@@ -53,7 +45,7 @@ public class CongestionTally implements LinkEnterEventHandler {
         });
     }
     
-    /*package*/ int getTimeBin(double time) {
+    /*package*/ int getTimeBin(double time) { //TODO: Figure out where to put this!
 
         double timeAfterSimStart = time;
 
@@ -111,7 +103,6 @@ public class CongestionTally implements LinkEnterEventHandler {
 		}
     }
 
-
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
 		int bin = getTimeBin(event.getTime());
@@ -121,37 +112,15 @@ public class CongestionTally implements LinkEnterEventHandler {
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 		double delay = this.linkId2timeBin2values.get(lid)[bin];
-		double previous = this.personId2causedDelay.get(event.getVehicleId());
+		double previous = this.tempValues.get(personId).get("Delay");
+		this.tempValues.get(personId).put("Delay", previous + delay);
 		
-		this.personId2causedDelay.put(personId, previous + delay);
+		super.handleEvent(event); //add distance
 	}
 	
-    public void outputSummary() {
-    	for (Map.Entry<Id<Person>, Double> e : personId2causedDelay.entrySet()  ) {
-    		System.out.println("Person " + e.getKey().toString() + " caused " + personId2causedDelay.get(e.getKey()).toString() + " seconds of delay.");
-    	}
+    @Override
+    public void writeCsvFile(String path) {
+    	super.writeCsvFile(path + "congestion.csv");
     }
-    
-    public void writeCsvFile(String output) {
-		String fileName = output + "caused_delay.csv";
-		CSVWriter writer;
-		try {
-			writer = new CSVWriter(new FileWriter(fileName));
-	        // write header and records
-			String[] header = "PersonId,CausedDelay".split(",");
-			writer.writeNext(header);
-			
-	    	for (Map.Entry<Id<Person>, Double> e : personId2causedDelay.entrySet()  ) {
-	    		String record = e.getKey().toString() + "," + e.getValue().toString();
-	    		String[] records = record.split(",");
-            	writer.writeNext(records);
-	    	}
-    		writer.close();
-    		log.info("CSV created successfully!");
-		} catch (IOException e1) {
-			log.error("Error writing CSV file!");
-			e1.printStackTrace();
-		}
-    }
-
+	
 }

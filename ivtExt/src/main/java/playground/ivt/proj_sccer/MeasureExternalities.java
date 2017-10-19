@@ -24,10 +24,10 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import playground.ivt.proj_sccer.aggregation.EmissionsAggregator;
-import playground.ivt.proj_sccer.aggregation.EmissionsTally;
+import playground.ivt.proj_sccer.aggregation.EmissionsCounter;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
-import playground.ivt.proj_sccer.aggregation.CongestionTally;
+import playground.ivt.proj_sccer.aggregation.CongestionCounter;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 
 /**
@@ -67,24 +67,24 @@ public class MeasureExternalities {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionTally congestionTally = new CongestionTally(scenario, v2deh, bin_size_s);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, bin_size_s);
         
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
-        EmissionsTally emissionsTally = new EmissionsTally(scenario, v2deh);
+        EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh);
         
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionTally);
-        eventsManager.addHandler(emissionsTally);
+        eventsManager.addHandler(congestionCounter);
+        eventsManager.addHandler(emissionsCounter);
 
-        congestionTally.loadCsvFile(CONGESTION_FILE);
+        congestionCounter.loadCsvFile(CONGESTION_FILE);
 
    //     setUpNoise(scenario);
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsTally.writeCsvFile(config.controler().getOutputDirectory());
-        congestionTally.writeCsvFile(config.controler().getOutputDirectory());
+        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory());
+        congestionCounter.writeCsvFile(config.controler().getOutputDirectory());
         
         emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
