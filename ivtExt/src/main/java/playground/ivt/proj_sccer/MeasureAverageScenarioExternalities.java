@@ -5,6 +5,13 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.contrib.noise.NoiseConfigGroup;
+import org.matsim.contrib.noise.data.NoiseContext;
+import org.matsim.contrib.noise.data.NoiseLink;
+import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
+import org.matsim.contrib.noise.handler.NoiseTimeTracker;
+import org.matsim.contrib.noise.handler.PersonActivityTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
@@ -16,11 +23,12 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
+import playground.ivt.proj_sccer.aggregation.NoiseAggregator;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 
-public class MeasureAverageCausedDelay {
-	private final static Logger log = Logger.getLogger(MeasureAverageCausedDelay.class);
+public class MeasureAverageScenarioExternalities {
+	private final static Logger log = Logger.getLogger(MeasureAverageScenarioExternalities.class);
 	
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
@@ -28,24 +36,32 @@ public class MeasureAverageCausedDelay {
     
     private Config config;
     private EventsManagerImpl eventsManager;
+    private NoiseContext noiseContext;
+    private NoiseTimeTracker noiseTimeTracker;
+    private NoiseConfigGroup noiseParameters;
 
     public static void main(String[] args) {
-        new MeasureAverageCausedDelay().run();
+        new MeasureAverageScenarioExternalities().run();
     }
     
     public void run() {
+
     	int bin_size_s = 3600;
     	
     	// set up config
-    	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE);
-    	config.controler().setOutputDirectory(RUN_FOLDER + "output\\");
-    	Scenario scenario = ScenarioUtils.loadScenario(config);
+    	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
+        config.controler().setOutputDirectory(RUN_FOLDER + "output\\");
+        Scenario scenario = ScenarioUtils.loadScenario(config);
+        this.noiseParameters = (NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME);
+        noiseParameters.setTimeBinSizeNoiseComputation(bin_size_s);
+//        noiseParameters.setComputeAvgNoiseCostPerLinkAndTime(false);
+        
     	
     	// set up event manager and handlers
     	eventsManager = new EventsManagerImpl();
     	MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
-    	
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
+        
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
         
@@ -54,14 +70,46 @@ public class MeasureAverageCausedDelay {
         eventsManager.addHandler(congestionAggregator);
 
         setUpVehicles(scenario);
+        
+//        setUpNoise(scenario);
+//        NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         congestionAggregator.computeLinkAverageCausedDelays();
-        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory());
+        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "average_caused_delay.csv");
+        
+//        noiseAggregator.computeLinkId2timeBin2averageValues();
+//        noiseAggregator.writeCsvFile(config.controler().getOutputDirectory() + "average_caused_noise.csv");
 
         log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
+    }
+    
+    public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
+
+        noiseContext = new NoiseContext(scenario);
+        noiseContext.getNoiseParams().setWriteOutputIteration(0); //avoid writing multiple output files!!!
+        noiseContext.getNoiseParams().setThrowNoiseEventsCaused(true);
+//        noiseParameters.setThrowNoiseEventsCaused(true);
+
+        noiseTimeTracker = new NoiseTimeTracker();
+        noiseTimeTracker.setNoiseContext(noiseContext);
+        noiseTimeTracker.setEvents(eventsManager);
+        //noiseTimeTracker.setOutputFilePath(outputFilePath);
+
+        eventsManager.addHandler(noiseTimeTracker);
+
+        if (noiseContext.getNoiseParams().isUseActualSpeedLevel()) {
+            LinkSpeedCalculation linkSpeedCalculator = new LinkSpeedCalculation();
+            linkSpeedCalculator.setNoiseContext(noiseContext);
+            eventsManager.addHandler(linkSpeedCalculator);
+        }
+
+        if (noiseContext.getNoiseParams().isComputePopulationUnits()) {
+            PersonActivityTracker actTracker = new PersonActivityTracker(noiseContext);
+            eventsManager.addHandler(actTracker);
+        }
     }
     
     private void setUpVehicles(Scenario scenario) {
