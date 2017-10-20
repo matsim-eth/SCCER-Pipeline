@@ -37,7 +37,7 @@ public class MeasureExternalities {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
 
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-    final private static String EVENTS_FILE = "test.events.xml.gz";
+    final private static String EVENTS_FILE = "800.events.xml.gz"; // "test.events.xml.gz"
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
     
     final private static String CONGESTION_FILE = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\average_caused_delay.csv";
@@ -79,41 +79,15 @@ public class MeasureExternalities {
 
         congestionCounter.loadCsvFile(CONGESTION_FILE);
 
-   //     setUpNoise(scenario);
-
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory());
-        congestionCounter.writeCsvFile(config.controler().getOutputDirectory());
+        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "emissions.csv");
+        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "congestion.csv");
         
         emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
     }
-
-    public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
-
-        noiseContext = new NoiseContext(scenario);
-
-        noiseTimeTracker = new NoiseTimeTracker();
-        noiseTimeTracker.setNoiseContext(noiseContext);
-        noiseTimeTracker.setEvents(eventsManager);
-        //noiseTimeTracker.setOutputFilePath(outputFilePath);
-
-        eventsManager.addHandler(noiseTimeTracker);
-
-        if (noiseContext.getNoiseParams().isUseActualSpeedLevel()) {
-            LinkSpeedCalculation linkSpeedCalculator = new LinkSpeedCalculation();
-            linkSpeedCalculator.setNoiseContext(noiseContext);
-            eventsManager.addHandler(linkSpeedCalculator);
-        }
-
-        if (noiseContext.getNoiseParams().isComputePopulationUnits()) {
-            PersonActivityTracker actTracker = new PersonActivityTracker(noiseContext);
-            eventsManager.addHandler(actTracker);
-        }
-    }
-
 
     private void setUpVehicles(Scenario scenario) {
         //householdid, #autos, auto1, auto2, auto3

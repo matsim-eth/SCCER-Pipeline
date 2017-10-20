@@ -66,10 +66,5 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
             tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());       
         }
     }
-    
-    @Override
-    public void writeCsvFile(String path) {
-    	super.writeCsvFile(path + "emissions.csv");
-    }
 
 }

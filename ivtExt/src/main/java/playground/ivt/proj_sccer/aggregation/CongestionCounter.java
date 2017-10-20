@@ -69,7 +69,7 @@ public class CongestionCounter extends ExternalityCounter {
     public void loadCsvFile(String input) {
     	CSVReader reader;
 		try {
-			reader = new CSVReader(new FileReader(input), ',');
+			reader = new CSVReader(new FileReader(input), ';');
 			// read line by line
 			String[] record = null;
 			int count = 0;
@@ -117,10 +117,5 @@ public class CongestionCounter extends ExternalityCounter {
 		
 		super.handleEvent(event); //add distance
 	}
-	
-    @Override
-    public void writeCsvFile(String path) {
-    	super.writeCsvFile(path + "congestion.csv");
-    }
-	
+
 }

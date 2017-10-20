@@ -10,12 +10,11 @@ import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
-
-import com.opencsv.CSVWriter;
-
 import playground.ivt.proj_sccer.vsp.CongestionEvent;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionEventHandler;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.*;
@@ -123,30 +122,37 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         }
     }
     
-    public void writeCsvFile(String output) {
-		String fileName = output + "average_caused_delay.csv";
-		CSVWriter writer;
+    public void writeCsvFile(String outputPath, String outputFileName) {
+    	
+		File dir = new File(outputPath);
+		dir.mkdirs();
+		
+		String fileName = outputPath + outputFileName;
+		
+		File file = new File(fileName);
+		
 		try {
-			writer = new CSVWriter(new FileWriter(fileName));
-	        // write header and records
-			String[] header = "LinkId,TimeBin,AverageCausedDelay".split(",");
-			writer.writeNext(header);
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			
+			bw.write("LinkId;TimeBin;AverageCausedDelay");
+			bw.newLine();
 			
 	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
 	            for (int i=0; i<e.getValue().get("avg_delay").length; i++) {
 	            	if (e.getValue().get("avg_delay")[i] != 0.0) {
-		            	String record = e.getKey().toString() + "," + i + "," + e.getValue().get("avg_delay")[i];
-		            	String[] records = record.split(",");
-		            	writer.writeNext(records);
+		            	bw.write(e.getKey() + ";" + i + ";" + e.getValue().get("avg_delay")[i]);
+		            	bw.newLine();
 	            	}
 	            }
 	        }
-    		writer.close();
-    		log.info("CSV created successfully!");
-		} catch (IOException e1) {
-			log.error("Error writing CSV file!");
-			e1.printStackTrace();
+			
+			bw.close();
+			log.info("Output written to " + fileName);
+			
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
+    	
     }
 
 

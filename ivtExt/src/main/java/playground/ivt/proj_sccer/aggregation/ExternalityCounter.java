@@ -1,5 +1,7 @@
 package playground.ivt.proj_sccer.aggregation;
 
+import java.io.BufferedWriter;
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.util.ArrayList;
@@ -7,6 +9,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
@@ -19,9 +22,8 @@ import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
-import com.opencsv.CSVWriter;
-
 public abstract class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler {
+	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 	protected final Scenario scenario;
     protected final Vehicle2DriverEventHandler drivers;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
@@ -86,35 +88,46 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         }
     }
     
-    public void writeCsvFile(String output) {
-    	try {
-			String fileName = output;
-			CSVWriter writer = new CSVWriter(new FileWriter(fileName));
+    public void writeCsvFile(String outputPath, String outputFileName) {
+    	
+		File dir = new File(outputPath);
+		dir.mkdirs();
+		
+		String fileName = outputPath + outputFileName;
+		
+		File file = new File(fileName);
+		
+		try {
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			
 	        // write header and records
 			boolean headerWritten = false;
 	    	for (Map.Entry<Id<Person>,List<Map<String, Double>>> person : personId2Leg2Values.entrySet()  ) {
+	    		int legCount = 0;
 	    		for (Map<String, Double> leg : person.getValue()) {
-	    			String fields = "PersonId,";
-	    			String record = person.getKey().toString() + ",";
+	    			legCount++;
+	    			String header = "PersonId;Leg;";
+	    			String record = person.getKey() + ";" + legCount + ";";
 	    	        for (String key : keys) {
-	    	        	fields = fields + key + ",";
-	    	        	record = record + leg.get(key).toString() + ",";
+	    	        	header = header + key + ";";
+	    	        	record = record + leg.get(key) + ";";
 	    	        }
-	    	        String[] header = fields.split(",");
-	    	        String[] records = record.split(",");
 	    	        if (!headerWritten) {
-	    	        	writer.writeNext(header);
+	    	        	bw.write(header);
+	    				bw.newLine();
 	    	        	headerWritten = true;
 	    	        } 
-	    	        writer.writeNext(records);
+	    	        bw.write(record);
+	    	        bw.newLine();
 	    		}
-	    	}
-    		writer.close();
-
+	    	}	
+			bw.close();
+			log.info("Output written to " + fileName);
+			
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
+    	
     }
+
 }
