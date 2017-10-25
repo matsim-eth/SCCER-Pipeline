@@ -23,7 +23,6 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import playground.ivt.proj_sccer.aggregation.CongestionAggregator;
-import playground.ivt.proj_sccer.aggregation.NoiseAggregator;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandler;
 import playground.ivt.proj_sccer.vsp.handlers.CongestionHandlerImplV3;
 

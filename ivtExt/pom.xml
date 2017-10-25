@@ -106,6 +106,13 @@
 		  <artifactId>graphhopper-reader-osm</artifactId>
 		  <version>RELEASE</version>
 	  </dependency>
+	  <!-- https://mvnrepository.com/artifact/com.graphhopper/map-matching -->
+	  <dependency>
+		  <groupId>com.graphhopper</groupId>
+		  <artifactId>graphhopper-map-matching-core</artifactId>
+		  <version>0.9.0</version>
+	  </dependency>
+
   </dependencies>
 
 	<repositories>
