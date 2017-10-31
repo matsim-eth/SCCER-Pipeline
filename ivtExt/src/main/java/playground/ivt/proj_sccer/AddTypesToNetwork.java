@@ -6,6 +6,7 @@ import com.vividsolutions.jts.index.SpatialIndex;
 import com.vividsolutions.jts.index.strtree.STRtree;
 import com.vividsolutions.jts.linearref.LinearLocation;
 import com.vividsolutions.jts.linearref.LocationIndexedLine;
+import org.apache.commons.math3.util.Pair;
 import org.apache.log4j.Logger;
 import org.geotools.data.*;
 import org.geotools.data.shapefile.ShapefileDataStoreFactory;
@@ -47,6 +48,13 @@ import java.util.stream.Collectors;
 
 /**
  * Created by molloyj on 27.07.2017.
+ *
+ * This class prepares a MATSim network for use with the emissions contrib by assigning types that
+ * match the HBEFA database. The road types are taken from an OSM shapefile, in the same coordinate reference system.
+ * Based on the MATSim link speed and the nearest OSM link, a road type is defined.
+ * These types are then matched to the HBEFA types, and a new network with type ides, and a type mapping (as csv) are generated.
+ * These can then be used as inputs to MATSim simulations that include the emissions module.
+ * N.B. The links or attributes of the network are not changed, only the types are added.
  */
 //TODO: document!!!!!!!!!!
 public class AddTypesToNetwork {
@@ -60,7 +68,14 @@ public class AddTypesToNetwork {
     private SpatialIndex index;
     private static int  MAX_SEARCH_DISTANCE = 2000;
     private static String WORKING_FOLDER = "C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\network_editing\\version2\\";
+    private Map<Id<Link>, String> linkMatches = new HashMap<>();
 
+    /**
+     * Constructor takes the matsim network and an OSM shapefile
+     * @param network
+     * @param osmShapefile
+     * @throws IOException
+     */
     public AddTypesToNetwork(Network network, File osmShapefile) throws IOException {
 
         FeatureSource<SimpleFeatureType, SimpleFeature> source = loadOSMShapefile(osmShapefile);
@@ -80,7 +95,6 @@ public class AddTypesToNetwork {
 
     }
 
-
     public static void main (String[] args) throws Exception {
         Config config_old = ConfigUtils.createConfig();
         Scenario sc_old = ScenarioUtils.createScenario(config_old);
@@ -97,7 +111,7 @@ public class AddTypesToNetwork {
         Path path = Paths.get(WORKING_FOLDER + "distinct_link_types.txt");
         Files.write(path, osmReference.buildHBEFAlinkTypes(link_types), StandardCharsets.UTF_8);
 
-        new NetworkWriter(sc_old.getNetwork()).writeFileV1(WORKING_FOLDER + "network_zurich_w_types.xml");
+        new NetworkWriter(sc_old.getNetwork()).writeFileV2(WORKING_FOLDER + "network_zurich_w_types.xml");
 
 
     }
@@ -110,6 +124,11 @@ public class AddTypesToNetwork {
 
     }
 
+    /**
+     * Does a simple increasing search , starting with a 10m radius, and increasing to @MAX_SEARCH_DISTANCE, until a matching link is found
+     * TODO: examined links could be filtered by appropriate speeds.
+     * @param network
+     */
     private void findMatchingLinks(Network network) {
         for (Link link : network.getLinks().values()) {
             SimpleFeature matchingLink = null;
@@ -123,7 +142,13 @@ public class AddTypesToNetwork {
         }
     }
 
-    public FeatureSource<SimpleFeatureType, SimpleFeature> loadOSMShapefile(File file) throws IOException {
+    /**
+     * This function loads the OSM shapefile
+     * @param file The osm shapefile
+     * @return the set of features
+     * @throws IOException
+     */
+    private FeatureSource<SimpleFeatureType, SimpleFeature> loadOSMShapefile(File file) throws IOException {
         Map<String, Object> map = new HashMap<>();
         map.put("url", file.toURI().toURL());
 
@@ -139,7 +164,15 @@ public class AddTypesToNetwork {
         return source;
 
     }
-    public static SpatialIndex buildSpatialIndex(FeatureSource<SimpleFeatureType, SimpleFeature> source)  throws IOException {
+
+    /**
+     * From the FeatureSource loaded in @loadOSMShapefile, a @final @{@link SpatialIndex} is created, that
+     * allows for the fast searching of of OSM links
+     * @param source
+     * @return
+     * @throws IOException
+     */
+    private static SpatialIndex buildSpatialIndex(FeatureSource<SimpleFeatureType, SimpleFeature> source)  throws IOException {
 
         final SpatialIndex index = new STRtree();
         FeatureCollection features = source.getFeatures();
@@ -162,12 +195,28 @@ public class AddTypesToNetwork {
         return index;
     }
 
+    /**
+     * Get the Envelope of the MATSim link.
+     * @param link
+     * @return
+     */
     private Envelope getLinkEnvelope(Link link) {
         Coordinate c1 = new Coordinate(link.getFromNode().getCoord().getX(), link.getFromNode().getCoord().getY());
         Coordinate c2 = new Coordinate(link.getToNode().getCoord().getX(), link.getToNode().getCoord().getY());
         return new Envelope(c1, c2);
     }
 
+    /**
+     * The algorithm for finding the matching link, using the @{@link SpatialIndex}.
+     * The list of potential candidates within the searchRadius is collected.
+     * Then, the distance between the centroids of the @{@link Link} and the candidates are compared,
+     * with the link with the smallest distance being returned. There is room for more advanced methods there, but it
+     * works fast enough.
+     *
+     * @param link The MATSim link to find a match for.
+     * @param searchRadius The search radius (m) around the link envelope to examine for candidate links.
+     * @return Returns the feature which is closest to the link (based on centroids)
+     */
     public SimpleFeature getOSMLink(Link link, int searchRadius) {
         //algorithm for matching points
         //if they share both verticies, then copy over the type
@@ -199,7 +248,7 @@ public class AddTypesToNetwork {
 
         return minDistFeature;
     }
-
+    //helper function from MATSim to Geotools
     private static Coordinate toGeoCoord(Coord c) {
         return new Coordinate(c.getX(), c.getY());
     }
@@ -208,10 +257,19 @@ public class AddTypesToNetwork {
         return toGeoCoord(link.getCoord());
     }
 
+    /**
+     * Updates the link to add the road type from the feature. Does some extra work to simplify the heirachy a bit,
+     * i.e. living_street to residential. May not consider all OSM road types in its current implementation.
+     * Also adds the speed, based on the MATSim freespeed of the link.
+     * The type 'unclassified' will be used for any unlabeled links.
+     * @param l
+     * @param feature
+     */
     private void updateLinkType(Link l, SimpleFeature feature) {
 
         if (!l.getAllowedModes().contains(TransportMode.car)) {
             NetworkUtils.setType(l, null);
+            linkMatches.put(l.getId(), feature.getID());
         }
         else {
             String type;
@@ -239,7 +297,11 @@ public class AddTypesToNetwork {
     }
 
 
-
+    /**
+     * build the mapping of link types needed for the emissions contrib.
+     * @param link_type_map
+     * @return
+     */
     private List<String> buildHBEFAlinkTypes(Map<String, Integer> link_type_map) {
 
         List<String> linkTypeString = link_type_map.entrySet().stream()
@@ -255,6 +317,11 @@ public class AddTypesToNetwork {
 
     }
 
+    /**
+     * From a network with types, build an index of the types, sorted by name.
+     * @param network A network with OSM types already added
+     * @return
+     */
     private Map<String, Integer> buildRoadTypeIndex(Network network) {
         AtomicInteger i = new AtomicInteger();
         Map<String, Integer> link_types = network.getLinks().values().stream()
@@ -274,6 +341,10 @@ public class AddTypesToNetwork {
         return link_types;
     }
 
+    /**
+     * replace the network types with the ID's generated in @buildRoadTypeIndex
+     * @param network A network with OSM types already added
+     */
     private void replaceNetworkTypesWithId(Network network) {
         //set link types to the id of the type
         for (Link l : network.getLinks().values()) {
@@ -286,6 +357,15 @@ public class AddTypesToNetwork {
     }
 
 
+    /**
+     * Get the HBEFA type for a road type, based on the @hbfeaMap.
+     * If the speed is greater than 90kmh, the road is classified as National.
+     * All types are classified as Urban. This could be updated if suitable information is available.
+     * Unclassified types are assigned a type based on their MATSim freespeed.
+     * @param hbfeaMap
+     * @param road_type
+     * @return
+     */
     public String getHEBFAtype(Map<String, HBFEA>  hbfeaMap, String road_type) {
 
 
@@ -293,7 +373,7 @@ public class AddTypesToNetwork {
         String type = ss[0];
         int speed = Integer.parseInt(ss[1]);
 
-        //TODO: make distinction between national and city, based on shapefile, or regions.
+        //TODO: could make distinction between national and city, based on shapefile, or regions.
 
         if (type.equals("unclassified")) {
             if (speed <= 50) type = "living";
