@@ -17,6 +17,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.apache.log4j.Logger;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
@@ -43,19 +44,20 @@ public class MATSimNetwork2graphhopper implements DataReader  {
     protected final Graph graph;
     private Network network;
     private Map<Coord, Integer> nodes = new HashMap<>();
-    private CH1903LV03PlustoWGS84 convertor = new CH1903LV03PlustoWGS84();
+    private final CoordinateTransformation convertor;
 
-    public MATSimNetwork2graphhopper(GraphHopperStorage ghStorage, Network network) {
+    public MATSimNetwork2graphhopper(GraphHopperStorage ghStorage, Network network, CoordinateTransformation mATSim2WGS84Conversion) {
         this.graphStorage = ghStorage;
         this.graph = ghStorage;
         this.nodeAccess = graph.getNodeAccess();
         this.encodingManager = ghStorage.getEncodingManager();
+        this.convertor = mATSim2WGS84Conversion;
 
         this.network = network;
 
     }
 
-    public static interface EdgeAddedListener {
+    public interface EdgeAddedListener {
         void edgeAdded(ReaderWay way, EdgeIteratorState edge);
     }
 

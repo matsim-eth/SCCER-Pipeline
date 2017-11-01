@@ -18,6 +18,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
 import java.io.IOException;
@@ -63,7 +64,8 @@ public class TestMATSimGraphhopper {
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // import matsim network data
-        GraphHopper hopper = new GraphHopperMATSim(scenario.getNetwork());
+        GraphHopper hopper = new GraphHopperMATSim(scenario.getNetwork(), new CH1903LV03PlustoWGS84());
+        
         hopper.setStoreOnFlush(false)
                 .setGraphHopperLocation(new File("").getAbsolutePath())
                 .setDataReaderFile(config.network().getInputFile());
