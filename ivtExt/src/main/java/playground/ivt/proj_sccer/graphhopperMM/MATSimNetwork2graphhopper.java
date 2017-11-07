@@ -1,4 +1,4 @@
-package playground.ivt.proj_sccer.traces2matsim;
+package playground.ivt.proj_sccer.graphhopperMM;
 
 
 import com.graphhopper.reader.DataReader;
@@ -18,7 +18,6 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.apache.log4j.Logger;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
 import java.util.*;
