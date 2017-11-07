@@ -1,6 +1,7 @@
 package playground.ivt.proj_sccer.graphhopperMM;
 
 
+import com.graphhopper.GraphHopper;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
@@ -9,17 +10,25 @@ import com.graphhopper.routing.AlgorithmOptions;
 import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
+import com.graphhopper.routing.util.FlagEncoder;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
+import com.graphhopper.util.EdgeIterator;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
+import com.vividsolutions.jts.geom.Coordinate;
+import com.vividsolutions.jts.geom.GeometryFactory;
+import com.vividsolutions.jts.geom.LineString;
+import com.vividsolutions.jts.linearref.LengthIndexedLine;
+import org.geotools.geometry.jts.JTSFactoryFinder;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.api.core.v01.network.Node;
 import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Route;
@@ -97,13 +106,13 @@ public class TestMATSimGraphhopper {
 
 // do the actual matching, get the GPX entries from a file or via stream
 
-        Leg l = gpxToLeg(mapMatching, readGPX("C:\\Users\\molloyj\\Documents\\SCCER\\gps\\ch_lvs_plus_test.csv"));
+  //      Leg l = gpxToLeg(mapMatching, readGPX("C:\\Users\\molloyj\\Documents\\SCCER\\gps\\ch_lvs_plus_test.csv"));
 
-        String result = l.getRoute().getRouteDescription();
+   //     String result = l.getRoute().getRouteDescription();
 
-        System.out.println(result);
+    //    System.out.println(result);
 
-        assert(result.equals("48194,48196,48198,48200,4380,4304,4306,4308,4385,26150,4353,4355,4378,4382,4371,4359,4361,26016,26018,26020,116099,116102,116104,231524,128028,128046,60693,60694,60698,287323,287325,170734,170742,11179,11181,11183,161619,11161,11163,11165,60696,11169,289958,115429,115430,60701,11199,158800,158810,11191,11193,4387,143565,143561,143563,8896,8898,8900,8902,86351,11173,11175,11177,11157,11159,103826,103828,103830,103832,103834,21375,21381,204999,205000,205001,204997,86297,86300,86302,86293,86295,86353,281430,281432,281434,281436,281439,11201,11203,23534,23536,23652,23654,23656,23659,263162,263163,18777,34000,37874,37872,277442,277444,277446,290366,290369,290371,290373,205846,125258,125260,205887,125256,22665,24590,24593,24595,24982,24984,24986,24988,87470,117501,82513,236601,236603,94211,82509,82511,25900,25902,25904,25906,25908,47157,47159,47161,47163,47165,47167,47169,47171,47173,47175,47177,47179,25916,25910,25912,25914,51283,51287,51289,51297,271361,271363,37045,37047,37049,37027,37029,37031,37033,37035,37037,37039,37041,37043,86562,271377,271365,271379,26553,26555,105552,181778,294693,294696,60721,60722,60723,60725,60728,47369,47370,93795,93791,93796,157032,86564,161735,161732,95466,134296,117099,168840,168842,77585,77581,77583,143439,143435,115467,151577,48216,143429,143431,143433,38926,38924,143443,143437,168838,231832,234092,234094,105901,105903,77295,105829,61062,61060,61058,61056,146927,104321,104297,235428,235426,235424,235422,235420,165673,61822,61824,14153,14130,61820,14156,142947,142944,142942,142940,142938,142936,142933,16567,249502,151584,93799,249500,111264,249498,111255,111253,111251,111249,111247,111282,111272,111261,111259,151576,111204,111202,111274,111206,142989,142987,142985,142983,111280,111262,111257,151574,151572,151570,151568,151566,23191,23189,23181,71517,71515,71512,71510,223336,223337,111235,111233,111231,111229,71508,111219,111217,111215,111213,111211,111209,111284,197851,151563,151580,197861,197859,197857,197849,87598,87596,87594,87592,128602,87719,87612,87618,165676,87601,287298,87714,87604,87670,87610,124698,124699,99147,99148,124701,124718,124696,151685,151686,151687,45483,45484,140007,140008,281265,281274,115740,115742,115743,97541,45482,63458,98194,261492,261491,45092,45093,45094,45095,45096,145532,145534,91348,276512,228177,228178,228179,228180,228181,228182,228183,228184,228185,228186,228187,49355,49357,49358,49359,49360,148676,148675,88805,101842,101843,101839,101840,88803,259940,259941,248612,248613,302136,302112,168835,48223,48224,28673,28675,28676,259851,259850,168869,168870,168871,168872,157695,157974,168849,145870,161733,117098,117100,86566,157033,161741,161742,117102,93495,93496,168850,157693,158014,158015,168833,168834,68520,259852,28678,28674,168836,88806,302137,302114,302115,259942,248611,213533,125678,125679,213553,168848,168847,125677,181264,250574,250575,250569,250570,250571,250572,247303,125652,125651,36226,125680,259941,248612,248613,302136,302112,168835,48223,48224,28673,28675,28676,259851,259850,168869,168870,168871,168872,157695,157772,93497,175111,117092,117093,117094,117095,157688,117103,117104,117105,117106,157547,157767,157732,157534,157535,157536,157537,158162,109530,158086,157538,158065,20514,20523,158078,20540,20541,20544,282724,123166,123168,61495,61492,61493,49334,158146,157623,157800,48225,48226,48228,48229,20288,20289,193906,193907,157581,157825,157826,157712,158026,158034,19995,19993,19994,19792,19793,19794,157639,157783,157690,157789,43986,43996,158087,158006,158007,157558,157790,43138,43147,43148,157612,157743,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,19920,19909,19910,19911,19912,100160,100165,100161,100183,4302,4300,236086,4338,4340,4342,128369,4331,4333,4310,4312,4314\n"));
+    //    assert(result.equals("48194,48196,48198,48200,4380,4304,4306,4308,4385,26150,4353,4355,4378,4382,4371,4359,4361,26016,26018,26020,116099,116102,116104,231524,128028,128046,60693,60694,60698,287323,287325,170734,170742,11179,11181,11183,161619,11161,11163,11165,60696,11169,289958,115429,115430,60701,11199,158800,158810,11191,11193,4387,143565,143561,143563,8896,8898,8900,8902,86351,11173,11175,11177,11157,11159,103826,103828,103830,103832,103834,21375,21381,204999,205000,205001,204997,86297,86300,86302,86293,86295,86353,281430,281432,281434,281436,281439,11201,11203,23534,23536,23652,23654,23656,23659,263162,263163,18777,34000,37874,37872,277442,277444,277446,290366,290369,290371,290373,205846,125258,125260,205887,125256,22665,24590,24593,24595,24982,24984,24986,24988,87470,117501,82513,236601,236603,94211,82509,82511,25900,25902,25904,25906,25908,47157,47159,47161,47163,47165,47167,47169,47171,47173,47175,47177,47179,25916,25910,25912,25914,51283,51287,51289,51297,271361,271363,37045,37047,37049,37027,37029,37031,37033,37035,37037,37039,37041,37043,86562,271377,271365,271379,26553,26555,105552,181778,294693,294696,60721,60722,60723,60725,60728,47369,47370,93795,93791,93796,157032,86564,161735,161732,95466,134296,117099,168840,168842,77585,77581,77583,143439,143435,115467,151577,48216,143429,143431,143433,38926,38924,143443,143437,168838,231832,234092,234094,105901,105903,77295,105829,61062,61060,61058,61056,146927,104321,104297,235428,235426,235424,235422,235420,165673,61822,61824,14153,14130,61820,14156,142947,142944,142942,142940,142938,142936,142933,16567,249502,151584,93799,249500,111264,249498,111255,111253,111251,111249,111247,111282,111272,111261,111259,151576,111204,111202,111274,111206,142989,142987,142985,142983,111280,111262,111257,151574,151572,151570,151568,151566,23191,23189,23181,71517,71515,71512,71510,223336,223337,111235,111233,111231,111229,71508,111219,111217,111215,111213,111211,111209,111284,197851,151563,151580,197861,197859,197857,197849,87598,87596,87594,87592,128602,87719,87612,87618,165676,87601,287298,87714,87604,87670,87610,124698,124699,99147,99148,124701,124718,124696,151685,151686,151687,45483,45484,140007,140008,281265,281274,115740,115742,115743,97541,45482,63458,98194,261492,261491,45092,45093,45094,45095,45096,145532,145534,91348,276512,228177,228178,228179,228180,228181,228182,228183,228184,228185,228186,228187,49355,49357,49358,49359,49360,148676,148675,88805,101842,101843,101839,101840,88803,259940,259941,248612,248613,302136,302112,168835,48223,48224,28673,28675,28676,259851,259850,168869,168870,168871,168872,157695,157974,168849,145870,161733,117098,117100,86566,157033,161741,161742,117102,93495,93496,168850,157693,158014,158015,168833,168834,68520,259852,28678,28674,168836,88806,302137,302114,302115,259942,248611,213533,125678,125679,213553,168848,168847,125677,181264,250574,250575,250569,250570,250571,250572,247303,125652,125651,36226,125680,259941,248612,248613,302136,302112,168835,48223,48224,28673,28675,28676,259851,259850,168869,168870,168871,168872,157695,157772,93497,175111,117092,117093,117094,117095,157688,117103,117104,117105,117106,157547,157767,157732,157534,157535,157536,157537,158162,109530,158086,157538,158065,20514,20523,158078,20540,20541,20544,282724,123166,123168,61495,61492,61493,49334,158146,157623,157800,48225,48226,48228,48229,20288,20289,193906,193907,157581,157825,157826,157712,158026,158034,19995,19993,19994,19792,19793,19794,157639,157783,157690,157789,43986,43996,158087,158006,158007,157558,157790,43138,43147,43148,157612,157743,20014,20015,20016,20017,20018,20019,20020,20021,20022,20023,20024,20025,20026,19920,19909,19910,19911,19912,100160,100165,100161,100183,4302,4300,236086,4338,4340,4342,128369,4331,4333,4310,4312,4314\n"));
     }
 
 
@@ -124,146 +133,6 @@ public class TestMATSimGraphhopper {
             throw new RuntimeException(ex);
         }
         return entries;
-    }
-
-    public static List<Double> gpxToNodeTimes(MapMatching mapMatching, List<GPXEntry> entries) {
-
-        MatchResult mr = mapMatching.doWork(entries);
-
-        Path path = mapMatching.calcPath(mr);
-
-        ListIterator<EdgeMatch> matchedededges = mr.getEdgeMatches().listIterator();
-        ListIterator<EdgeIteratorState> pathEdges = path.calcEdges().listIterator();
-
-        //list of nodes (x1... xk)
-        ArrayList<Integer> nodes = new ArrayList<>();
-        //list of t0... tn
-        ArrayList<Double> times = new ArrayList<>(); //we should have |edges|-1 nodes
-        ArrayList<Double> T_list = new ArrayList<>(path.getEdgeCount()-1); //we should have |edges|-1 nodes
-
-
-        EdgeMatch e = matchedededges.next();
-        EdgeIteratorState p = pathEdges.next();
-        GPXExtension x0 = e.getGpxExtensions().get(e.getGpxExtensions().size()-1);//get node from e
-        GPXExtension x1 = null;
-        //can assume that first edge has a point. add end(e) to n_list, time(x, end(e)) to t_list
-        nodes.add(p.getAdjNode());
-        times.add(timeBetween(x0, p));
-        while (pathEdges.hasNext()) {
-
-            //catch edges up to path
-            if (e.getEdgeState().getEdge() != p.getEdge()) {
-                p = pathEdges.next();
-                //add p to t_list, end node to n_list
-                times.add(timeBetween(p));
-                nodes.add(p.getAdjNode());
-            } else if (!hasPoints(e)) {
-                //add p to t_list, node to n_list
-                times.add(timeBetween(p));
-                nodes.add(p.getAdjNode());
-
-                e = matchedededges.next();
-            } else { //finish off this section!
-                x1 = e.getGpxExtensions().get(0);//first point of e
-                //add time(start(e), x1) to t_list)
-                times.add(timeBetween(p, x1));
-
-                //T_list = t_list / sum(t_list) * (x1 - x0)
-                double real_time = timeBetween(x0, x1);
-                double map_time = times.stream().reduce(0.0, Double::sum);
-                //cum_sum T_list
-                List<Double> tt = times.stream().map( x -> (x * real_time) / map_time ).collect(Collectors.toList());
-                T_list.addAll(tt);
-                //assign to nodes
-                //TODO
-
-                //clear t_list, n_list
-                times.clear();
-                nodes.clear();
-
-                x0 = e.getGpxExtensions().get(e.getGpxExtensions().size()-1); //last point of e
-                //add time(x0, end(e)) to t_list
-                //add end(e) to n_list
-                nodes.add(p.getAdjNode());
-                times.add(timeBetween(x0, p));
-
-                e = matchedededges.next();
-                p = pathEdges.next();
-
-            }
-
-            //add start(p) to the n_list
-
-            //add t(p) to the t_list
-
-
-            //now we are caught up, can finish the previous segment
-            if (t_list.size() > 0) {
-                //T_list = t_list / sum(t_list) * time(x_0, x_1)
-            }
-            //get first point of e
-            //get distance of start(e) -> x
-            //add this distance to
-
-            //get last point of e
-
-            e = matchedededges.next();
-            p = pathEdges.next();
-
-
-        }
-
-        EdgeIteratorState currEdge = null;
-        while (routedEdges.hasNext()) {
-            EdgeIteratorState prevEdge = currEdge;
-            currEdge = routedEdges.next();
-
-            Id<Link> link = toLink(currEdge);
-
-            if (currEdge.getEdgeState())
-                //get first and last timestamp & location on each link
-
-                //what if the link has no GPXextensions?
-
-                //routing problem with constraints - need to make sure person was at certain point at certain time
-                //allocate travel time porportional to free flow travel time - could also use Hellinga 2008 - Decomposing travel times
-
-                if (!edgeIter.hasPrevious()) { //first link
-                    linkEnterTime = currEdge.getGpxExtensions().get(0).getEntry().getTime();
-                    events.add(new PersonDepartureEvent(linkEnterTime, agentId, link, TransportMode.car));
-                    events.add(new LinkLeaveEvent(0, vehicleId, link));
-                }
-                else if (edgeIter.hasNext()) { //middle links
-                    events.add(new LinkEnterEvent(0, vehicleId, link));
-                    events.add(new LinkLeaveEvent(0, vehicleId, link));
-                } else { //last link
-                    events.add(new LinkEnterEvent(0, vehicleId, link));
-                    events.add(new PersonArrivalEvent(0, agentId, link, TransportMode.car));
-                }
-            linkEnterTime = linkLeaveTime;
-        }
-
-
-
-
-
-        //calcPath creates The whole route, but removes the GPS entries.
-        //we need to record the entry and exit times for each link, 1 - 1 matching from the Path to the edgeMatchs, which are converted into (edge -> (start, end)
-
-// return GraphHopper edges with all associated GPX entries
-        List<EdgeMatch> matches = mr.getEdgeMatches();
-// now do something with the edges like storing the edgeIds or doing fetchWayGeometry etc
-        String result = mr.getEdgeMatches()
-                .stream()
-                .map(e -> e.getEdgeState().getEdge())
-                .map(String::valueOf)
-                .collect(Collectors.joining(","));
-
-        //TODO: make sure the GPS time is converted to MATSim time
-        double departureTime = entries.get(0).getTime();
-        double travelTime = entries.get(entries.size()-1).getTime() - departureTime;
-        Leg leg = createLeg(null, mr, departureTime, travelTime);
-        return leg;
     }
 
 
@@ -313,7 +182,7 @@ public class TestMATSimGraphhopper {
 
             Id<Link> link = toLink(currEdge);
 
-            if (currEdge.getEdgeState())
+            if (true)
                 //get first and last timestamp & location on each link
 
                 //what if the link has no GPXextensions?
