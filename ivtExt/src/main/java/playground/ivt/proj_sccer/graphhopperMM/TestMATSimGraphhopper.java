@@ -1,29 +1,27 @@
 package playground.ivt.proj_sccer.graphhopperMM;
 
 
-import com.google.protobuf.TextFormat;
-import com.graphhopper.GraphHopper;
 import com.graphhopper.matching.EdgeMatch;
-import com.graphhopper.matching.GPXFile;
+import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.matching.MatchResult;
 import com.graphhopper.routing.AlgorithmOptions;
+import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
+import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
+import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Leg;
-import org.matsim.api.core.v01.population.PopulationFactory;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Route;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -31,7 +29,11 @@ import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.population.routes.RouteUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
+import org.matsim.vehicles.Vehicle;
+import org.opengis.referencing.operation.TransformException;
+import sun.plugin2.message.transport.Transport;
 
+import javax.swing.*;
 import java.io.File;
 import java.io.IOException;
 
@@ -39,7 +41,7 @@ import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
-import java.util.List;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -54,6 +56,7 @@ public class TestMATSimGraphhopper {
     final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
     final private static SimpleDateFormat formatter = new SimpleDateFormat("HH:mm:ss");
+    private static Weighting weighting;
 
     private static GPXEntry readGPSLine(String l) {
 
@@ -87,7 +90,8 @@ public class TestMATSimGraphhopper {
 
 // create MapMatching object, can and should be shared accross threads
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
-        Weighting weighting = new FastestWeighting(encoder);
+
+        weighting = new FastestWeighting(encoder);
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
         MapMatching mapMatching = new MapMatching(hopper, algoOptions);
 
@@ -122,9 +126,129 @@ public class TestMATSimGraphhopper {
         return entries;
     }
 
-    public static Leg gpxToLeg(MapMatching mapMatching, List<GPXEntry> entries) {
+    public static List<Double> gpxToNodeTimes(MapMatching mapMatching, List<GPXEntry> entries) {
 
         MatchResult mr = mapMatching.doWork(entries);
+
+        Path path = mapMatching.calcPath(mr);
+
+        ListIterator<EdgeMatch> matchedededges = mr.getEdgeMatches().listIterator();
+        ListIterator<EdgeIteratorState> pathEdges = path.calcEdges().listIterator();
+
+        //list of nodes (x1... xk)
+        ArrayList<Integer> nodes = new ArrayList<>();
+        //list of t0... tn
+        ArrayList<Double> times = new ArrayList<>(); //we should have |edges|-1 nodes
+        ArrayList<Double> T_list = new ArrayList<>(path.getEdgeCount()-1); //we should have |edges|-1 nodes
+
+
+        EdgeMatch e = matchedededges.next();
+        EdgeIteratorState p = pathEdges.next();
+        GPXExtension x0 = e.getGpxExtensions().get(e.getGpxExtensions().size()-1);//get node from e
+        GPXExtension x1 = null;
+        //can assume that first edge has a point. add end(e) to n_list, time(x, end(e)) to t_list
+        nodes.add(p.getAdjNode());
+        times.add(timeBetween(x0, p));
+        while (pathEdges.hasNext()) {
+
+            //catch edges up to path
+            if (e.getEdgeState().getEdge() != p.getEdge()) {
+                p = pathEdges.next();
+                //add p to t_list, end node to n_list
+                times.add(timeBetween(p));
+                nodes.add(p.getAdjNode());
+            } else if (!hasPoints(e)) {
+                //add p to t_list, node to n_list
+                times.add(timeBetween(p));
+                nodes.add(p.getAdjNode());
+
+                e = matchedededges.next();
+            } else { //finish off this section!
+                x1 = e.getGpxExtensions().get(0);//first point of e
+                //add time(start(e), x1) to t_list)
+                times.add(timeBetween(p, x1));
+
+                //T_list = t_list / sum(t_list) * (x1 - x0)
+                double real_time = timeBetween(x0, x1);
+                double map_time = times.stream().reduce(0.0, Double::sum);
+                //cum_sum T_list
+                List<Double> tt = times.stream().map( x -> (x * real_time) / map_time ).collect(Collectors.toList());
+                T_list.addAll(tt);
+                //assign to nodes
+                //TODO
+
+                //clear t_list, n_list
+                times.clear();
+                nodes.clear();
+
+                x0 = e.getGpxExtensions().get(e.getGpxExtensions().size()-1); //last point of e
+                //add time(x0, end(e)) to t_list
+                //add end(e) to n_list
+                nodes.add(p.getAdjNode());
+                times.add(timeBetween(x0, p));
+
+                e = matchedededges.next();
+                p = pathEdges.next();
+
+            }
+
+            //add start(p) to the n_list
+
+            //add t(p) to the t_list
+
+
+            //now we are caught up, can finish the previous segment
+            if (t_list.size() > 0) {
+                //T_list = t_list / sum(t_list) * time(x_0, x_1)
+            }
+            //get first point of e
+            //get distance of start(e) -> x
+            //add this distance to
+
+            //get last point of e
+
+            e = matchedededges.next();
+            p = pathEdges.next();
+
+
+        }
+
+        EdgeIteratorState currEdge = null;
+        while (routedEdges.hasNext()) {
+            EdgeIteratorState prevEdge = currEdge;
+            currEdge = routedEdges.next();
+
+            Id<Link> link = toLink(currEdge);
+
+            if (currEdge.getEdgeState())
+                //get first and last timestamp & location on each link
+
+                //what if the link has no GPXextensions?
+
+                //routing problem with constraints - need to make sure person was at certain point at certain time
+                //allocate travel time porportional to free flow travel time - could also use Hellinga 2008 - Decomposing travel times
+
+                if (!edgeIter.hasPrevious()) { //first link
+                    linkEnterTime = currEdge.getGpxExtensions().get(0).getEntry().getTime();
+                    events.add(new PersonDepartureEvent(linkEnterTime, agentId, link, TransportMode.car));
+                    events.add(new LinkLeaveEvent(0, vehicleId, link));
+                }
+                else if (edgeIter.hasNext()) { //middle links
+                    events.add(new LinkEnterEvent(0, vehicleId, link));
+                    events.add(new LinkLeaveEvent(0, vehicleId, link));
+                } else { //last link
+                    events.add(new LinkEnterEvent(0, vehicleId, link));
+                    events.add(new PersonArrivalEvent(0, agentId, link, TransportMode.car));
+                }
+            linkEnterTime = linkLeaveTime;
+        }
+
+
+
+
+
+        //calcPath creates The whole route, but removes the GPS entries.
+        //we need to record the entry and exit times for each link, 1 - 1 matching from the Path to the edgeMatchs, which are converted into (edge -> (start, end)
 
 // return GraphHopper edges with all associated GPX entries
         List<EdgeMatch> matches = mr.getEdgeMatches();
@@ -163,25 +287,69 @@ public class TestMATSimGraphhopper {
 
     public static List<Event> gpsToEvents(Network network, MatchResult matchResult , double departureTime, double travelTime) {
         List<EdgeMatch> matches = matchResult.getEdgeMatches();
-        //TODO, we need to determine the link entrance time, which may not be the first GPS point 
+        //TODO, we need to determine the link entrance time, which may not be the first GPS point
         List<Id<Link>> links = matches
                 .stream()
-                .map( e -> {
-                    e.getEdgeState().
-
-                    e.getEdgeState().getEdge()
-                })
-                .map( e -> {
-                    e.
-                    Id::createLinkId
-                })
+                .map( e -> e.getEdgeState().getEdge())
+                .map( Id::createLinkId )
                 .collect(Collectors.toList());
 
-        links.stream().map(l -> new LinkEnterEvent(e))
+        Id<Person> agentId = null;
+        Id<Vehicle> vehicleId = null;
+        List<Event> events = new LinkedList<>();
 
-        return leg;
+        ListIterator<EdgeMatch> edgeIter = matches.listIterator();
+
+
+
+
+        EdgeMatch currEdge = null;
+        double linkEnterTime = 0;
+        double linkLeaveTime = 0;
+
+        while (edgeIter.hasNext()) {
+            EdgeMatch prevEdge = currEdge;
+            currEdge = edgeIter.next();
+
+            Id<Link> link = toLink(currEdge);
+
+            if (currEdge.getEdgeState())
+                //get first and last timestamp & location on each link
+
+                //what if the link has no GPXextensions?
+
+                //routing problem with constraints - need to make sure person was at certain point at certain time
+                //allocate travel time porportional to free flow travel time - could also use Hellinga 2008 - Decomposing travel times
+
+            if (!edgeIter.hasPrevious()) { //first link
+                linkEnterTime = currEdge.getGpxExtensions().get(0).getEntry().getTime();
+                events.add(new PersonDepartureEvent(linkEnterTime, agentId, link, TransportMode.car));
+                events.add(new LinkLeaveEvent(0, vehicleId, link));
+            }
+            else if (edgeIter.hasNext()) { //middle links
+                events.add(new LinkEnterEvent(0, vehicleId, link));
+                events.add(new LinkLeaveEvent(0, vehicleId, link));
+            } else { //last link
+                events.add(new LinkEnterEvent(0, vehicleId, link));
+                events.add(new PersonArrivalEvent(0, agentId, link, TransportMode.car));
+            }
+            linkEnterTime = linkLeaveTime;
+        }
+
+        //need to calculate link enter and exit times - is there a particular way to do this?
+
+        //calculate each link entry and exit time, then scale them up or down
+        //point before link start, and point after, take average.
+        //Paper section - GPS trace matching to a simplified network?
+
+        //links.stream().map(l -> new LinkEnterEvent(e))
+
+        return null;
     }
 
+    private static Id<Link> toLink(EdgeMatch edge) {
+        return Id.createLinkId(edge.getEdgeState().getEdge());
+    }
 
 
 }
