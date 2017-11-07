@@ -38,6 +38,14 @@ public class GHtoEvents {
         public NodeArrivalStruct(Node node, double time) {
             this.node = node; this.time = time;
         }
+
+        @Override
+        public String toString() {
+            return "{" +
+                    "node=" + node.getId() +
+                    ", time=" + time +
+                    '}';
+        }
     }
 
 
@@ -93,12 +101,13 @@ public class GHtoEvents {
         double aTime = timeBetween(x0, e.getLink());
         double map_time = 0 + aTime;
         nodes.add(new NodeArrivalStruct(e.getToNode(), aTime));
-        T_list.add(nodes.get(0));
 
         while (pathEdges.hasNext()) {
+            e = pathEdges.next();
+
             Node endNode = e.getToNode();
 
-            if (e.isEmpty()) {
+            if(e.isEmpty()) {
                 //add p to t_list, node to n_list
                 aTime = timeBetween(e.getLink());
                 map_time += aTime;
@@ -115,24 +124,31 @@ public class GHtoEvents {
                 final double lastNodeTime = x0.getEntry().getTime();
                 //cum_sum T_list
                 final double final_map_time = map_time;
-                nodes.forEach(n -> n.time = lastNodeTime + (n.time * (real_time / final_map_time)));
-                T_list.addAll(nodes.subList(1, nodes.size()-1)); //don't add the first node.
+
+                nodes.forEach(n -> n.time = n.time * (real_time / final_map_time));
+                addStartValue(nodes, lastNodeTime); //recursion for fun!
+
+                T_list.addAll(nodes);
                 nodes.clear();
 
                 x0 = e.getGpxExtensions().get(e.getGpxExtensions().size() - 1); //last point of e
-                //add time(x0, end(e)) to t_list
-                //add end(e) to n_list
+
                 aTime = timeBetween(x0, e.getLink());
                 map_time = aTime;
                 nodes.add(new NodeArrivalStruct(e.getToNode(), aTime));
 
             }
 
-            e = pathEdges.next();
-
         }
         return T_list;
 
+    }
+
+    private void addStartValue(List<NodeArrivalStruct> nodes, double lastNodeTime) {
+        if (!nodes.isEmpty()) {
+            nodes.get(0).time += lastNodeTime;
+            addStartValue(nodes.subList(1, nodes.size()), nodes.get(0).time);
+        }
     }
 /*
     public List<Event> timedEdgesToEvents(Iterator<EdgeMatch> routedEdges) {
