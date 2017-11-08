@@ -94,6 +94,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
         // read the OSM id, should never be null
         long id = Integer.parseInt(String.valueOf(road.getId()));
+        edge.setName(String.valueOf(road.getId()));
 
         // Make a temporary ReaderWay object with the properties we need so we
         // can use the enocding manager
@@ -113,10 +114,10 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
         // read maxspeed filtering for 0 which for Geofabrik shapefiles appears
         // to correspond to no tag
-        Object maxSpeed = road.getFreespeed();
+        double maxSpeed = road.getFreespeed();
 
-        if (maxSpeed != null && !maxSpeed.toString().trim().equals("0")) {
-            way.setTag("maxspeed", maxSpeed.toString());
+        if (maxSpeed > 0) {
+            way.setTag("maxspeed", Double.toString(maxSpeed));
         }
 
         // read oneway
@@ -168,7 +169,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
             Coord wgs_from_node = convertor.transform(x.getCoord());
 
             int nodeId = nodes.computeIfAbsent(wgs_from_node, a -> i.getAndIncrement());
-            nodeAccess.setNode(nodeId, wgs_from_node.getY(), wgs_from_node.getX());
+            nodeAccess.setNode(nodeId, wgs_from_node.getX(), wgs_from_node.getY());
         });
 
     }

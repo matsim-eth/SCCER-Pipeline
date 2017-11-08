@@ -10,6 +10,7 @@ import com.graphhopper.util.GPXEntry;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.linearref.LengthIndexedLine;
+import org.apache.commons.math3.util.Pair;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -17,6 +18,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 
 import java.util.*;
+import java.util.stream.Collectors;
 
 /**
  * Created by molloyj on 07.11.2017.
@@ -31,44 +33,53 @@ public class GHtoEvents {
         this.matcher = matcher;
     }
 
-    protected class NodeArrivalStruct {
-        public double time;
-        public final Node node;
-
-        public NodeArrivalStruct(Node node, double time) {
-            this.node = node; this.time = time;
-        }
-
-        @Override
-        public String toString() {
-            return "{" +
-                    "node=" + node.getId() +
-                    ", time=" + time +
-                    '}';
-        }
-    }
-
-
-    public List<NodeArrivalStruct> interpolateMMresult(List<GPXEntry> entries) {
+    public List<NodeTimingStruct> interpolateMMresult(List<GPXEntry> entries) {
 
         MatchResult mr = matcher.doWork(entries);
-        List<LinkGPXStruct> edges = createPath(mr);
+        List<LinkGPXStruct> edges = convertToMatsimLinks(mr.getEdgeMatches());
+        //List<LinkGPXStruct> path = convertToMatsimLinks(matcher.calcPath(mr).calcEdges());
+        //List<LinkGPXStruct> mergedPath = mergePaths(edges, path);
         return gpxToNodeTimes(edges);
     }
 
-    private List<LinkGPXStruct> createPath(MatchResult mr) {
+private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges) {
+        return edges.stream().map(e -> {
+            String edgeIndex = "";
+            List<GPXExtension> gpxList = Collections.emptyList();
+            if (e instanceof EdgeMatch) {
+                edgeIndex = ((EdgeMatch) e).getEdgeState().getName();
+                gpxList = ((EdgeMatch) e).getGpxExtensions();
+            } else if (e instanceof EdgeIteratorState) {
+                edgeIndex = ((EdgeIteratorState) e).getName();
+            } else {
+                throw new RuntimeException("Only EdgeMatch and EdgeStateIterator Supported");
+            }
+            Link link = network.getLinks().get(Id.createLinkId(edgeIndex));
+            return new LinkGPXStruct(link, gpxList);
+        }).collect(Collectors.toList());
+    }
 
-        Path path = matcher.calcPath(mr);
-        ListIterator<EdgeMatch> matchedededges = mr.getEdgeMatches().listIterator();
-        ListIterator<EdgeIteratorState> pathEdges = path.calcEdges().listIterator();
-        EdgeMatch e = matchedededges.next();
-        EdgeIteratorState p = pathEdges.next();
+    /**
+     * A function to merge the GPX points from the edges, and the path, based on the edge ids
+     * This is acutally not needed, as the path puts in the interpolated edges as well, but kept for reference
+     * @param edgesWgpx edges from the MatchResult
+     * @param path edges that have been routed, to fill in gaps.
+     * @return
+     */
+    private List<LinkGPXStruct> mergePaths(List<LinkGPXStruct> edgesWgpx, List<LinkGPXStruct> path) {
+        assert edgesWgpx.size() <= path.size() :  "There needs to be equal or less edges than the path";
+        ListIterator<LinkGPXStruct> pathEdges = path.listIterator();
+        ListIterator<LinkGPXStruct> matchedededges = edgesWgpx.listIterator();
 
         List<LinkGPXStruct> edges = new ArrayList<>();
 
+        LinkGPXStruct e = matchedededges.next();
+        LinkGPXStruct p = pathEdges.next();
+
         while (pathEdges.hasNext()) {
-            Link link = network.getLinks().get(Id.createLinkId(p.getEdge()));
-            if (p.getEdge() != e.getEdgeState().getEdge()) {
+            Link link = p.getLink();
+
+            if (p.getLink() != e.getLink()) {
                 LinkGPXStruct emptyMatch = new LinkGPXStruct(link, Collections.emptyList());
                 edges.add(emptyMatch);
             } else if (e.isEmpty()) {
@@ -85,13 +96,13 @@ public class GHtoEvents {
         return edges;
     }
 
-    public List<NodeArrivalStruct> gpxToNodeTimes(List<LinkGPXStruct> path) {
+    public List<NodeTimingStruct> gpxToNodeTimes(List<LinkGPXStruct> path) {
         ListIterator<LinkGPXStruct> pathEdges = path.listIterator();
 
         //list of nodes (x1... xk)
-        ArrayList<NodeArrivalStruct> nodes = new ArrayList<>();
+        ArrayList<NodeTimingStruct> nodes = new ArrayList<>();
         //list of t0... tn
-        ArrayList<NodeArrivalStruct> T_list = new ArrayList<>(path.size() - 1); //we should have |edges|-1 nodes
+        ArrayList<NodeTimingStruct> T_list = new ArrayList<>(path.size() - 1); //we should have |edges|-1 nodes
 
 
         LinkGPXStruct e = pathEdges.next();
@@ -100,7 +111,7 @@ public class GHtoEvents {
         //can assume that first edge has a point. add end(e) to n_list, time(x, end(e)) to t_list
         double aTime = timeBetween(x0, e.getLink());
         double map_time = 0 + aTime;
-        nodes.add(new NodeArrivalStruct(e.getToNode(), aTime));
+        nodes.add(new NodeTimingStruct(e.getToNode(), aTime));
 
         while (pathEdges.hasNext()) {
             e = pathEdges.next();
@@ -111,7 +122,7 @@ public class GHtoEvents {
                 //add p to t_list, node to n_list
                 aTime = timeBetween(e.getLink());
                 map_time += aTime;
-                nodes.add(new NodeArrivalStruct(endNode, aTime));
+                nodes.add(new NodeTimingStruct(endNode, aTime));
             } else { //finish off this section!
                 x1 = e.getGpxExtensions().get(0);//first point of e
                 //add time(start(e), x1) to t_list)
@@ -135,7 +146,7 @@ public class GHtoEvents {
 
                 aTime = timeBetween(x0, e.getLink());
                 map_time = aTime;
-                nodes.add(new NodeArrivalStruct(e.getToNode(), aTime));
+                nodes.add(new NodeTimingStruct(e.getToNode(), aTime));
 
             }
 
@@ -144,7 +155,7 @@ public class GHtoEvents {
 
     }
 
-    private void addStartValue(List<NodeArrivalStruct> nodes, double lastNodeTime) {
+    private void addStartValue(List<NodeTimingStruct> nodes, double lastNodeTime) {
         if (!nodes.isEmpty()) {
             nodes.get(0).time += lastNodeTime;
             addStartValue(nodes.subList(1, nodes.size()), nodes.get(0).time);
@@ -189,7 +200,7 @@ public class GHtoEvents {
 
 
     private Coordinate coordToCoordinate(Coord coord) {
-        return new Coordinate(coord.getY(), coord.getX());
+        return new Coordinate(coord.getX(), coord.getY());
     }
 
     private double timeBetween(GPXExtension x0, GPXExtension x1) {
@@ -205,9 +216,10 @@ public class GHtoEvents {
         Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
 
         LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
-        double distance_x0_e = ls.getEndIndex() - ls.project(x0_coord);
+        double distance_covered = (ls.getEndIndex() - ls.project(x0_coord)) / ls.getEndIndex();
+        double distance = distance_covered * l.getLength();
         double speed_e = l.getFreespeed();
-        double time_e = distance_x0_e / speed_e;
+        double time_e = distance / speed_e;
 
         return time_e;
     }
@@ -221,9 +233,10 @@ public class GHtoEvents {
         Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
 
         LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
-        double distance_x0_e = ls.project(x1_coord) - ls.getStartIndex();
+        double distance_covered = (ls.project(x1_coord) - ls.getStartIndex()) / ls.getEndIndex();
+        double distance = distance_covered * l.getLength();
         double speed_e = l.getFreespeed();;
-        double time_e = distance_x0_e / speed_e;
+        double time_e = distance / speed_e;
 
         return time_e;
     }
