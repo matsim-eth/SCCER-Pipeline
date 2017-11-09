@@ -4,18 +4,19 @@ import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.matching.MatchResult;
-import com.graphhopper.routing.Path;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
 import com.vividsolutions.jts.linearref.LengthIndexedLine;
-import org.apache.commons.math3.util.Pair;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.network.Node;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.vehicles.Vehicle;
 
 import java.util.*;
 import java.util.stream.Collectors;
@@ -33,16 +34,16 @@ public class GHtoEvents {
         this.matcher = matcher;
     }
 
-    public List<NodeTimingStruct> interpolateMMresult(List<GPXEntry> entries) {
+    public List<LinkGPXStruct> interpolateMMresult(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId) {
 
         MatchResult mr = matcher.doWork(entries);
-        List<LinkGPXStruct> edges = convertToMatsimLinks(mr.getEdgeMatches());
+        List<LinkGPXStruct> edges = convertToMatsimLinks(mr.getEdgeMatches(), personId, vehicleId);
         //List<LinkGPXStruct> path = convertToMatsimLinks(matcher.calcPath(mr).calcEdges());
         //List<LinkGPXStruct> mergedPath = mergePaths(edges, path);
-        return gpxToNodeTimes(edges);
+        return calculateNodeVisitTimes(edges);
     }
 
-private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges) {
+private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges, Id<Person> personId, Id<Vehicle> vehicleId) {
         return edges.stream().map(e -> {
             String edgeIndex = "";
             List<GPXExtension> gpxList = Collections.emptyList();
@@ -55,54 +56,17 @@ private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges) {
                 throw new RuntimeException("Only EdgeMatch and EdgeStateIterator Supported");
             }
             Link link = network.getLinks().get(Id.createLinkId(edgeIndex));
-            return new LinkGPXStruct(link, gpxList);
+            return new LinkGPXStruct(link, gpxList, personId, vehicleId);
         }).collect(Collectors.toList());
     }
 
-    /**
-     * A function to merge the GPX points from the edges, and the path, based on the edge ids
-     * This is acutally not needed, as the path puts in the interpolated edges as well, but kept for reference
-     * @param edgesWgpx edges from the MatchResult
-     * @param path edges that have been routed, to fill in gaps.
-     * @return
-     */
-    private List<LinkGPXStruct> mergePaths(List<LinkGPXStruct> edgesWgpx, List<LinkGPXStruct> path) {
-        assert edgesWgpx.size() <= path.size() :  "There needs to be equal or less edges than the path";
-        ListIterator<LinkGPXStruct> pathEdges = path.listIterator();
-        ListIterator<LinkGPXStruct> matchedededges = edgesWgpx.listIterator();
-
-        List<LinkGPXStruct> edges = new ArrayList<>();
-
-        LinkGPXStruct e = matchedededges.next();
-        LinkGPXStruct p = pathEdges.next();
-
-        while (pathEdges.hasNext()) {
-            Link link = p.getLink();
-
-            if (p.getLink() != e.getLink()) {
-                LinkGPXStruct emptyMatch = new LinkGPXStruct(link, Collections.emptyList());
-                edges.add(emptyMatch);
-            } else if (e.isEmpty()) {
-                LinkGPXStruct emptyMatch = new LinkGPXStruct(link, Collections.emptyList());
-                edges.add(emptyMatch);
-                e = matchedededges.next();
-            } else { //e == p
-                LinkGPXStruct match = new LinkGPXStruct(link, e.getGpxExtensions());
-                edges.add(match);
-                e = matchedededges.next();
-            }
-            p = pathEdges.next();
-        }
-        return edges;
-    }
-
-    public List<NodeTimingStruct> gpxToNodeTimes(List<LinkGPXStruct> path) {
+    public List<LinkGPXStruct> calculateNodeVisitTimes(List<LinkGPXStruct> path) {
         ListIterator<LinkGPXStruct> pathEdges = path.listIterator();
 
         //list of nodes (x1... xk)
-        ArrayList<NodeTimingStruct> nodes = new ArrayList<>();
-        //list of t0... tn
-        ArrayList<NodeTimingStruct> T_list = new ArrayList<>(path.size() - 1); //we should have |edges|-1 nodes
+        ArrayList<LinkGPXStruct> currLinks = new ArrayList<>();
+           //list of t0... tn
+     //   ArrayList<LinkGPXStruct> T_list = new ArrayList<>(path.size() - 1); //we should have |edges|-1 nodes
 
 
         LinkGPXStruct e = pathEdges.next();
@@ -111,92 +75,76 @@ private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges) {
         //can assume that first edge has a point. add end(e) to n_list, time(x, end(e)) to t_list
         double aTime = timeBetween(x0, e.getLink());
         double map_time = 0 + aTime;
-        nodes.add(new NodeTimingStruct(e.getToNode(), aTime));
+    //    nodes.add(new NodeTimingStruct(e.getToNode(), aTime));
+        e.exitTime = aTime;
+        e.entryTime = x0.getEntry().getTime();
+
+        LinkGPXStruct firstLink = e;
 
         while (pathEdges.hasNext()) {
+            LinkGPXStruct prevE = e;
             e = pathEdges.next();
-
-            Node endNode = e.getToNode();
+            e.entryTime = prevE.exitTime;
+            currLinks.add(e);
 
             if(e.isEmpty()) {
                 //add p to t_list, node to n_list
                 aTime = timeBetween(e.getLink());
                 map_time += aTime;
-                nodes.add(new NodeTimingStruct(endNode, aTime));
-            } else { //finish off this section!
+                e.exitTime = e.entryTime + aTime;
+            } else { //finish off this section of road!
                 x1 = e.getGpxExtensions().get(0);//first point of e
-                //add time(start(e), x1) to t_list)
                 aTime = timeBetween(e.getLink(), x1);
-                map_time += aTime;
 
-                //T_list = t_list / sum(t_list) * (x1 - x0)
+                map_time += aTime;
 
                 final double real_time = timeBetween(x0, x1);
                 final double lastNodeTime = x0.getEntry().getTime();
-                //cum_sum T_list
-                final double final_map_time = map_time;
+                 double final_map_time = map_time;
 
-                nodes.forEach(n -> n.time = n.time * (real_time / final_map_time));
-                addStartValue(nodes, lastNodeTime); //recursion for fun!
+                firstLink.exitTime = lastNodeTime + firstLink.exitTime*(real_time / final_map_time);
 
-                T_list.addAll(nodes);
-                nodes.clear();
+                currLinks.forEach(n -> n.scaleTimesBy(lastNodeTime, real_time / final_map_time));
 
                 x0 = e.getGpxExtensions().get(e.getGpxExtensions().size() - 1); //last point of e
 
                 aTime = timeBetween(x0, e.getLink());
-                map_time = aTime;
-                nodes.add(new NodeTimingStruct(e.getToNode(), aTime));
 
+                if (pathEdges.hasNext()) e.exitTime = aTime;
+                else e.exitTime = x1.getEntry().getTime();
+
+                map_time = aTime;
+                firstLink = e;
+                currLinks.clear();
             }
 
+
         }
-        return T_list;
+        return path;
 
     }
 
-    private void addStartValue(List<NodeTimingStruct> nodes, double lastNodeTime) {
-        if (!nodes.isEmpty()) {
-            nodes.get(0).time += lastNodeTime;
-            addStartValue(nodes.subList(1, nodes.size()), nodes.get(0).time);
-        }
-    }
-/*
-    public List<Event> timedEdgesToEvents(Iterator<EdgeMatch> routedEdges) {
-        EdgeMatch currEdge = null;
+
+    public List<Event> LinkGPXToEvents(Iterator<LinkGPXStruct> x) {
         List<Event> events = new ArrayList<>();
-        while (routedEdges.hasNext()) {
-            EdgeMatch prevEdge = currEdge;
-            currEdge = routedEdges.next();
+        LinkGPXStruct firstE = x.next();
+        events.add(new PersonDepartureEvent(firstE.entryTime, firstE.personId, firstE.getLink().getId(), TransportMode.car));
+        events.add(new LinkLeaveEvent(firstE.exitTime, firstE.vehicleId, firstE.getLink().getId()));
 
-            Id<Link> link = toLink(currEdge);
-
-            if (currEdge.getEdgeState() == null)
-                //get first and last timestamp & location on each link
-
-                //what if the link has no GPXextensions?
-
-                //routing problem with constraints - need to make sure person was at certain point at certain time
-                //allocate travel time porportional to free flow travel time - could also use Hellinga 2008 - Decomposing travel times
-
-                if (!edgeIter.hasPrevious()) { //first link
-                    linkEnterTime = currEdge.getGpxExtensions().get(0).getEntry().getTime();
-                    events.add(new PersonDepartureEvent(linkEnterTime, agentId, link, TransportMode.car));
-                    events.add(new LinkLeaveEvent(0, vehicleId, link));
-                }
-                else if (edgeIter.hasNext()) { //middle links
-                    events.add(new LinkEnterEvent(0, vehicleId, link));
-                    events.add(new LinkLeaveEvent(0, vehicleId, link));
-                } else { //last link
-                    events.add(new LinkEnterEvent(0, vehicleId, link));
-                    events.add(new PersonArrivalEvent(0, agentId, link, TransportMode.car));
-                }
-            linkEnterTime = linkLeaveTime;
+        while (x.hasNext()) {
+            LinkGPXStruct curr = x.next();
+            if (x.hasNext()) {
+                events.add(new LinkEnterEvent(curr.entryTime, firstE.vehicleId, firstE.getLink().getId()));
+                events.add(new LinkLeaveEvent(curr.exitTime, firstE.vehicleId, firstE.getLink().getId()));
+            } else { //process final element
+                events.add(new LinkEnterEvent(curr.entryTime, firstE.vehicleId, firstE.getLink().getId()));
+                events.add(new PersonArrivalEvent(curr.exitTime, firstE.personId, firstE.getLink().getId(), TransportMode.car));
+            }
         }
 
         return events;
     }
-*/
+
 
 
     private Coordinate coordToCoordinate(Coord coord) {

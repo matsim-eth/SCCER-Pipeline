@@ -1,7 +1,5 @@
 package playground.ivt.proj_sccer.graphhopperMM;
 
-import com.graphhopper.GraphHopper;
-import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.routing.AlgorithmOptions;
@@ -9,22 +7,26 @@ import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
-import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
 import org.junit.Before;
 import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.events.Event;
+import org.matsim.api.core.v01.events.LinkEnterEvent;
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
+import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.MutableScenario;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 import org.matsim.core.utils.geometry.transformations.IdentityTransformation;
+import org.matsim.vehicles.Vehicle;
 
 import java.io.File;
 import java.util.ArrayList;
@@ -33,6 +35,7 @@ import java.util.Collections;
 import java.util.List;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertTrue;
 
 /**
  * Created by molloyj on 07.11.2017.
@@ -52,6 +55,9 @@ public class NodeTimingTest {
     double step = 0.002;
     double end_y = start_y + 2*step;
     private MapMatching mapMatching;
+
+    Id<Person> personId = Id.createPersonId(1);
+    Id<Vehicle> vehicleId = Id.createVehicleId(1);
 
     @Before
     public void setUpTestNetwork() {
@@ -110,14 +116,14 @@ public class NodeTimingTest {
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 1.5*step, start_y, 2000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1)));
-        path.add(new LinkGPXStruct(l2, Arrays.asList(g2)));
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2, Arrays.asList(g2), personId, vehicleId));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
-        List<NodeTimingStruct> res = gHtoEvents.gpxToNodeTimes(path);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
-        assert (int) res.get(0).time == 1500;
+        assert (int) res.get(0).exitTime == 1500;
     }
 
 
@@ -130,17 +136,17 @@ public class NodeTimingTest {
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1)));
-        path.add(new LinkGPXStruct(l2, Collections.emptyList()));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2)));
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
-        List<NodeTimingStruct> res = gHtoEvents.gpxToNodeTimes(path);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
-        assert(res.size() == 2);
-        assert Math.round(res.get(0).time) == 1500;
-        assert Math.round(res.get(1).time) == 2500;
+        assertEquals(res.size(),3);
+        assertEquals(Math.round(res.get(0).exitTime),1500);
+        assertEquals(Math.round(res.get(1).exitTime),2500);
     }
 
     @Test
@@ -153,21 +159,28 @@ public class NodeTimingTest {
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
         GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1)));
-        path.add(new LinkGPXStruct(l2, Collections.emptyList()));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2)));
-        path.add(new LinkGPXStruct(l4, Collections.emptyList()));
-        path.add(new LinkGPXStruct(l5, Arrays.asList(g3)));
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
+        path.add(new LinkGPXStruct(l4, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l5, Arrays.asList(g3), personId, vehicleId));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
-        List<NodeTimingStruct> res = gHtoEvents.gpxToNodeTimes(path);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
-        assert(res.size() == 4);
-        assert Math.round(res.get(0).time) == 1500;
-        assert Math.round(res.get(1).time) == 2500;
-        assert Math.round(res.get(2).time) == 3500;
-        assert Math.round(res.get(3).time) == 4500;
+        assertEquals(res.size(),5);
+        assertEquals(Math.round(res.get(0).entryTime),g1.getEntry().getTime());
+        assertEquals(Math.round(res.get(0).exitTime),1500);
+        assertEquals(Math.round(res.get(1).exitTime),2500);
+        assertEquals(Math.round(res.get(2).exitTime),3500);
+        assertEquals(Math.round(res.get(3).exitTime),4500);
+
+        for (int i=0; i < res.size()-1; i++) {
+            assertEquals(res.get(i).exitTime, res.get(i+1).entryTime, 0.00001);
+        }
+
+        assertEquals(Math.round(res.get(res.size()-1).exitTime),g3.getEntry().getTime());
     }
 
 
@@ -180,17 +193,17 @@ public class NodeTimingTest {
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1)));
-        path.add(new LinkGPXStruct(l2a, Collections.emptyList()));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2)));
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2a, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
-        List<NodeTimingStruct> res = gHtoEvents.gpxToNodeTimes(path);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
-        assert(res.size() == 2);
-        assert Math.round(res.get(0).time) == 1500;
-        assert Math.round(res.get(1).time) == 3500;
+        assertEquals(res.size(),3);
+        assertEquals( Math.round(res.get(0).exitTime),1500);
+        assertEquals( Math.round(res.get(1).exitTime),3500);
     }
 
 
@@ -204,17 +217,17 @@ public class NodeTimingTest {
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
 
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1)));
-        path.add(new LinkGPXStruct(l2b, Collections.emptyList()));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2)));
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2b, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
-        List<NodeTimingStruct> res = gHtoEvents.gpxToNodeTimes(path);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
-        assert(res.size() == 2);
-        assert Math.round(res.get(0).time) == 1500;
-        assert Math.round(res.get(1).time) == 3500;
+        assertEquals(res.size(), 3);
+        assertEquals(Math.round(res.get(0).exitTime),1500);
+        assertEquals(Math.round(res.get(1).exitTime),3500);
     }
 
     @Test
@@ -226,13 +239,13 @@ public class NodeTimingTest {
                 new GPXEntry(start_x + 0.5*step, start_y, 1000),
                 new GPXEntry( start_x + 4.5*step, start_y,4000)
         );
-        List<NodeTimingStruct> timings = gHtoEvents.interpolateMMresult(entries);
+        List<LinkGPXStruct> timings = gHtoEvents.interpolateMMresult(entries, personId, vehicleId);
         System.out.println(timings);
 
-        assertEquals (timings.size(), 3);
-        assertEquals (Math.round(timings.get(0).time), 1536);
-        assertEquals (Math.round(timings.get(1).time), 2607);
-        assertEquals (Math.round(timings.get(2).time), 3679);
+        assertEquals (timings.size(), 4);
+        assertEquals (Math.round(timings.get(0).exitTime), 1536);
+        assertEquals (Math.round(timings.get(1).exitTime), 2607);
+        assertEquals (Math.round(timings.get(2).exitTime), 3679);
 
     }
 
@@ -245,13 +258,50 @@ public class NodeTimingTest {
                 new GPXEntry(start_x + 0.5*step, start_y, 1000),
                 new GPXEntry(start_x + 2.5*step, start_y, 3000)
         );
-        List<NodeTimingStruct> timings = gHtoEvents.interpolateMMresult(entries);
+        List<LinkGPXStruct> timings = gHtoEvents.interpolateMMresult(entries, personId, vehicleId);
         System.out.println(timings);
 
-        assertEquals (timings.size(), 2);
-        assertEquals (Math.round(timings.get(0).time), 1500);
-        assertEquals (Math.round(timings.get(1).time), 2500);
+        assertEquals (timings.size(), 3);
+        assertEquals (Math.round(timings.get(0).exitTime), 1500);
+        assertEquals (Math.round(timings.get(1).exitTime), 2500);
 
+    }
+
+    @Test
+    public void testLinkGPXtoEvents() {
+        List<LinkGPXStruct> path = new ArrayList<>();
+
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
+        GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
+
+        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
+        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
+        path.add(new LinkGPXStruct(l4, Collections.emptyList(), personId, vehicleId));
+        path.add(new LinkGPXStruct(l5, Arrays.asList(g3), personId, vehicleId));
+
+        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
+        List<Event> events = gHtoEvents.LinkGPXToEvents(res.iterator());
+
+        assertEquals(events.size(),10);
+
+        assertEquals(events.get(0).getTime(),g1.getEntry().getTime(), 0.001);
+        assertTrue(events.get(0) instanceof PersonDepartureEvent);
+
+        assertEquals(events.get(1).getTime(), 1500, 0.0001);
+        assertEquals(events.get(3).getTime(), 2500, 0.0001);
+        assertEquals(events.get(5).getTime(), 3500, 0.0001);
+        assertEquals(events.get(7).getTime(), 4500, 0.0001);
+
+        for (int i=1; i < events.size()-1;  i+=2) {
+            assertEquals(events.get(i).getTime(), events.get(i+1).getTime(), 0.0001);
+            assertTrue(events.get(i) instanceof LinkLeaveEvent);
+            assertTrue(events.get(i+1) instanceof LinkEnterEvent);
+        }
+
+        assertEquals(Math.round(res.get(res.size()-1).exitTime),g3.getEntry().getTime());
     }
 
 
