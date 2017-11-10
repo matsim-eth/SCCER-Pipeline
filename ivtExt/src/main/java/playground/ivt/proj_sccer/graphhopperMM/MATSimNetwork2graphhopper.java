@@ -62,6 +62,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
     @Override
     public void readGraph() {
+        //TODO: make it so that the network is read in here instead of earlier
         graphStorage.create(1000);
         processJunctions();
         processRoads();

@@ -33,6 +33,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -247,6 +248,8 @@ public class NodeTimingTest {
         assertEquals (Math.round(timings.get(1).exitTime), 2607);
         assertEquals (Math.round(timings.get(2).exitTime), 3679);
 
+
+        List<String> ids = timings.stream().map(t -> t.getLink().getId().toString()).collect(Collectors.toList());
     }
 
     @Test
