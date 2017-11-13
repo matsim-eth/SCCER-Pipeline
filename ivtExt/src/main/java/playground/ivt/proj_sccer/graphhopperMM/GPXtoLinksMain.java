@@ -23,6 +23,7 @@ import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public class GPXtoLinksMain {
 
@@ -60,6 +61,9 @@ public class GPXtoLinksMain {
         //TODO: handle a whole folder or file structure
         List<GPXEntry> gpxEntries = null;
         List<LinkGPXStruct> events = gHtoEvents.interpolateMMresult(gpxEntries, null, null);
+
+        List<String> ids = events.stream().map(t -> t.getLink().getId().toString()).collect(Collectors.toList());
+
 
 
     }

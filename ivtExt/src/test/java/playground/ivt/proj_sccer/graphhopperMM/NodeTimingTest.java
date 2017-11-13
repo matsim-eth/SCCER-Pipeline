@@ -249,7 +249,6 @@ public class NodeTimingTest {
         assertEquals (Math.round(timings.get(2).exitTime), 3679);
 
 
-        List<String> ids = timings.stream().map(t -> t.getLink().getId().toString()).collect(Collectors.toList());
     }
 
     @Test

@@ -6,6 +6,7 @@ import com.graphhopper.storage.GraphHopperStorage;
 import contrib.baseline.lib.NetworkUtils;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
+import org.matsim.core.utils.geometry.transformations.IdentityTransformation;
 
 import java.io.File;
 
@@ -25,6 +26,12 @@ public class GraphHopperMATSim extends GraphHopper {
         this.setDataReaderFile(networkFilename);
     }
 
+    public GraphHopperMATSim(Network network, IdentityTransformation matsim2wgs) {
+        this.network =  network;
+        this.matsim2wgs = matsim2wgs;
+        this.setDataReaderFile("/");
+    }
+
     @Override
     protected DataReader createReader(GraphHopperStorage ghStorage) {
         MATSimNetwork2graphhopper reader = new MATSimNetwork2graphhopper(ghStorage, network, matsim2wgs );
@@ -35,7 +42,7 @@ public class GraphHopperMATSim extends GraphHopper {
     }
 
     public GraphHopper test() {
-        return new GraphHopperMATSim(null, null)
+        return new GraphHopperMATSim((Network) null, null)
                 .setGraphHopperLocation(new File("").getAbsolutePath())
                 .importOrLoad();
     }
