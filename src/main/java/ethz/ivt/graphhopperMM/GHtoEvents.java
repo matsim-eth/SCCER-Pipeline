@@ -43,7 +43,23 @@ public class GHtoEvents {
         return calculateNodeVisitTimes(edges);
     }
 
-private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges, Id<Person> personId, Id<Vehicle> vehicleId) {
+
+    public List<Link> routeWithoutTimings (List<GPXEntry> points) {
+        MatchResult mr = matcher.doWork(points);
+        List<Link> links = mr.getEdgeMatches()
+                .stream()
+                .map(
+                        em -> network.getLinks().get(Id.createLinkId(em.getEdgeState().getName()))
+                ).collect(Collectors.toList());
+        return links;
+    }
+
+    public String getEdgeString(List<Link> links) {
+        return links.stream().map(l -> l.getId().toString()).collect(Collectors.joining(","));
+    }
+
+
+    private <T> List<LinkGPXStruct> convertToMatsimLinks(List<T> edges, Id<Person> personId, Id<Vehicle> vehicleId) {
         return edges.stream().map(e -> {
             String edgeIndex = "";
             List<GPXExtension> gpxList = Collections.emptyList();

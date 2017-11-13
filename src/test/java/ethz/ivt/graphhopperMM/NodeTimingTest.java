@@ -2,6 +2,7 @@ package ethz.ivt.graphhopperMM;
 
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
+import com.graphhopper.matching.MatchResult;
 import com.graphhopper.routing.AlgorithmOptions;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
@@ -33,6 +34,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -303,6 +305,24 @@ public class NodeTimingTest {
         }
 
         assertEquals(Math.round(res.get(res.size()-1).exitTime),g3.getEntry().getTime());
+    }
+
+    @Test
+    public void testWholeNoTiming() {
+
+        GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
+
+        List<GPXEntry> entries = Arrays.asList(
+                new GPXEntry(start_x + 0.5*step, start_y, 0),
+                new GPXEntry( start_x + 4.5*step, start_y,0)
+        );
+        List<Link> links = gHtoEvents.routeWithoutTimings(entries);
+        //MatchResult mr = mapMatching.doWork(entries);
+        //String edges = mr.getEdgeMatches().stream().map(em -> em.getEdgeState().getName()).collect(Collectors.joining(","));
+        String edges = gHtoEvents.getEdgeString(links);
+
+        assertEquals ("1,2,3,4",edges);
+        
     }
 
 
