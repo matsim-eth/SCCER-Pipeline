@@ -3,10 +3,12 @@ package ethz.ivt.graphhopperMM;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.reader.DataReader;
 import com.graphhopper.storage.GraphHopperStorage;
-import contrib.baseline.lib.NetworkUtils;
+import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.network.io.MatsimNetworkReader;
+import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.core.utils.geometry.transformations.IdentityTransformation;
 
 import java.io.File;
 
@@ -21,12 +23,12 @@ public class GraphHopperMATSim extends GraphHopper {
 
     public GraphHopperMATSim(String networkFilename, CoordinateTransformation matsim2wgs) {
 
-        this.network =  NetworkUtils.readNetwork(networkFilename);
+        this.network =  readNetwork(networkFilename);
         this.matsim2wgs = matsim2wgs;
         this.setDataReaderFile(networkFilename);
     }
 
-    public GraphHopperMATSim(Network network, IdentityTransformation matsim2wgs) {
+    public GraphHopperMATSim(Network network, CoordinateTransformation matsim2wgs) {
         this.network =  network;
         this.matsim2wgs = matsim2wgs;
         this.setDataReaderFile("/");
@@ -46,6 +48,12 @@ public class GraphHopperMATSim extends GraphHopper {
                 .setGraphHopperLocation(new File("").getAbsolutePath())
                 .importOrLoad();
     }
+    public static Network readNetwork(String path2Network) {
+        Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
+        new MatsimNetworkReader(scenario.getNetwork()).readFile(path2Network);
+        return scenario.getNetwork();
+    }
+
 
 
 

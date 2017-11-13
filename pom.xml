@@ -1,11 +1,27 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.matsim</groupId>
-  <artifactId>matsim-mapmatching</artifactId>
+	<artifactId>matsim-mapmatching</artifactId>
+	<version>0.1</version>
   <name>Mapmatching for MATSim</name>
-
+	<build>
+		<plugins>
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-compiler-plugin</artifactId>
+				<configuration>
+					<source>1.8</source>
+					<target>1.8</target>
+				</configuration>
+			</plugin>
+		</plugins>
+	</build>
+	<properties>
+		<maven.compiler.source>1.8</maven.compiler.source>
+		<maven.compiler.target>1.8</maven.compiler.target>
+		<java.version>1.8</java.version>
+	</properties>
   <dependencies>
-
   	<dependency>
   		<groupId>org.apache.commons</groupId>
   		<artifactId>commons-math</artifactId>
@@ -16,20 +32,10 @@
 		  <artifactId>commons-io</artifactId>
 		  <version>2.4</version>
 	  </dependency>
-  	<dependency>
-  		<groupId>org.matsim.contrib</groupId>
-  		<artifactId>locationchoice</artifactId>
-  		<version>0.10.0-SNAPSHOT</version>
-  	</dependency>
 	  <dependency>
-		  <groupId>org.matsim.contrib</groupId>
-		  <artifactId>socnetsim</artifactId>
+		  <groupId>org.matsim</groupId>
+		  <artifactId>matsim</artifactId>
 		  <version>0.10.0-SNAPSHOT</version>
-	  </dependency>
-	  <dependency>
-	  	<groupId>org.matsim.contrib</groupId>
-	  	<artifactId>parking</artifactId>
-	  	<version>0.10.0-SNAPSHOT</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.geotools</groupId>
@@ -113,8 +119,6 @@
 		  <artifactId>commons-cli</artifactId>
 		  <version>1.4</version>
 	  </dependency>
-
-
   </dependencies>
 
 	<repositories>
@@ -134,26 +138,4 @@
 		</repository>
 	</repositories>
 
-
-	<build>
-		<plugins>
-			<plugin>
-				<groupId>org.apache.maven.plugins</groupId>
-				<artifactId>maven-jar-plugin</artifactId>
-				<version>2.3.1</version>
-				<executions>
-					<execution>
-						<goals>
-							<goal>test-jar</goal>
-						</goals>
-						<!--
-                        <configuration>
-                            <skip>${skipTestJar}</skip>
-                        </configuration>
-                        -->
-					</execution>
-				</executions>
-			</plugin>
-		</plugins>
-	</build>
 </project>

@@ -13,7 +13,6 @@ import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
-import contrib.baseline.lib.NetworkUtils;
 import org.apache.commons.cli.*;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.network.Network;
@@ -53,7 +52,7 @@ public class GPXtoLinksMain {
             throw new IllegalArgumentException("Invalid option for output type");
         }
 
-        Network network = NetworkUtils.readNetwork(networkFileName);
+        Network network = GraphHopperMATSim.readNetwork(networkFileName);
         GraphHopperMATSim hopper = buildGraphHopper(networkFileName, new CH1903LV03PlustoWGS84());
         MapMatching mapMatcher = createMapMatching(hopper);
         GHtoEvents gHtoEvents = new GHtoEvents(mapMatcher, network);
