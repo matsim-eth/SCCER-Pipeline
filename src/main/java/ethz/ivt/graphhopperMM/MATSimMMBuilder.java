@@ -14,20 +14,17 @@ import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
 import org.apache.commons.cli.*;
-import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.util.List;
-import java.util.stream.Collectors;
 
-public class GPXtoLinksMain {
+public class MATSimMMBuilder {
 
 
-    public void main(String[] args) throws FileNotFoundException {
+    public static void main(String[] args) throws FileNotFoundException {
         //arg 1 = network
         //arg 2 = gpx list
         //arg 3 = output format
@@ -48,22 +45,25 @@ public class GPXtoLinksMain {
             //outputter = new EventsWriter(outputFilename);
         } else if (outputFormat.equals("-asLinkIds")) {
             //outputter = new LinkIdWriter(outputFilename);
+        } else if (outputFormat.equals("-noTimings")) {
+            //outputter = new LinkIdWriter(outputFilename);
         } else {
             throw new IllegalArgumentException("Invalid option for output type");
         }
 
-        Network network = GraphHopperMATSim.readNetwork(networkFileName);
-        GraphHopperMATSim hopper = buildGraphHopper(networkFileName, new CH1903LV03PlustoWGS84());
-        MapMatching mapMatcher = createMapMatching(hopper);
-        GHtoEvents gHtoEvents = new GHtoEvents(mapMatcher, network);
+        GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFileName, new CH1903LV03PlustoWGS84());
 
         //TODO: handle a whole folder or file structure
         List<GPXEntry> gpxEntries = null;
-        List<LinkGPXStruct> events = gHtoEvents.interpolateMMresult(gpxEntries, null, null);
+        //List<LinkGPXStruct> events = gHtoEvents.mapMatchWithTravelTimes(gpxEntries, null, null);
+        String edgeString = gHtoEvents.getEdgeString(gHtoEvents.networkRouteWithoutTravelTimes(gpxEntries));
 
-        List<String> ids = events.stream().map(t -> t.getLink().getId().toString()).collect(Collectors.toList());
+    }
 
-
+    public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans) {
+        GraphHopperMATSim hopper = buildGraphHopper(networkFilename, trans);
+        MapMatching mapMatcher = createMapMatching(hopper);
+        return new GHtoEvents(mapMatcher, hopper.network);
 
     }
 

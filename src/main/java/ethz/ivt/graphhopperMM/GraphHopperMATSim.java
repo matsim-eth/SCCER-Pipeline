@@ -18,7 +18,7 @@ import java.io.File;
  */
 public class GraphHopperMATSim extends GraphHopper {
 
-    Network network;
+    final Network network;
     CoordinateTransformation matsim2wgs;
 
     public GraphHopperMATSim(String networkFilename, CoordinateTransformation matsim2wgs) {

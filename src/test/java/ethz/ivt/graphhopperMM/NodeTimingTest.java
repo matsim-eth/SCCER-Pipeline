@@ -1,15 +1,14 @@
 package ethz.ivt.graphhopperMM;
 
+import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
-import com.graphhopper.matching.MatchResult;
 import com.graphhopper.routing.AlgorithmOptions;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
-import com.graphhopper.util.GPXEntry;
-import com.graphhopper.util.Parameters;
+import com.graphhopper.util.*;
 import org.junit.Before;
 import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
@@ -34,7 +33,6 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
-import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
@@ -113,13 +111,13 @@ public class NodeTimingTest {
     @Test
     public void testNodeTiming1() {
 
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 1.5*step, start_y, 2000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2, Arrays.asList(g2), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2, Arrays.asList(g2)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
@@ -133,14 +131,14 @@ public class NodeTimingTest {
     public void testNodeTiming2() {
 
         // x --- Node --- Node --- x
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
@@ -155,17 +153,17 @@ public class NodeTimingTest {
     public void testNodeTiming3() {
 
         // n1 -- X -- n2  -- n3 -- X -- n4 -- n5 -- X -- n6
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
         GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
-        path.add(new LinkGPXStruct(l4, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l5, Arrays.asList(g3), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
+        path.add(new MockEdgeMatch(l4, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l5, Arrays.asList(g3)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
@@ -190,14 +188,14 @@ public class NodeTimingTest {
     public void testNodeTiming4speed() {
 
         // x --- Node --(fast)- Node --- x
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2a, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2a, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
@@ -213,15 +211,15 @@ public class NodeTimingTest {
     public void testNodeTiming5distance() {
 
         // x --- Node --(fast)- Node --- x
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
 
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2b, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2b, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
@@ -241,7 +239,7 @@ public class NodeTimingTest {
                 new GPXEntry(start_x + 0.5*step, start_y, 1000),
                 new GPXEntry( start_x + 4.5*step, start_y,4000)
         );
-        List<LinkGPXStruct> timings = gHtoEvents.interpolateMMresult(entries, personId, vehicleId);
+        List<LinkGPXStruct> timings = gHtoEvents.mapMatchWithTravelTimes(entries);
         System.out.println(timings);
 
         assertEquals (timings.size(), 4);
@@ -261,7 +259,7 @@ public class NodeTimingTest {
                 new GPXEntry(start_x + 0.5*step, start_y, 1000),
                 new GPXEntry(start_x + 2.5*step, start_y, 3000)
         );
-        List<LinkGPXStruct> timings = gHtoEvents.interpolateMMresult(entries, personId, vehicleId);
+        List<LinkGPXStruct> timings = gHtoEvents.mapMatchWithTravelTimes(entries);
         System.out.println(timings);
 
         assertEquals (timings.size(), 3);
@@ -272,21 +270,21 @@ public class NodeTimingTest {
 
     @Test
     public void testLinkGPXtoEvents() {
-        List<LinkGPXStruct> path = new ArrayList<>();
+        List<EdgeMatch> path = new ArrayList<>();
 
         GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
         GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
         GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
 
-        path.add(new LinkGPXStruct(l1, Arrays.asList(g1), personId, vehicleId));
-        path.add(new LinkGPXStruct(l2, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l3, Arrays.asList(g2), personId, vehicleId));
-        path.add(new LinkGPXStruct(l4, Collections.emptyList(), personId, vehicleId));
-        path.add(new LinkGPXStruct(l5, Arrays.asList(g3), personId, vehicleId));
+        path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
+        path.add(new MockEdgeMatch(l2, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
+        path.add(new MockEdgeMatch(l4, Collections.emptyList()));
+        path.add(new MockEdgeMatch(l5, Arrays.asList(g3)));
 
         GHtoEvents gHtoEvents = new GHtoEvents(null, network);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
-        List<Event> events = gHtoEvents.LinkGPXToEvents(res.iterator());
+        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId);
 
         assertEquals(events.size(),10);
 
@@ -316,7 +314,7 @@ public class NodeTimingTest {
                 new GPXEntry(start_x + 0.5*step, start_y, 0),
                 new GPXEntry( start_x + 4.5*step, start_y,0)
         );
-        List<Link> links = gHtoEvents.routeWithoutTimings(entries);
+        List<Link> links = gHtoEvents.networkRouteWithoutTravelTimes(entries);
         //MatchResult mr = mapMatching.doWork(entries);
         //String edges = mr.getEdgeMatches().stream().map(em -> em.getEdgeState().getName()).collect(Collectors.joining(","));
         String edges = gHtoEvents.getEdgeString(links);

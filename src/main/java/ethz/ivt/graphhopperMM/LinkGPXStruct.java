@@ -17,14 +17,10 @@ public class LinkGPXStruct {
     private final Link link;
     public double entryTime;
     public double exitTime;
-    public final Id<Person> personId;
-    public final Id<Vehicle> vehicleId;
 
-    public LinkGPXStruct(Link link, List<GPXExtension> gpxExtensions, Id<Person> p , Id<Vehicle> v) {
+    public LinkGPXStruct(Link link, List<GPXExtension> gpxExtensions) {
         this.link = link;
         this.gpxExtensions = gpxExtensions;
-        this.personId = p;
-        this.vehicleId = v;
     }
 
     public List<GPXExtension> getGpxExtensions() {
