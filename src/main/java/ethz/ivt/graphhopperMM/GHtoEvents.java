@@ -1,5 +1,6 @@
 package ethz.ivt.graphhopperMM;
 
+import com.graphhopper.GraphHopper;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
@@ -27,10 +28,18 @@ public class GHtoEvents {
 
     private final MapMatching matcher;
     Network network;
+    private com.graphhopper.matching.MapMatching MapMatching;
+    private GraphHopper hopper;
 
     public GHtoEvents(MapMatching matcher, Network network) {
         this.network = network;
         this.matcher = matcher;
+    }
+
+    public GHtoEvents(GraphHopper hopper, MapMatching matcher, Network network) {
+        this.network = network;
+        this.matcher = matcher;
+        this.hopper = hopper;
     }
 
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
@@ -158,7 +167,7 @@ public class GHtoEvents {
     private double timeBetween(GPXExtension x0, Link l) {
         //get distance from x0 to e.
 
-        Coordinate x0_coord = new Coordinate(x0.getEntry().getLat(), x0.getEntry().getLon()); //TODO lon lat order?
+        Coordinate x0_coord = new Coordinate(x0.getEntry().getLon(), x0.getEntry().getLat()); //TODO lon lat order?
 
         Coordinate start_coord = coordToCoordinate(l.getFromNode().getCoord());
         Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
@@ -175,7 +184,7 @@ public class GHtoEvents {
     private double timeBetween(Link l, GPXExtension x1) {
         //get distance from x0 to e.
 
-        Coordinate x1_coord = new Coordinate(x1.getEntry().getLat(), x1.getEntry().getLon()); //TODO lon lat order?
+        Coordinate x1_coord = new Coordinate(x1.getEntry().getLon(), x1.getEntry().getLat()); //TODO lon lat order?
 
         Coordinate start_coord = coordToCoordinate(l.getFromNode().getCoord());
         Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
@@ -200,4 +209,11 @@ public class GHtoEvents {
         return coordToCoordinate(network.getNodes().get(Id.createNodeId(node)).getCoord());
     }
 
+    public MapMatching getMapper() {
+        return MapMatching;
+    }
+
+    public GraphHopper getHopper() {
+        return hopper;
+    }
 }

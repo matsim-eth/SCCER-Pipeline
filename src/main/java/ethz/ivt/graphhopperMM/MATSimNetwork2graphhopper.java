@@ -85,6 +85,9 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
                 //graph.edge(nodes.get(fromNode), nodes.get(toNode), l.getLength(), false);
             }
+            else {
+                log.info(l.getId());
+            }
         });
     }
 
@@ -170,7 +173,8 @@ public class MATSimNetwork2graphhopper implements DataReader  {
             Coord wgs_from_node = convertor.transform(x.getCoord());
 
             int nodeId = nodes.computeIfAbsent(wgs_from_node, a -> i.getAndIncrement());
-            nodeAccess.setNode(nodeId, wgs_from_node.getX(), wgs_from_node.getY());
+            nodeAccess.setNode(nodeId, wgs_from_node.getY(), wgs_from_node.getX());
+            //log.debug("[id=" + x.getId() + ",lat=" + wgs_from_node.getY() + ",lon=" + wgs_from_node.getX() + "]");
         });
 
     }

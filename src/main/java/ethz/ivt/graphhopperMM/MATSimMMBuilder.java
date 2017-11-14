@@ -52,7 +52,6 @@ public class MATSimMMBuilder {
         }
 
         GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFileName, new CH1903LV03PlustoWGS84());
-
         //TODO: handle a whole folder or file structure
         List<GPXEntry> gpxEntries = null;
         //List<LinkGPXStruct> events = gHtoEvents.mapMatchWithTravelTimes(gpxEntries, null, null);
@@ -63,7 +62,7 @@ public class MATSimMMBuilder {
     public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans) {
         GraphHopperMATSim hopper = buildGraphHopper(networkFilename, trans);
         MapMatching mapMatcher = createMapMatching(hopper);
-        return new GHtoEvents(mapMatcher, hopper.network);
+        return new GHtoEvents(hopper, mapMatcher, hopper.network);
 
     }
 

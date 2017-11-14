@@ -3,6 +3,7 @@ package ethz.ivt.graphhopperMM;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
+import com.graphhopper.matching.MatchResult;
 import com.graphhopper.routing.AlgorithmOptions;
 import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
@@ -113,8 +114,8 @@ public class NodeTimingTest {
 
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 1.5*step, start_y, 2000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step,  1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 1.5*step, 2000), null);
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2, Arrays.asList(g2)));
@@ -133,8 +134,8 @@ public class NodeTimingTest {
         // x --- Node --- Node --- x
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step,  1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 2.5*step,  3000), null);
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2, Collections.emptyList()));
@@ -155,9 +156,9 @@ public class NodeTimingTest {
         // n1 -- X -- n2  -- n3 -- X -- n4 -- n5 -- X -- n6
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
-        GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step,  1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 2.5*step,  3000), null);
+        GPXExtension g3 = new GPXExtension(new GPXEntry(end_y, start_x + 4.5*step, 5000), null);
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2, Collections.emptyList()));
@@ -190,8 +191,8 @@ public class NodeTimingTest {
         // x --- Node --(fast)- Node --- x
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step, 1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 2.5*step, 4000), null);
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2a, Collections.emptyList()));
@@ -213,8 +214,8 @@ public class NodeTimingTest {
         // x --- Node --(fast)- Node --- x
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 4000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step, 1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 2.5*step, 4000), null);
 
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
@@ -236,9 +237,13 @@ public class NodeTimingTest {
         GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
 
         List<GPXEntry> entries = Arrays.asList(
-                new GPXEntry(start_x + 0.5*step, start_y, 1000),
-                new GPXEntry( start_x + 4.5*step, start_y,4000)
+                new GPXEntry( start_y, start_x + 0.5*step,1000),
+                new GPXEntry( start_y,start_x + 4.5*step, 4000)
         );
+
+        MatchResult mr = mapMatching.doWork(entries);
+        assertEquals(4, mr.getEdgeMatches().size());
+
         List<LinkGPXStruct> timings = gHtoEvents.mapMatchWithTravelTimes(entries);
         System.out.println(timings);
 
@@ -256,8 +261,8 @@ public class NodeTimingTest {
         GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
 
         List<GPXEntry> entries = Arrays.asList(
-                new GPXEntry(start_x + 0.5*step, start_y, 1000),
-                new GPXEntry(start_x + 2.5*step, start_y, 3000)
+                new GPXEntry( start_y, start_x + 0.5*step,1000),
+                new GPXEntry(start_y,start_x + 2.5*step,  3000)
         );
         List<LinkGPXStruct> timings = gHtoEvents.mapMatchWithTravelTimes(entries);
         System.out.println(timings);
@@ -272,9 +277,9 @@ public class NodeTimingTest {
     public void testLinkGPXtoEvents() {
         List<EdgeMatch> path = new ArrayList<>();
 
-        GPXExtension g1 = new GPXExtension(new GPXEntry(start_x + 0.5*step, start_y, 1000), null);
-        GPXExtension g2 = new GPXExtension(new GPXEntry(start_x + 2.5*step, start_y, 3000), null);
-        GPXExtension g3 = new GPXExtension(new GPXEntry( start_x + 4.5*step, end_y,5000), null);
+        GPXExtension g1 = new GPXExtension(new GPXEntry(start_y, start_x + 0.5*step,  1000), null);
+        GPXExtension g2 = new GPXExtension(new GPXEntry(start_y, start_x + 2.5*step,  3000), null);
+        GPXExtension g3 = new GPXExtension(new GPXEntry(end_y,  start_x + 4.5*step, 5000), null);
 
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2, Collections.emptyList()));
@@ -311,8 +316,8 @@ public class NodeTimingTest {
         GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
 
         List<GPXEntry> entries = Arrays.asList(
-                new GPXEntry(start_x + 0.5*step, start_y, 0),
-                new GPXEntry( start_x + 4.5*step, start_y,0)
+                new GPXEntry(start_y, start_x + 0.5*step, 0),
+                new GPXEntry( start_y,start_x + 4.5*step, 0)
         );
         List<Link> links = gHtoEvents.networkRouteWithoutTravelTimes(entries);
         //MatchResult mr = mapMatching.doWork(entries);
