@@ -27,9 +27,9 @@ import org.matsim.vehicles.VehicleUtils;
 
 public class MeasureAverageScenarioExternalities {
 	private final static Logger log = Logger.getLogger(MeasureAverageScenarioExternalities.class);
-	
-    final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-    final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
+
+    final private static String RUN_FOLDER = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
+	final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml";
     final private static String EVENTS_FILE = "800.events.xml.gz";
     
     private Config config;

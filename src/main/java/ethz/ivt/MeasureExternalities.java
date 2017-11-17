@@ -34,11 +34,11 @@ import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 public class MeasureExternalities {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
 
+    final private static String RUN_FOLDER = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
     final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-    final private static String EVENTS_FILE = "800.events.xml.gz"; // "test.events.xml.gz"
-    final private static String RUN_FOLDER = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\";
-    
-    final private static String CONGESTION_FILE = "P:\\Projekte\\SCCER\\zurich_1pc\\scenario\\output\\average_caused_delay.csv";
+    final private static String EVENTS_FILE = "20171117_events.xml.gz"; // "test.events.xml.gz"
+
+    final private static String CONGESTION_FILE = "output\\average_caused_delay.csv";
 
     private Config config;
     private NoiseContext noiseContext;
@@ -75,12 +75,12 @@ public class MeasureExternalities {
         eventsManager.addHandler(congestionCounter);
         eventsManager.addHandler(emissionsCounter);
 
-        congestionCounter.loadCsvFile(CONGESTION_FILE);
+        congestionCounter.loadCsvFile(RUN_FOLDER + CONGESTION_FILE);
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "emissions.csv");
-        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "congestion.csv");
+        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117_emissions.csv");
+        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117_congestion.csv");
         
         emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
