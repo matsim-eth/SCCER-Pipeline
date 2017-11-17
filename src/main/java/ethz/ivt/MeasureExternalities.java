@@ -34,11 +34,10 @@ import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 public class MeasureExternalities {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
 
-    final private static String RUN_FOLDER = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
-    final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
-    final private static String EVENTS_FILE = "20171117_events.xml.gz"; // "test.events.xml.gz"
-
-    final private static String CONGESTION_FILE = "output\\average_caused_delay.csv";
+    private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
+    private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
+    private static String EVENTS_FILE; // = "20171117_events.xml.gz"; // "test.events.xml.gz"
+    private static String CONGESTION_FILE; // = "output\\average_caused_delay.csv";
 
     private Config config;
     private NoiseContext noiseContext;
@@ -46,6 +45,10 @@ public class MeasureExternalities {
     private EventsManagerImpl eventsManager;
 
     public static void main(String[] args) {
+        RUN_FOLDER = args[0];
+        CONFIG_FILE = args[1];
+        EVENTS_FILE = args[2];
+        CONGESTION_FILE = args[3];
         new MeasureExternalities().run();
     }
 

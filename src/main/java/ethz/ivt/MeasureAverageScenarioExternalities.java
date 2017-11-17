@@ -28,9 +28,9 @@ import org.matsim.vehicles.VehicleUtils;
 public class MeasureAverageScenarioExternalities {
 	private final static Logger log = Logger.getLogger(MeasureAverageScenarioExternalities.class);
 
-    final private static String RUN_FOLDER = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
-	final private static String CONFIG_FILE = "defaultIVTConfig_w_emissions.xml";
-    final private static String EVENTS_FILE = "800.events.xml.gz";
+    private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
+	private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml";
+    private static String EVENTS_FILE; // = "800.events.xml.gz";
     
     private Config config;
     private EventsManagerImpl eventsManager;
@@ -39,6 +39,9 @@ public class MeasureAverageScenarioExternalities {
     private NoiseConfigGroup noiseParameters;
 
     public static void main(String[] args) {
+        RUN_FOLDER = args[0];
+        CONFIG_FILE = args[1];
+        EVENTS_FILE = args[2];
         new MeasureAverageScenarioExternalities().run();
     }
     
