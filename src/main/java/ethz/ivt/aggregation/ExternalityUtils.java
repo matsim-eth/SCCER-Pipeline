@@ -1,5 +1,7 @@
 package ethz.ivt.aggregation;
 
+import java.net.URI;
+
 public class ExternalityUtils {
     private ExternalityUtils(){}
 
@@ -22,5 +24,10 @@ public class ExternalityUtils {
         if (timeAfterSimStart % binSize_s == 0.0) bin--;
 
         return bin;
+    }
+
+    public static String getDate(String eventFileName) {
+        // Assume event file name format "date_events.xml[.gz]"
+        return eventFileName.split("_")[0];
     }
 }
