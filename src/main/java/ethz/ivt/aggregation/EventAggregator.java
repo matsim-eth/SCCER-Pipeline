@@ -67,30 +67,30 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
         this.setMethodsExecuted = false;
     }
 
-    /*package*/ int getTimeBin(double time) {
-
-        double timeAfterSimStart = time;
-
-		/*
-		 * Agents who end their first activity before the simulation has started
-		 * will depart in the first time step.
-		 */
-        if (timeAfterSimStart <= 0.0) return 0;
-
-		/*
-		 * Calculate the bin for the given time. Increase it by one if the result
-		 * of the modulo operation is > 0. If it is 0, it is the last time value
-		 * which is part of the previous bin.
-		 */  
-        int bin = (int) (timeAfterSimStart / binSize_s);
-        if (timeAfterSimStart % binSize_s == 0.0) bin--;
-
-        return bin;
-    }
+//    /*package*/ int getTimeBin(double time) {
+//
+//        double timeAfterSimStart = time;
+//
+//		/*
+//		 * Agents who end their first activity before the simulation has started
+//		 * will depart in the first time step.
+//		 */
+//        if (timeAfterSimStart <= 0.0) return 0;
+//
+//		/*
+//		 * Calculate the bin for the given time. Increase it by one if the result
+//		 * of the modulo operation is > 0. If it is 0, it is the last time value
+//		 * which is part of the previous bin.
+//		 */
+//        int bin = (int) (timeAfterSimStart / binSize_s);
+//        if (timeAfterSimStart % binSize_s == 0.0) bin--;
+//
+//        return bin;
+//    }
 
     @Override
     public void handleEvent(LinkEnterEvent event) {
-        int bin = getTimeBin(event.getTime());
+        int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
 
         this.linkEnterEvents.add(event);
         //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[num_bins]);
@@ -103,7 +103,7 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
         if (event.getLegMode().equals(TransportMode.car.toString())) {
             this.personDepartureEvents.add(event);
 
-            int bin = getTimeBin(event.getTime());
+            int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
             //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[num_bins]);
             this.linkId2timeBin2enteringAndDepartingAgents.get(event.getLinkId())[bin]++; //TODO: do we have to consider PCU;s here?
 
