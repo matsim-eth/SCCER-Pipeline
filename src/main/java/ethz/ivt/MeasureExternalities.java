@@ -57,7 +57,7 @@ public class MeasureExternalities {
         int bin_size_s = 3600;
 
         config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
-        config.controler().setOutputDirectory(RUN_FOLDER + "output\\");
+        config.controler().setOutputDirectory(RUN_FOLDER + "output/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
         ((NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME)).setTimeBinSizeNoiseComputation(bin_size_s);
 
@@ -82,8 +82,8 @@ public class MeasureExternalities {
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117_emissions.csv");
-        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117_congestion.csv");
+        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117");
+        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117");
         
         emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
