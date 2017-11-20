@@ -1,5 +1,6 @@
 package ethz.ivt;
 
+import ethz.ivt.aggregation.ExternalityUtils;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -55,6 +56,7 @@ public class MeasureExternalities {
     public void run() {
 
         int bin_size_s = 3600;
+        String date = ExternalityUtils.getDate(EVENTS_FILE);
 
         config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
         config.controler().setOutputDirectory(RUN_FOLDER + "output/");
@@ -68,10 +70,10 @@ public class MeasureExternalities {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, bin_size_s);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, bin_size_s);
         
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
-        EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh);
+        EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
         
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
@@ -82,8 +84,8 @@ public class MeasureExternalities {
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
         
-        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117");
-        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), "20171117");
+        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
+        congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
         
         emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());

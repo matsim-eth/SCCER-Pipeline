@@ -4,10 +4,8 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.text.SimpleDateFormat;
+import java.util.*;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -26,13 +24,15 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 	protected final Scenario scenario;
     protected final Vehicle2DriverEventHandler drivers;
+	protected final String date;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
     List<String> keys = new ArrayList<>(); //list of all leg data fields
     
-    public ExternalityCounter(Scenario scenario, Vehicle2DriverEventHandler drivers) {
+    public ExternalityCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date) {
     	this.scenario = scenario;
     	this.drivers = drivers;
+    	this.date = date;
     	initializeFields();
     	initializeMaps();
     }
@@ -106,8 +106,8 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	    		int legCount = 0;
 	    		for (Map<String, Double> leg : person.getValue()) {
 	    			legCount++;
-	    			String header = "PersonId;Leg;";
-	    			String record = person.getKey() + ";" + legCount + ";";
+	    			String header = "PersonId;Date;Leg;";
+	    			String record = person.getKey() + ";" + this.date + ";" + legCount + ";";
 	    	        for (String key : keys) {
 	    	        	header = header + key + ";";
 	    	        	record = record + leg.get(key) + ";";
@@ -129,5 +129,9 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 		}
     	
     }
+
+	public String getDate() {
+		return date;
+	}
 
 }

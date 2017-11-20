@@ -16,8 +16,8 @@ public class NoiseCounter extends ExternalityCounter {
 	protected final int num_bins;
 	protected int binSize_s;
 
-	public NoiseCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, int binSize_s) {
-    	super(scenario, drivers);
+	public NoiseCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date, int binSize_s) {
+    	super(scenario, drivers, date);
 
         this.num_bins = (int) (30 * 3600 / binSize_s);
         this.binSize_s = binSize_s;

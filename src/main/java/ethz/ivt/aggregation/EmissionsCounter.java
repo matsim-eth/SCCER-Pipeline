@@ -18,8 +18,8 @@ import java.util.Map;
  */
 public class EmissionsCounter extends ExternalityCounter implements WarmEmissionEventHandler, ColdEmissionEventHandler {
 
-    public EmissionsCounter(Scenario scenario, Vehicle2DriverEventHandler drivers) {
-    	super(scenario, drivers);
+    public EmissionsCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date) {
+    	super(scenario, drivers, date);
     }
     
     @Override
