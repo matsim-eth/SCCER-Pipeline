@@ -118,4 +118,9 @@ public class CongestionCounter extends ExternalityCounter {
 		super.handleEvent(event); //add distance
 	}
 
+	public void writeCsvFile(String outputPath, String date) {
+		String outputFileName = date + "congestion.csv";
+		writeCsvFile(outputPath, outputFileName);
+	}
+
 }
