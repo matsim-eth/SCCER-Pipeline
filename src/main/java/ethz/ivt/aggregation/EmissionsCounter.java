@@ -68,8 +68,8 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
     }
 
     public void writeCsvFile(String outputPath, String date) {
-        String outputFileName = date + "emissions.csv";
-        writeCsvFile(outputPath, outputFileName);
+        String outputFileName = date + "_emissions.csv";
+        super.writeCsvFile(outputPath, outputFileName);
     }
 
 }

@@ -44,28 +44,7 @@ public class CongestionCounter extends ExternalityCounter {
             linkId2timeBin2values.put(l, new double[num_bins]);
         });
     }
-    
-    /*package*/ int getTimeBin(double time) { //TODO: Figure out where to put this!
 
-        double timeAfterSimStart = time;
-
-		/*
-		 * Agents who end their first activity before the simulation has started
-		 * will depart in the first time step.
-		 */
-        if (timeAfterSimStart <= 0.0) return 0;
-
-		/*
-		 * Calculate the bin for the given time. Increase it by one if the result
-		 * of the modulo operation is > 0. If it is 0, it is the last time value
-		 * which is part of the previous bin.
-		 */  
-        int bin = (int) (timeAfterSimStart / binSize_s);
-        if (timeAfterSimStart % binSize_s == 0.0) bin--;
-
-        return bin;
-    }
-    
     public void loadCsvFile(String input) {
     	CSVReader reader;
 		try {
@@ -105,7 +84,7 @@ public class CongestionCounter extends ExternalityCounter {
 
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
-		int bin = getTimeBin(event.getTime());
+		int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
 		Id<Link> lid = event.getLinkId();
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
@@ -119,8 +98,8 @@ public class CongestionCounter extends ExternalityCounter {
 	}
 
 	public void writeCsvFile(String outputPath, String date) {
-		String outputFileName = date + "congestion.csv";
-		writeCsvFile(outputPath, outputFileName);
+		String outputFileName = date + "_congestion.csv";
+		super.writeCsvFile(outputPath, outputFileName);
 	}
 
 }
