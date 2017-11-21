@@ -11,7 +11,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
-import org.matsim.contrib.noise.data.NoiseLink;
 import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.contrib.noise.handler.PersonActivityTracker;
@@ -25,8 +24,8 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
-public class MeasureAverageScenarioExternalities {
-	private final static Logger log = Logger.getLogger(MeasureAverageScenarioExternalities.class);
+public class MeasureAggregateExternalities {
+	private final static Logger log = Logger.getLogger(MeasureAggregateExternalities.class);
 
     private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
 	private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml";
@@ -42,7 +41,7 @@ public class MeasureAverageScenarioExternalities {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
-        new MeasureAverageScenarioExternalities().run();
+        new MeasureAggregateExternalities().run();
     }
     
     public void run() {
@@ -65,7 +64,7 @@ public class MeasureAverageScenarioExternalities {
         
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
-        
+
         eventsManager.addHandler(v2deh);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
