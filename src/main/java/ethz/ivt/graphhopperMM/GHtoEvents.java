@@ -48,6 +48,13 @@ public class GHtoEvents {
         return calculateNodeVisitTimes(mr.getEdgeMatches());
     }
 
+    public List<Link> reduceLinkGPX(List<LinkGPXStruct> points) {
+        List<Link> links = points
+                .stream()
+                .map(em -> em.getLink())
+                .collect(Collectors.toList());
+        return links;
+    }
     public List<Link> networkRouteWithoutTravelTimes(List<GPXEntry> points) {
         MatchResult mr = matcher.doWork(points);
         List<Link> links = mr.getEdgeMatches()
@@ -134,10 +141,15 @@ public class GHtoEvents {
         return resultLinks;
     }
 
+    @Deprecated
     public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId) {
+        return linkGPXToEvents(x, personId, vehicleId, TransportMode.car);
+    }
+
+    public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
         List<Event> events = new ArrayList<>();
         LinkGPXStruct firstE = x.next();
-        events.add(new PersonDepartureEvent(firstE.entryTime, personId, firstE.getLink().getId(), TransportMode.car));
+        events.add(new PersonDepartureEvent(firstE.entryTime, personId, firstE.getLink().getId(), mode));
         events.add(new LinkLeaveEvent(firstE.exitTime, vehicleId, firstE.getLink().getId()));
 
         while (x.hasNext()) {
@@ -147,7 +159,7 @@ public class GHtoEvents {
                 events.add(new LinkLeaveEvent(curr.exitTime, vehicleId, firstE.getLink().getId()));
             } else { //process final element
                 events.add(new LinkEnterEvent(curr.entryTime, vehicleId, firstE.getLink().getId()));
-                events.add(new PersonArrivalEvent(curr.exitTime, personId, firstE.getLink().getId(), TransportMode.car));
+                events.add(new PersonArrivalEvent(curr.exitTime, personId, firstE.getLink().getId(), mode));
             }
         }
 
