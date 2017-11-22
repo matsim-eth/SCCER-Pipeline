@@ -38,7 +38,7 @@ public class MeasureAggregateExternalities {
     private EventsManagerImpl eventsManager;
     private NoiseContext noiseContext;
     private NoiseTimeTracker noiseTimeTracker;
-    private NoiseConfigGroup noiseParameters;
+//    private NoiseConfigGroup noiseParameters;
     protected int bin_size_s = 3600;
 
     public static void main(String[] args) {
@@ -60,13 +60,12 @@ public class MeasureAggregateExternalities {
         setUpNoise(scenario);
 
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        
-//        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-//        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
-
         eventsManager.addHandler(v2deh);
-//        eventsManager.addHandler(congestionHandler);
-//        eventsManager.addHandler(congestionAggregator);
+
+        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
+        eventsManager.addHandler(congestionHandler);
+        eventsManager.addHandler(congestionAggregator);
 
         setUpVehicles(scenario);
 
@@ -77,9 +76,10 @@ public class MeasureAggregateExternalities {
 
         log.info("Noise calculation completed.");
 
-//        congestionAggregator.computeLinkAverageCausedDelays();
-//        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
-        
+        congestionAggregator.computeLinkAverageCausedDelays();
+        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
+        log.info("Congestion calculation completed.");
+
 //        noiseAggregator.computeLinkId2timeBin2averageValues();
 //        noiseAggregator.writeCsvFile(config.controler().getOutputDirectory());
 
