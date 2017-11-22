@@ -55,6 +55,9 @@ public class GraphHopperMATSim extends GraphHopper {
     }
 
 
+    //input should be person_stage_date - ie for GPS - personid_input_date
+
+
 
 
 }
