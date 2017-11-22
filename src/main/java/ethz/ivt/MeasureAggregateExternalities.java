@@ -11,7 +11,6 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
-import org.matsim.contrib.noise.NoiseWriter;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
@@ -20,7 +19,6 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
-import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
@@ -69,19 +67,19 @@ public class MeasureAggregateExternalities {
 
         setUpVehicles(scenario);
 
-//        NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
-
+        // read through MATSim events
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
+        // save noise emissions to single csv file
         log.info("Noise calculation completed.");
+        NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
+        noiseAggregator.computeLinkId2timeBin2values(config.controler().getOutputDirectory() + "noise/emissions/");
+        noiseAggregator.writeAggregateNoiseCsvFile(config.controler().getOutputDirectory() + "noise/");
 
-        congestionAggregator.computeLinkAverageCausedDelays();
-        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
-        log.info("Congestion calculation completed.");
-
-//        noiseAggregator.computeLinkId2timeBin2averageValues();
-//        noiseAggregator.writeCsvFile(config.controler().getOutputDirectory());
+//        congestionAggregator.computeLinkAverageCausedDelays();
+//        congestionAggregator.writeAggregateNoiseCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
+//        log.info("Congestion calculation completed.");
 
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();

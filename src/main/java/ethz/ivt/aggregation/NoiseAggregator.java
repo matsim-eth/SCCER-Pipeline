@@ -1,14 +1,13 @@
 package ethz.ivt.aggregation;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
+import java.io.*;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.regex.Pattern;
 
+import com.opencsv.CSVReader;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -20,9 +19,10 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.noise.events.NoiseEventCaused;
 import org.matsim.contrib.noise.handler.NoiseEventCausedHandler;
+import org.matsim.core.config.ReflectiveConfigGroup;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
-public class NoiseAggregator implements NoiseEventCausedHandler, LinkEnterEventHandler, LinkLeaveEventHandler {
+public class NoiseAggregator {
     private static final Logger log = Logger.getLogger(NoiseAggregator.class);
     
     private final Scenario scenario;
@@ -32,7 +32,6 @@ public class NoiseAggregator implements NoiseEventCausedHandler, LinkEnterEventH
     protected int num_bins; //30 hours, how do we split them
     
     protected Map<Id<Link>, Map<String, double[]>> linkId2timeBin2values = new HashMap<>();
-    protected Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2timeBin2personId = new HashMap<>();
 
     public NoiseAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, int binSize_s) {
         this.num_bins = (int) (30 * 3600 / binSize_s);
@@ -50,76 +49,106 @@ public class NoiseAggregator implements NoiseEventCausedHandler, LinkEnterEventH
             linkId2timeBin2values.put(l, new HashMap<>());
             linkId2timeBin2values.get(l).putIfAbsent("value", new double[num_bins]);
             linkId2timeBin2values.get(l).putIfAbsent("count", new double[num_bins]);
-            linkId2timeBin2values.get(l).putIfAbsent("average", new double[num_bins]);
-            
-            linkId2timeBin2personId.put(l, new HashMap<>());
-            for(int bin = 0; bin<this.num_bins; bin++) {
-            	linkId2timeBin2personId.get(l).put(bin, new ArrayList<>());
-            }
+
         });
     }
 
-	@Override
-	public void handleEvent(NoiseEventCaused event) {
-        int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
-        this.linkId2timeBin2values.get(event.getLinkId()).get("value")[bin] += event.getAmount();
-	}
+    public void computeLinkId2timeBin2values(String directory) {
+		File dir = null;
+		String[] files;
 
-	@Override
-	public void handleEvent(LinkLeaveEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
-		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
-        if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
-        	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-        	this.linkId2timeBin2values.get(event.getLinkId()).get("count")[bin] += 1.0;
-        }
-	}
+		try {
+			// create new file object
+			dir = new File(directory);
 
-	@Override
-	public void handleEvent(LinkEnterEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
-		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
-        if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
-        	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-        	this.linkId2timeBin2values.get(event.getLinkId()).get("count")[bin] += 1.0;
-        }
-	}
+			// array of files and directory
+			files = dir.list();
 
-    public void computeLinkId2timeBin2averageValues() {
-        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-            double[] a = e.getValue().get("value").clone();
-            double[] counts = e.getValue().get("count").clone();
-            for (int i=0; i<counts.length; i++) {
-            	if(counts[i] > 0.0) {
-            		a[i] /= counts[i];
-            	}
-            	else {
-            		a[i] = 0.0;
-            	}
-            }
-            linkId2timeBin2values.get(e.getKey()).put("average", a);
-        }
+			// for each name in the path array
+			for(String file:files) {
+				loadNoiseDataFromCsvFile(directory, file);
+				log.info("Loading : " + directory + file);
+			}
+		} catch (Exception e) {
+			// if any error occurs
+			e.printStackTrace();
+		}
     }
+
+	public void loadNoiseDataFromCsvFile(String directory, String file) {
+		CSVReader reader;
+		try {
+			reader = new CSVReader(new FileReader(directory + file), ';');
+			String[] file_parts = parseFileName(file);
+			int bin = ExternalityUtils.getTimeBin(Double.parseDouble(file_parts[1]),binSize_s);
+
+			// read line by line
+			String[] record = null;
+			int n = 0;
+			try {
+				while ((record = reader.readNext()) != null) {
+					if(n>0) {
+						Id<Link> lid = Id.createLinkId(record[0]);
+						double count = Double.parseDouble(record[1]) + Double.parseDouble(record[2]);
+						double value = Double.parseDouble(record[5]);
+
+						this.linkId2timeBin2values.get(lid).get("count")[bin] = count;
+						this.linkId2timeBin2values.get(lid).get("value")[bin] = value;
+					}
+					n++;
+				}
+			} catch (NumberFormatException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				e.printStackTrace();
+			}
+
+			try {
+				reader.close();
+			} catch (IOException e) {
+				log.error("Error while closing CSV file reader!");
+				e.printStackTrace();
+			}
+		} catch (FileNotFoundException e) {
+			log.error("CSV file not found!");
+			e.printStackTrace();
+		}
+	}
+
+	private String[] parseFileName(String file) {
+		String[] fp1 = file.split("_");
+		String[] fp2 = fp1[1].split(Pattern.quote("."));
+		String[] fp = new String[4];
+
+		fp[0] = fp1[0];
+		fp[1] = fp2[0];
+		fp[2] = fp2[1];
+		fp[3] = fp2[2];
+
+		return fp;
+	}
     
-    public void writeCsvFile(String outputPath) {
+    public void writeAggregateNoiseCsvFile(String outputPath) {
     	
 		File dir = new File(outputPath);
 		dir.mkdirs();
 		
-		String fileName = outputPath + "average_caused_noise.csv";
+		String fileName = outputPath + "aggregate_noise.csv";
 		
 		File file = new File(fileName);
 		
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			
-			bw.write("LinkId;TimeBin;AverageCausedNoise");
+			bw.write("LinkId;TimeBin;Count;Noise");
 			bw.newLine();
 			
 	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-	            for (int i=0; i<e.getValue().get("average").length; i++) {
-	            	if (e.getValue().get("average")[i] != 0.0) {
-		            	bw.write(e.getKey() + ";" + i + ";" + e.getValue().get("average")[i]);
+	            for (int bin=0; bin<e.getValue().get("value").length; bin++) {
+	            	if (e.getValue().get("value")[bin] != 0.0) {
+		            	bw.write(e.getKey() + ";" + bin + ";" + e.getValue().get("count")[bin] + ";" + e.getValue().get("value")[bin]);
 		            	bw.newLine();
 	            	}
 	            }
