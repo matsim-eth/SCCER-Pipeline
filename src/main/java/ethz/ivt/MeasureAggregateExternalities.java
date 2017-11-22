@@ -75,7 +75,6 @@ public class MeasureAggregateExternalities {
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-        noiseTimeTracker.computeFinalTimeIntervals();
         log.info("Noise calculation completed.");
 
 //        congestionAggregator.computeLinkAverageCausedDelays();
