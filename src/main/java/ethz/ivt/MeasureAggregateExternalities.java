@@ -1,6 +1,7 @@
 package ethz.ivt;
 
 import ethz.ivt.aggregation.CongestionAggregator;
+import ethz.ivt.aggregation.NoiseAggregator;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
@@ -10,6 +11,7 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
+import org.matsim.contrib.noise.NoiseWriter;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
@@ -18,6 +20,7 @@ import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
+import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
@@ -36,6 +39,7 @@ public class MeasureAggregateExternalities {
     private NoiseContext noiseContext;
     private NoiseTimeTracker noiseTimeTracker;
     private NoiseConfigGroup noiseParameters;
+//    protected int bin_size_s = 3600;
 
     public static void main(String[] args) {
         RUN_FOLDER = args[0];
@@ -50,53 +54,62 @@ public class MeasureAggregateExternalities {
     	
     	// set up config
     	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
-        config.controler().setOutputDirectory(RUN_FOLDER + "output\\");
-        Scenario scenario = ScenarioUtils.loadScenario(config);
+        config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
+
         this.noiseParameters = (NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME);
-        noiseParameters.setTimeBinSizeNoiseComputation(bin_size_s);
-//        noiseParameters.setComputeAvgNoiseCostPerLinkAndTime(false);
-        
+//        this.noiseParameters.setReceiverPointGap(12345789.);
+        this.noiseParameters.setTimeBinSizeNoiseComputation(bin_size_s);
+
+        Scenario scenario = ScenarioUtils.loadScenario(config);
     	
     	// set up event manager and handlers
     	eventsManager = new EventsManagerImpl();
-    	MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
+        setUpNoise(scenario);
+
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         
-        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
+//        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+//        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
 
         eventsManager.addHandler(v2deh);
-        eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionAggregator);
+//        eventsManager.addHandler(congestionHandler);
+//        eventsManager.addHandler(congestionAggregator);
 
         setUpVehicles(scenario);
-        
-//        setUpNoise(scenario);
+
 //        NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
 
+        MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-        congestionAggregator.computeLinkAverageCausedDelays();
-        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "average_caused_delay.csv");
+        noiseTimeTracker.computeFinalTimeIntervals();
+        log.info("Noise calculation completed.");
+
+//        congestionAggregator.computeLinkAverageCausedDelays();
+//        congestionAggregator.writeCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
         
 //        noiseAggregator.computeLinkId2timeBin2averageValues();
-//        noiseAggregator.writeCsvFile(config.controler().getOutputDirectory() + "average_caused_noise.csv");
+//        noiseAggregator.writeCsvFile(config.controler().getOutputDirectory());
 
-        log.info("Total delay: " + congestionHandler.getTotalDelay());
+//        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
     }
     
     public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
 
         noiseContext = new NoiseContext(scenario);
-        noiseContext.getNoiseParams().setWriteOutputIteration(0); //avoid writing multiple output files!!!
-        noiseContext.getNoiseParams().setThrowNoiseEventsCaused(true);
-//        noiseParameters.setThrowNoiseEventsCaused(true);
+//        noiseContext.getNoiseParams().setTimeBinSizeNoiseComputation(bin_size.);
+
+        noiseContext.getNoiseParams().setInternalizeNoiseDamages(true);
+        noiseContext.getNoiseParams().setComputeNoiseDamages(false);
+        noiseContext.getNoiseParams().setComputeAvgNoiseCostPerLinkAndTime(false);
+        noiseContext.getNoiseParams().setComputePopulationUnits(false);
+        noiseContext.getNoiseParams().setComputeCausingAgents(false);
 
         noiseTimeTracker = new NoiseTimeTracker();
         noiseTimeTracker.setNoiseContext(noiseContext);
         noiseTimeTracker.setEvents(eventsManager);
-        //noiseTimeTracker.setOutputFilePath(outputFilePath);
+        noiseTimeTracker.setOutputFilePath(config.controler().getOutputDirectory() + "noise/");
 
         eventsManager.addHandler(noiseTimeTracker);
 
