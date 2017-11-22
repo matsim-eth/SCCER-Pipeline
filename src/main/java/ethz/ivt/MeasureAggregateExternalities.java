@@ -39,7 +39,7 @@ public class MeasureAggregateExternalities {
     private NoiseContext noiseContext;
     private NoiseTimeTracker noiseTimeTracker;
     private NoiseConfigGroup noiseParameters;
-//    protected int bin_size_s = 3600;
+    protected int bin_size_s = 3600;
 
     public static void main(String[] args) {
         RUN_FOLDER = args[0];
@@ -50,16 +50,9 @@ public class MeasureAggregateExternalities {
     
     public void run() {
 
-    	int bin_size_s = 3600;
-    	
     	// set up config
     	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
         config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
-
-        this.noiseParameters = (NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME);
-//        this.noiseParameters.setReceiverPointGap(12345789.);
-        this.noiseParameters.setTimeBinSizeNoiseComputation(bin_size_s);
-
         Scenario scenario = ScenarioUtils.loadScenario(config);
     	
     	// set up event manager and handlers
@@ -98,8 +91,7 @@ public class MeasureAggregateExternalities {
     public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
 
         noiseContext = new NoiseContext(scenario);
-//        noiseContext.getNoiseParams().setTimeBinSizeNoiseComputation(bin_size.);
-
+        noiseContext.getNoiseParams().setTimeBinSizeNoiseComputation(this.bin_size_s);
         noiseContext.getNoiseParams().setInternalizeNoiseDamages(true);
         noiseContext.getNoiseParams().setComputeNoiseDamages(false);
         noiseContext.getNoiseParams().setComputeAvgNoiseCostPerLinkAndTime(false);
