@@ -72,16 +72,15 @@ public class MeasureAggregateExternalities {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save noise emissions to single csv file
-        log.info("Noise calculation completed.");
         NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
         noiseAggregator.computeLinkId2timeBin2values(config.controler().getOutputDirectory() + "noise/emissions/");
         noiseAggregator.writeAggregateNoiseCsvFile(config.controler().getOutputDirectory() + "noise/");
+        log.info("Noise calculation completed.");
 
-//        congestionAggregator.computeLinkAverageCausedDelays();
-//        congestionAggregator.writeAggregateNoiseCsvFile(config.controler().getOutputDirectory(), "aggregate_delay.csv");
-//        log.info("Congestion calculation completed.");
+        // save congestion data to single csv file
+        congestionAggregator.writeAggregateCongestionCsvFile(config.controler().getOutputDirectory() + "congestion/");
+        log.info("Congestion calculation completed.");
 
-//        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
     }
     

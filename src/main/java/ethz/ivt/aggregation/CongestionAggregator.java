@@ -50,8 +50,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             linkId2timeBin2values.put(l, new HashMap<>());
             linkId2timeBin2values.get(l).putIfAbsent("delay", new double[num_bins]);
             linkId2timeBin2values.get(l).putIfAbsent("count", new double[num_bins]);
-            linkId2timeBin2values.get(l).putIfAbsent("avg_delay", new double[num_bins]);
-            
+
             linkId2timeBin2personId.put(l, new HashMap<>());
             for(int bin = 0; bin<this.num_bins; bin++) {
             	linkId2timeBin2personId.get(l).put(bin, new ArrayList<>());
@@ -85,41 +84,25 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         }
 	}
 
-    public void computeLinkAverageCausedDelays() {
-        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-            double[] a = e.getValue().get("delay").clone();
-            double[] counts = e.getValue().get("count").clone();
-            for (int i=0; i<counts.length; i++) {
-            	if(counts[i] > 0.0) {
-            		a[i] /= counts[i];
-            	}
-            	else {
-            		a[i] = 0.0;
-            	}
-            }
-            linkId2timeBin2values.get(e.getKey()).put("avg_delay", a);
-        }
-    }
-    
-    public void writeCsvFile(String outputPath, String outputFileName) {
+    public void writeAggregateCongestionCsvFile(String outputPath) {
     	
 		File dir = new File(outputPath);
 		dir.mkdirs();
 		
-		String fileName = outputPath + outputFileName;
+		String fileName = outputPath + "aggregate_delay.csv";
 		
 		File file = new File(fileName);
 		
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			
-			bw.write("LinkId;TimeBin;AverageCausedDelay");
+			bw.write("LinkId;TimeBin;Count;Delay");
 			bw.newLine();
 			
 	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-	            for (int i=0; i<e.getValue().get("avg_delay").length; i++) {
-	            	if (e.getValue().get("avg_delay")[i] != 0.0) {
-		            	bw.write(e.getKey() + ";" + i + ";" + e.getValue().get("avg_delay")[i]);
+	            for (int bin=0; bin<e.getValue().get("delay").length; bin++) {
+	            	if (e.getValue().get("delay")[bin] != 0.0) {
+		            	bw.write(e.getKey() + ";" + bin + ";" + e.getValue().get("count")[bin] + ";" + e.getValue().get("delay")[bin]);
 		            	bw.newLine();
 	            	}
 	            }
@@ -133,7 +116,4 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 		}
     	
     }
-
-
-    
 }
