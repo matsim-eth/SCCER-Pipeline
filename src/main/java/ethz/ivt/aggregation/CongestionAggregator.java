@@ -1,5 +1,6 @@
 package ethz.ivt.aggregation;
 
+import ethz.ivt.aggregation.data.AggregateCongestionData;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -25,34 +26,25 @@ import java.util.*;
 public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, LinkLeaveEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     
-    private final Scenario scenario;
+//    private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    
-    protected final double binSize_s; //30 hours, how do we split them
-    protected int num_bins; //30 hours, how do we split them
-    
-    protected Map<Id<Link>, Map<String, double[]>> linkId2timeBin2values = new HashMap<>();
+    private AggregateCongestionData aggregateCongestionData;
+
     protected Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2timeBin2personId = new HashMap<>();
 
-    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, int binSize_s) {
-        this.num_bins = (int) (30 * 3600 / binSize_s);
-        this.binSize_s = binSize_s;
-        this.scenario = scenario;
+    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, AggregateCongestionData acd) {
+//        this.scenario = scenario;
         this.drivers = drivers;
+        this.aggregateCongestionData = acd;
 
         setUpBinsForLinks(scenario);
-        log.info("Number of congestion bins: " + num_bins);
+        log.info("Number of congestion bins: " + aggregateCongestionData.getNumBins());
     }
-    
+
     protected void setUpBinsForLinks(Scenario scenario) {
         scenario.getNetwork().getLinks().keySet().forEach(l -> {
-        	
-            linkId2timeBin2values.put(l, new HashMap<>());
-            linkId2timeBin2values.get(l).putIfAbsent("delay", new double[num_bins]);
-            linkId2timeBin2values.get(l).putIfAbsent("count", new double[num_bins]);
-
             linkId2timeBin2personId.put(l, new HashMap<>());
-            for(int bin = 0; bin<this.num_bins; bin++) {
+            for(int bin = 0; bin<aggregateCongestionData.getNumBins(); bin++) {
             	linkId2timeBin2personId.get(l).put(bin, new ArrayList<>());
             }
         });
@@ -60,60 +52,27 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
     @Override
     public void handleEvent(CongestionEvent event) {
-        int bin = ExternalityUtils.getTimeBin(event.getEmergenceTime(), this.binSize_s);
-        this.linkId2timeBin2values.get(event.getLinkId()).get("delay")[bin] += event.getDelay();
+        int bin = ExternalityUtils.getTimeBin(event.getEmergenceTime(), aggregateCongestionData.getBinSize());
+        aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("value")[bin] += event.getDelay();
     }
     
 	@Override
 	public void handleEvent(LinkLeaveEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
+		int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionData.getBinSize());
 		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
         if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
         	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-        	this.linkId2timeBin2values.get(event.getLinkId()).get("count")[bin] += 1.0;
+            aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("count")[bin] += 1.0;
         }
 	}
 
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
+		int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionData.getBinSize());
 		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
         if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
         	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-        	this.linkId2timeBin2values.get(event.getLinkId()).get("count")[bin] += 1.0;
+            aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("count")[bin] += 1.0;
         }
 	}
-
-    public void writeAggregateCongestionCsvFile(String outputPath) {
-    	
-		File dir = new File(outputPath);
-		dir.mkdirs();
-		
-		String fileName = outputPath + "aggregate_delay.csv";
-		
-		File file = new File(fileName);
-		
-		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
-			
-			bw.write("LinkId;TimeBin;Count;Delay");
-			bw.newLine();
-			
-	        for (Map.Entry<Id<Link>, Map<String, double[]>> e : linkId2timeBin2values.entrySet()) {
-	            for (int bin=0; bin<e.getValue().get("delay").length; bin++) {
-	            	if (e.getValue().get("delay")[bin] != 0.0) {
-		            	bw.write(e.getKey() + ";" + bin + ";" + e.getValue().get("count")[bin] + ";" + e.getValue().get("delay")[bin]);
-		            	bw.newLine();
-	            	}
-	            }
-	        }
-			
-			bw.close();
-			log.info("Output written to " + fileName);
-			
-		} catch (IOException e) {
-			e.printStackTrace();
-		}
-    	
-    }
 }
