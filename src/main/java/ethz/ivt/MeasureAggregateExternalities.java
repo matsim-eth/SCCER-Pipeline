@@ -2,6 +2,8 @@ package ethz.ivt;
 
 import ethz.ivt.aggregation.CongestionAggregator;
 import ethz.ivt.aggregation.NoiseAggregator;
+import ethz.ivt.aggregation.data.AggregateCongestionData;
+import ethz.ivt.aggregation.data.AggregateNoiseData;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
@@ -60,8 +62,9 @@ public class MeasureAggregateExternalities {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
+        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, aggregateCongestionData);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -72,13 +75,13 @@ public class MeasureAggregateExternalities {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save noise emissions to single csv file
-        NoiseAggregator noiseAggregator = new NoiseAggregator(scenario, v2deh, bin_size_s);
-        noiseAggregator.computeLinkId2timeBin2values(config.controler().getOutputDirectory() + "noise/emissions/");
-        noiseAggregator.writeAggregateNoiseCsvFile(config.controler().getOutputDirectory() + "noise/");
+        AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
+        aggregateNoiseData.computeLinkId2timeBin2valuesFromEmissionFiles(config.controler().getOutputDirectory() + "noise/emissions/");
+        aggregateNoiseData.writeDataToCsv(config.controler().getOutputDirectory() + "noise/");
         log.info("Noise calculation completed.");
 
         // save congestion data to single csv file
-        congestionAggregator.writeAggregateCongestionCsvFile(config.controler().getOutputDirectory() + "congestion/");
+        aggregateCongestionData.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
         log.info("Congestion calculation completed.");
 
         eventsManager.finishProcessing();
