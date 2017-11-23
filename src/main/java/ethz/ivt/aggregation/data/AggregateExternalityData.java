@@ -10,24 +10,24 @@ import java.util.Map;
 
 public abstract class AggregateExternalityData {
     protected static final Logger log = Logger.getLogger(AggregateExternalityData.class);
-    protected double bin_size;
-    protected int num_bins;
+    protected double binSize;
+    protected int numBins;
     protected Map<Id<Link>, Map<String, double[]>> linkId2timeBin2values = new HashMap<>();
 
     // constructor
-    public AggregateExternalityData(Scenario scenario, double bin_size, int num_bins) {
-        this.bin_size = bin_size;
-        this.num_bins = num_bins;
+    public AggregateExternalityData(Scenario scenario, double binSize) {
+        this.numBins = (int) (30 * 3600 / binSize);
+        this.binSize = binSize;
         setUpBinsForLinks(scenario);
     }
 
     // getters
-    public double getBin_size() {
-        return bin_size;
+    public double getBinSize() {
+        return binSize;
     }
 
-    public int getNum_bins() {
-        return num_bins;
+    public int getNumBins() {
+        return numBins;
     }
 
     public Map<Id<Link>, Map<String, double[]>> getLinkId2timeBin2values() {
@@ -39,21 +39,21 @@ public abstract class AggregateExternalityData {
         scenario.getNetwork().getLinks().keySet().forEach(l -> {
 
             linkId2timeBin2values.put(l, new HashMap<>());
-            linkId2timeBin2values.get(l).putIfAbsent("count", new double[num_bins]);
-            linkId2timeBin2values.get(l).putIfAbsent("value", new double[num_bins]);
+            linkId2timeBin2values.get(l).putIfAbsent("count", new double[numBins]);
+            linkId2timeBin2values.get(l).putIfAbsent("value", new double[numBins]);
         });
     }
 
     // get values
     public double getCount(Id<Link> lid, int timeBin) {
-        if (timeBin > num_bins) {
+        if (timeBin > numBins) {
             return 0.0;
         }
         return this.linkId2timeBin2values.get(lid).get("count")[timeBin];
     }
 
     public double getValue(Id<Link> lid, int timeBin) {
-        if (timeBin > num_bins) {
+        if (timeBin > numBins) {
             return 0.0;
         }
         return this.linkId2timeBin2values.get(lid).get("value")[timeBin];
