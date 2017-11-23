@@ -72,7 +72,7 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
         int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
 
         this.linkEnterEvents.add(event);
-        //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[num_bins]);
+        //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[numBins]);
         this.linkId2timeBin2enteringAndDepartingAgents.get(event.getLinkId())[bin]++; //TODO: do we have to consider PCU;s here?
     }
 
@@ -83,7 +83,7 @@ public abstract class EventAggregator implements LinkEnterEventHandler, PersonDe
             this.personDepartureEvents.add(event);
 
             int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
-            //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[num_bins]);
+            //this.linkId2timeBin2enteringAndDepartingAgents.putIfAbsent(event.getLinkId(), new double[numBins]);
             this.linkId2timeBin2enteringAndDepartingAgents.get(event.getLinkId())[bin]++; //TODO: do we have to consider PCU;s here?
 
         } else {

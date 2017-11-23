@@ -29,7 +29,7 @@ public class EmissionsAggregator extends EventAggregator implements WarmEmission
     @Override
     public void handleEvent(ColdEmissionEvent event) {
         int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize_s);
-        //this.linkId2timeBin2delaySum.putIfAbsent(event.getLinkId(), new double[num_bins]);
+        //this.linkId2timeBin2delaySum.putIfAbsent(event.getLinkId(), new double[numBins]);
 
         //example of getting driver of vehicle:
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
@@ -50,7 +50,7 @@ public class EmissionsAggregator extends EventAggregator implements WarmEmission
     @Override
     public void handleEvent(WarmEmissionEvent event) {
         int bin = ExternalityUtils.getTimeBin(event.getTime(),this.binSize_s);
-        //this.linkId2timeBin2delaySum.putIfAbsent(event.getLinkId(), new double[num_bins]);
+        //this.linkId2timeBin2delaySum.putIfAbsent(event.getLinkId(), new double[numBins]);
         Map<WarmPollutant, Double> pollutants = event.getWarmEmissions();
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
