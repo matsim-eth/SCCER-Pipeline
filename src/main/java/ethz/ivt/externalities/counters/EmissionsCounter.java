@@ -1,4 +1,4 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.counters;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;

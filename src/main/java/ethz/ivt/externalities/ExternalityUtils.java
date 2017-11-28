@@ -1,6 +1,4 @@
-package ethz.ivt.aggregation;
-
-import java.net.URI;
+package ethz.ivt.externalities;
 
 public class ExternalityUtils {
     private ExternalityUtils(){}

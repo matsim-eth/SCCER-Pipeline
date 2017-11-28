@@ -1,4 +1,4 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.counters;
 
 import java.util.HashMap;
 import java.util.Map;

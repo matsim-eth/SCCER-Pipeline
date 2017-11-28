@@ -1,4 +1,4 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.counters;
 
 import java.io.FileNotFoundException;
 import java.io.FileReader;
@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
 
+import ethz.ivt.externalities.ExternalityUtils;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;

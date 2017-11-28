@@ -1,4 +1,4 @@
-package ethz.ivt.aggregation.data;
+package ethz.ivt.externalities.data;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;

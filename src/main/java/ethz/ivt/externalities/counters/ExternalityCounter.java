@@ -1,10 +1,9 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.counters;
 
 import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.text.SimpleDateFormat;
 import java.util.*;
 
 import org.apache.log4j.Logger;
@@ -34,7 +33,7 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
     	this.drivers = drivers;
     	this.date = date;
     	initializeFields();
-    	initializeMaps();
+    	initializeHashMaps();
     }
     
     //basic fields
@@ -44,7 +43,7 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         keys.add("Distance");
     }
     
-    protected void initializeMaps() {
+    protected void initializeHashMaps() {
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
             personId2Leg2Values.put(p, new ArrayList<>());
             tempValues.put(p, new HashMap<>());

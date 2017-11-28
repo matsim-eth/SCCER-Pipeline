@@ -1,9 +1,8 @@
 package ethz.ivt;
 
-import ethz.ivt.aggregation.CongestionAggregator;
-import ethz.ivt.aggregation.NoiseAggregator;
-import ethz.ivt.aggregation.data.AggregateCongestionData;
-import ethz.ivt.aggregation.data.AggregateNoiseData;
+import ethz.ivt.externalities.aggregation.CongestionAggregator;
+import ethz.ivt.externalities.data.AggregateCongestionData;
+import ethz.ivt.externalities.data.AggregateNoiseData;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;

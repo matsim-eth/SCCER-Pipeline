@@ -1,6 +1,7 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.aggregation;
 
-import ethz.ivt.aggregation.data.AggregateCongestionData;
+import ethz.ivt.externalities.ExternalityUtils;
+import ethz.ivt.externalities.data.AggregateCongestionData;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -14,10 +15,6 @@ import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import ethz.ivt.vsp.CongestionEvent;
 import ethz.ivt.vsp.handlers.CongestionEventHandler;
 
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
 import java.util.*;
 
 /**

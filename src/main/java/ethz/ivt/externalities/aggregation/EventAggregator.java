@@ -1,5 +1,6 @@
-package ethz.ivt.aggregation;
+package ethz.ivt.externalities.aggregation;
 
+import ethz.ivt.externalities.ExternalityUtils;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;

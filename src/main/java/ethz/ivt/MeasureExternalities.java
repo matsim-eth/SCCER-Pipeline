@@ -1,6 +1,6 @@
 package ethz.ivt;
 
-import ethz.ivt.aggregation.ExternalityUtils;
+import ethz.ivt.externalities.ExternalityUtils;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -10,23 +10,19 @@ import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
-import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
-import org.matsim.contrib.noise.handler.PersonActivityTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
-import org.matsim.core.events.handler.EventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.households.Household;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
-import ethz.ivt.aggregation.EmissionsCounter;
+import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.vsp.handlers.CongestionHandler;
-import ethz.ivt.aggregation.CongestionCounter;
+import ethz.ivt.externalities.counters.CongestionCounter;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 
 /**

@@ -1,7 +1,7 @@
-package ethz.ivt.aggregation.data;
+package ethz.ivt.externalities.data;
 
 import com.opencsv.CSVReader;
-import ethz.ivt.aggregation.ExternalityUtils;
+import ethz.ivt.externalities.ExternalityUtils;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
