@@ -1,6 +1,9 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.ExternalityUtils;
+import ethz.ivt.externalities.counters.NoiseCounter;
+import ethz.ivt.externalities.data.AggregateCongestionData;
+import ethz.ivt.externalities.data.AggregateNoiseData;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -34,7 +37,8 @@ public class MeasureExternalities {
     private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
     private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml"; // "defaultIVTConfig_w_emissions.xml";
     private static String EVENTS_FILE; // = "20171117_events.xml.gz"; // "test.events.xml.gz"
-    private static String CONGESTION_FILE; // = "output\\average_caused_delay.csv";
+    private static String CONGESTION_FILE; // = "aggregate/congestion/aggregate_delay.csv";
+    private static String NOISE_FILE; // = "aggregate/noise/aggregate_noise.csv";
 
     private Config config;
     private NoiseContext noiseContext;
@@ -46,6 +50,7 @@ public class MeasureExternalities {
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
         CONGESTION_FILE = args[3];
+        NOISE_FILE = args[4];
         new MeasureExternalities().run();
     }
 
@@ -57,7 +62,7 @@ public class MeasureExternalities {
         config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
         config.controler().setOutputDirectory(RUN_FOLDER + "output/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
-        ((NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME)).setTimeBinSizeNoiseComputation(bin_size_s);
+//        ((NoiseConfigGroup) config.getModules().get(NoiseConfigGroup.GROUP_NAME)).setTimeBinSizeNoiseComputation(bin_size_s);
 
         setUpVehicles(scenario);
         
@@ -65,25 +70,36 @@ public class MeasureExternalities {
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
-        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, bin_size_s);
-        
+//        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+
+        // load precomputed aggregate data
+        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
+        aggregateCongestionData.loadDataFromCsv(RUN_FOLDER + CONGESTION_FILE);
+
+        AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
+        aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
+
+        // setup externality counters
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
         EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
-        
-        eventsManager.addHandler(v2deh);
-        eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionCounter);
-        eventsManager.addHandler(emissionsCounter);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
+        NoiseCounter noiseCounter = new NoiseCounter(scenario, v2deh, date, aggregateNoiseData);
 
-        congestionCounter.loadCsvFile(RUN_FOLDER + CONGESTION_FILE);
+        // add event handlers
+        eventsManager.addHandler(v2deh);
+//        eventsManager.addHandler(congestionHandler);
+        eventsManager.addHandler(emissionsCounter);
+        eventsManager.addHandler(congestionCounter);
+        eventsManager.addHandler(noiseCounter);
 
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
-        
+
+        // write to file
         emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
         congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
-        
-        emissionModule.writeEmissionInformation();
+        noiseCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
+
+//        emissionModule.writeEmissionInformation();
 //        log.info("Total delay: " + congestionHandler.getTotalDelay());
         eventsManager.finishProcessing();
     }
