@@ -6,10 +6,14 @@ import ethz.ivt.externalities.data.AggregateNoiseData;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
@@ -22,9 +26,12 @@ import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.pt.PtConstants;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
+
+import java.util.*;
 
 public class MeasureAggregateExternalities {
 	private final static Logger log = Logger.getLogger(MeasureAggregateExternalities.class);
@@ -35,9 +42,6 @@ public class MeasureAggregateExternalities {
     
     private Config config;
     private EventsManagerImpl eventsManager;
-    private NoiseContext noiseContext;
-    private NoiseTimeTracker noiseTimeTracker;
-//    private NoiseConfigGroup noiseParameters;
     protected int bin_size_s = 3600;
 
     public static void main(String[] args) {
@@ -53,7 +57,7 @@ public class MeasureAggregateExternalities {
     	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
         config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
-    	
+
     	// set up event manager and handlers
     	eventsManager = new EventsManagerImpl();
         setUpNoise(scenario);
@@ -88,15 +92,30 @@ public class MeasureAggregateExternalities {
     
     public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
 
-        noiseContext = new NoiseContext(scenario);
-        noiseContext.getNoiseParams().setTimeBinSizeNoiseComputation(this.bin_size_s);
-        noiseContext.getNoiseParams().setInternalizeNoiseDamages(true);
-        noiseContext.getNoiseParams().setComputeNoiseDamages(false);
-        noiseContext.getNoiseParams().setComputeAvgNoiseCostPerLinkAndTime(false);
-        noiseContext.getNoiseParams().setComputePopulationUnits(false);
-        noiseContext.getNoiseParams().setComputeCausingAgents(false);
+        NoiseConfigGroup noiseParameters = (NoiseConfigGroup) scenario.getConfig().getModules().get(NoiseConfigGroup.GROUP_NAME);
 
-        noiseTimeTracker = new NoiseTimeTracker();
+        noiseParameters.setTimeBinSizeNoiseComputation(this.bin_size_s);
+        noiseParameters.setInternalizeNoiseDamages(true);
+        noiseParameters.setComputeNoiseDamages(true);
+        noiseParameters.setComputeAvgNoiseCostPerLinkAndTime(true);
+        noiseParameters.setComputePopulationUnits(false);
+        noiseParameters.setComputeCausingAgents(true);
+
+        // set parameter values to same as Kaddoura et al. 2017
+        noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
+//        noiseContext.getNoiseParams().setAnnualCostRate(78.6); // 78.6 CHF i.e. 85 DEM * 0.59827 * 1.02 ^ (2017-1995) ??
+        noiseParameters.setReceiverPointGap(500); // 50 m
+        noiseParameters.setRelevantRadius(50); // 500 m
+
+        String[] desiredActivities = {"home","work","remote_work"};
+
+        String[] consideredActivities = getValidActivitiesOfType(scenario, desiredActivities);
+        noiseParameters.setConsideredActivitiesForReceiverPointGridArray(consideredActivities);
+        noiseParameters.setConsideredActivitiesForDamageCalculationArray(consideredActivities);
+
+        NoiseContext noiseContext = new NoiseContext(scenario);
+
+        NoiseTimeTracker noiseTimeTracker = new NoiseTimeTracker();
         noiseTimeTracker.setNoiseContext(noiseContext);
         noiseTimeTracker.setEvents(eventsManager);
         noiseTimeTracker.setOutputFilePath(config.controler().getOutputDirectory() + "noise/");
@@ -134,6 +153,30 @@ public class MeasureAggregateExternalities {
             //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
         }
 
+    }
+
+    private String[] getValidActivitiesOfType(Scenario scenario, String[] desiredActTypes) {
+        Set<String> setValidActivities = new HashSet<>();
+
+        for (Person person: scenario.getPopulation().getPersons().values()) {
+
+            for (PlanElement planElement: person.getSelectedPlan().getPlanElements()) {
+                if (planElement instanceof Activity) {
+                    Activity activity = (Activity) planElement;
+
+                    if (!activity.getType().equalsIgnoreCase(PtConstants.TRANSIT_ACTIVITY_TYPE)) {
+
+                        for (String desiredActType : desiredActTypes) {
+                            if(activity.getType().contains(desiredActType)) {
+                                setValidActivities.add(activity.getType());
+                            }
+                        }
+                    }
+                }
+            }
+        }
+        String[] validActivities = new String[setValidActivities.size()];
+        return setValidActivities.toArray(validActivities);
     }
 
 }
