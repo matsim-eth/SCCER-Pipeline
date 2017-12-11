@@ -58,7 +58,12 @@ public class AggregateNoiseData {
                     if (line > 0) {
                         Id<Link> lid = Id.createLinkId(record[0]);
                         for (int column = 1; column<record.length; column++) {
-                            this.linkId2timeBin2value.get(lid)[column-1] = Double.parseDouble(record[column]);
+                            double value = Double.parseDouble(record[column]);
+                            if (Double.isNaN(value))
+                            {
+                                value = 0.;
+                            }
+                            this.linkId2timeBin2value.get(lid)[column-1] = value;
                         }
                     }
                     line ++;

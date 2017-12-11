@@ -89,6 +89,14 @@ public class AggregateCongestionData {
                         int bin = Integer.parseInt(record[1]);
                         double count = Double.parseDouble(record[2]);
                         double value = Double.parseDouble(record[3]);
+                        if (Double.isNaN(count))
+                        {
+                            count = 0.;
+                        }
+                        if (Double.isNaN(value))
+                        {
+                            value = 0.;
+                        }
 
                         this.linkId2timeBin2values.get(lid).get("count")[bin] = count;
                         this.linkId2timeBin2values.get(lid).get("value")[bin] = value;
