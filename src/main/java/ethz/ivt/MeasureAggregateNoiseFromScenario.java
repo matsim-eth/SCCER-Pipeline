@@ -44,6 +44,8 @@ public class MeasureAggregateNoiseFromScenario {
 
     private NoiseTimeTracker noiseTimeTracker;
 
+    public static enum DataLabel {average_damages_link, average_damages_link_car, average_damages_link_hgv, marginal_damages_link_car, marginal_damages_link_hgv} ;
+
     public static void main(String[] args) {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
@@ -78,8 +80,8 @@ public class MeasureAggregateNoiseFromScenario {
         eventsManager.finishProcessing();
 
         // save noise emissions to single csv file
-        final String[] labels = { "marginal_damages_link_car"};
-        final String[] workingDirectories = {config.controler().getOutputDirectory() + "/noise/" + "/marginal_damages_link_car/"};
+        final String[] labels = {DataLabel.marginal_damages_link_car.toString()};
+        final String[] workingDirectories = {config.controler().getOutputDirectory() + "/noise/" + "/" + DataLabel.marginal_damages_link_car.toString() + "/"};
 
         MergeNoiseCSVFile merger = new MergeNoiseCSVFile() ;
         merger.setNetworkFile(RUN_FOLDER + "network_zurich_w_types.xml");
