@@ -2,15 +2,12 @@ package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
 import ethz.ivt.externalities.data.AggregateCongestionData;
-import ethz.ivt.externalities.data.AggregateNoiseData;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.PlanElement;
@@ -20,6 +17,7 @@ import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.contrib.noise.handler.PersonActivityTracker;
+import org.matsim.contrib.noise.utils.MergeNoiseCSVFile;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
@@ -33,8 +31,8 @@ import org.matsim.vehicles.VehicleUtils;
 
 import java.util.*;
 
-public class MeasureAggregateExternalities {
-	private final static Logger log = Logger.getLogger(MeasureAggregateExternalities.class);
+public class MeasureAggregateNoiseFromScenario {
+	private final static Logger log = Logger.getLogger(MeasureAggregateNoiseFromScenario.class);
 
     private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
 	private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml";
@@ -44,18 +42,20 @@ public class MeasureAggregateExternalities {
     private EventsManagerImpl eventsManager;
     protected int bin_size_s = 3600;
 
+    private NoiseTimeTracker noiseTimeTracker;
+
     public static void main(String[] args) {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
-        new MeasureAggregateExternalities().run();
+        new MeasureAggregateNoiseFromScenario().run();
     }
     
     public void run() {
 
     	// set up config
     	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
-        config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
+    	config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
     	// set up event manager and handlers
@@ -65,29 +65,32 @@ public class MeasureAggregateExternalities {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
-        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
-        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, aggregateCongestionData);
-        eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionAggregator);
-
         setUpVehicles(scenario);
 
         // read through MATSim events
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-        // save noise emissions to single csv file
-        AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
-        aggregateNoiseData.computeLinkId2timeBin2valuesFromEmissionFiles(config.controler().getOutputDirectory() + "noise/emissions/");
-        aggregateNoiseData.writeDataToCsv(config.controler().getOutputDirectory() + "noise/");
+        noiseTimeTracker.computeFinalTimeIntervals();
+        noiseTimeTracker.reset(0); // clear all internal data
+
         log.info("Noise calculation completed.");
-
-        // save congestion data to single csv file
-        aggregateCongestionData.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
-        log.info("Congestion calculation completed.");
-
         eventsManager.finishProcessing();
+
+        // save noise emissions to single csv file
+        final String[] labels = { "marginal_damages_link_car"};
+        final String[] workingDirectories = {config.controler().getOutputDirectory() + "/noise/" + "/marginal_damages_link_car/"};
+
+        MergeNoiseCSVFile merger = new MergeNoiseCSVFile() ;
+        merger.setNetworkFile(RUN_FOLDER + "network_zurich_w_types.xml");
+        merger.setOutputDirectory(config.controler().getOutputDirectory() + "/noise/");
+        merger.setStartTime(1.*3600.);
+        merger.setEndTime(30.*3600.);
+        merger.setTimeBinSize(3600.);
+        merger.setOutputFormat(MergeNoiseCSVFile.OutputFormat.xyt1t2t3etc);
+        merger.setWorkingDirectory(workingDirectories);
+        merger.setLabel(labels);
+        merger.run();
     }
     
     public void setUpNoise(Scenario scenario) { //taken from NoiseOfflineCalculation
@@ -95,17 +98,26 @@ public class MeasureAggregateExternalities {
         NoiseConfigGroup noiseParameters = (NoiseConfigGroup) scenario.getConfig().getModules().get(NoiseConfigGroup.GROUP_NAME);
 
         noiseParameters.setTimeBinSizeNoiseComputation(this.bin_size_s);
-        noiseParameters.setInternalizeNoiseDamages(true);
+        noiseParameters.setInternalizeNoiseDamages(false);
         noiseParameters.setComputeNoiseDamages(true);
         noiseParameters.setComputeAvgNoiseCostPerLinkAndTime(true);
-        noiseParameters.setComputePopulationUnits(false);
+        noiseParameters.setComputePopulationUnits(true);
         noiseParameters.setComputeCausingAgents(true);
+        noiseParameters.setUseActualSpeedLevel(true);
+
+        // Set to '1.' for a 100 percent sample size. Set to '10.' for a 10 percent sample size. Set to '100.' for a 1 percent sample size.
+        noiseParameters.setScaleFactor(100.);
 
         // set parameter values to same as Kaddoura et al. 2017
         noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
 //        noiseContext.getNoiseParams().setAnnualCostRate(78.6); // 78.6 CHF i.e. 85 DEM * 0.59827 * 1.02 ^ (2017-1995) ??
-        noiseParameters.setReceiverPointGap(500); // 50 m
-        noiseParameters.setRelevantRadius(50); // 500 m
+
+//        double numberReceiverPoints = 2000000;
+//        double gap = computeMinimalGap(scenario, numberReceiverPoints);
+
+        noiseParameters.setReceiverPointGap(500.); // gap
+//        noiseParameters.setRelevantRadius(500.); // 500 m
+        noiseParameters.setRelevantRadius(Math.sqrt(2) / 2 * noiseParameters.getReceiverPointGap()); // sqrt(2)/2 * gap
 
         String[] desiredActivities = {"home","work","remote_work"};
 
@@ -115,7 +127,8 @@ public class MeasureAggregateExternalities {
 
         NoiseContext noiseContext = new NoiseContext(scenario);
 
-        NoiseTimeTracker noiseTimeTracker = new NoiseTimeTracker();
+//        NoiseTimeTracker noiseTimeTracker = new NoiseTimeTracker();
+        noiseTimeTracker = new NoiseTimeTracker();
         noiseTimeTracker.setNoiseContext(noiseContext);
         noiseTimeTracker.setEvents(eventsManager);
         noiseTimeTracker.setOutputFilePath(config.controler().getOutputDirectory() + "noise/");
@@ -178,5 +191,29 @@ public class MeasureAggregateExternalities {
         String[] validActivities = new String[setValidActivities.size()];
         return setValidActivities.toArray(validActivities);
     }
+
+//    private double computeMinimalGap(Scenario scenario, double numberReceiverPoints) {
+//        double xCoordMinLinkNode = Double.MAX_VALUE;
+//        double yCoordMinLinkNode = Double.MAX_VALUE;
+//        double xCoordMaxLinkNode = Double.MIN_VALUE;
+//        double yCoordMaxLinkNode = Double.MIN_VALUE;
+//
+//        for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()){
+//            if ((scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getX()) < xCoordMinLinkNode) {
+//                xCoordMinLinkNode = scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getX();
+//            }
+//            if ((scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getY()) < yCoordMinLinkNode) {
+//                yCoordMinLinkNode = scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getY();
+//            }
+//            if ((scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getX()) > xCoordMaxLinkNode) {
+//                xCoordMaxLinkNode = scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getX();
+//            }
+//            if ((scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getY()) > yCoordMaxLinkNode) {
+//                yCoordMaxLinkNode = scenario.getNetwork().getLinks().get(linkId).getFromNode().getCoord().getY();
+//            }
+//        }
+//
+//        return Math.sqrt( (xCoordMaxLinkNode - xCoordMinLinkNode) * (yCoordMaxLinkNode - yCoordMinLinkNode) / numberReceiverPoints);
+//    }
 
 }
