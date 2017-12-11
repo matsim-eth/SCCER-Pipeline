@@ -23,20 +23,20 @@ public class NoiseCounter extends ExternalityCounter {
     @Override
     protected void initializeFields() {
         super.initializeFields();
-        keys.add("NoiseEmissions");
+        keys.add("MarginalNoiseCost");
     }
 
     @Override
     public void handleEvent(LinkEnterEvent event) {
-        int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateNoiseData.getBinSize());
-        Id<Link> lid = event.getLinkId();
+        int timeBin = ExternalityUtils.getTimeBin(event.getTime(), aggregateNoiseData.getBinSize());
+        Id<Link> linkId = event.getLinkId();
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
-        double noise = this.aggregateNoiseData.getMeanValue(lid, bin);;
-        double previous = this.tempValues.get(personId).get("NoiseEmissions");
-        this.tempValues.get(personId).put("NoiseEmissions", previous + noise);
+        double noise = this.aggregateNoiseData.getValue(linkId, timeBin);
+        double previous = this.tempValues.get(personId).get("MarginalNoiseCost");
+        this.tempValues.get(personId).put("MarginalNoiseCost", previous + noise);
 
         super.handleEvent(event); //add distance
     }
