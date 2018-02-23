@@ -111,9 +111,11 @@ public class MATSimNetwork2graphhopper implements DataReader  {
         way.setTag("estimated_center", estmCentre);
         way.setTag("motorroad", "yes");
         // read the highway type
-        Object type = road.getAttributes().getAttribute("type");
-        if (type != null) {
-            way.setTag("highway", type.toString());
+        String typeString = road.getAttributes().getAttribute("type").toString();
+        int type = Integer.parseInt(typeString);
+        if (type <= 10) typeString = "motorway";
+        if (typeString != null) {
+            way.setTag("highway", typeString); //TODO: this isnt great, we should use the names from the link types
         }
 
         // read maxspeed filtering for 0 which for Geofabrik shapefiles appears
@@ -169,6 +171,8 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
     private void processJunctions() {
         AtomicInteger i = new AtomicInteger();
+        log.info(network);
+
         this.network.getNodes().values().forEach(x -> {
             Coord wgs_from_node = convertor.transform(x.getCoord());
 

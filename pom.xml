@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.matsim</groupId>
-	<artifactId>matsim-mapmatching</artifactId>
+	<artifactId>matsim-SCCER</artifactId>
 	<version>0.1</version>
   <name>Mapmatching for MATSim</name>
 	<build>
@@ -59,6 +59,11 @@
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
+		  <artifactId>socnetsim</artifactId>
+		  <version>0.10.0-SNAPSHOT</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>accessibility</artifactId>
 		  <version>0.10.0-SNAPSHOT</version>
 	  </dependency>
@@ -88,23 +93,41 @@
 		  <version>0.1.54</version>
 	  </dependency>
 	  <dependency>
-		  <groupId>com.github.gunnarfloetteroed</groupId>
-		  <artifactId>java</artifactId>
-		  <version>master</version>
-		  </dependency>
-		  <dependency>
-	  	<groupId>org.matsim.contrib</groupId>
-	  	<artifactId>dvrp</artifactId>
-	  	<version>0.10.0-SNAPSHOT</version>
+		  <groupId>com.conveyal</groupId>
+		  <artifactId>gtfs-lib</artifactId>
+		  <version>2.1.0</version>
+		  <exclusions>
+			  <exclusion>
+				  <groupId>org.slf4j</groupId>
+				  <artifactId>slf4j-simple</artifactId>
+			  </exclusion>
+			  <exclusion>
+				  <groupId>com.vividsolutions</groupId>
+				  <artifactId>jts</artifactId>
+			  </exclusion>
+		  </exclusions>
 	  </dependency>
 	  <dependency>
-		  <groupId>org.matsim.contrib</groupId>
-		  <artifactId>taxi</artifactId>
-		  <version>0.10.0-SNAPSHOT</version>
+		  <groupId>com.google.transit</groupId>
+		  <artifactId>gtfs-realtime-bindings</artifactId>
+		  <version>0.0.4</version>
+	  </dependency>
+	  <!-- https://mvnrepository.com/artifact/com.google.common/google-collect -->
+	  <dependency>
+		  <groupId>com.google.common</groupId>
+		  <artifactId>google-collect</artifactId>
+		  <version>LATEST</version>
+	  </dependency>
+
+
+      <dependency>
+		  <groupId>com.graphhopper</groupId>
+		  <artifactId>graphhopper-reader-osm</artifactId>
+		  <version>RELEASE</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>com.graphhopper</groupId>
-		  <artifactId>graphhopper-reader-osm</artifactId>
+		  <artifactId>graphhopper-reader-gtfs</artifactId>
 		  <version>RELEASE</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/com.graphhopper/map-matching -->

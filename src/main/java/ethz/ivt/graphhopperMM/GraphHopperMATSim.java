@@ -20,7 +20,7 @@ public class GraphHopperMATSim extends GraphHopper {
 
     final Network network;
     CoordinateTransformation matsim2wgs;
-
+    //TODO; refactor this so that the reader makes more sense and stuff
     public GraphHopperMATSim(String networkFilename, CoordinateTransformation matsim2wgs) {
 
         this.network =  readNetwork(networkFilename);
@@ -35,7 +35,7 @@ public class GraphHopperMATSim extends GraphHopper {
     }
 
     @Override
-    protected DataReader createReader(GraphHopperStorage ghStorage) {
+    public DataReader createReader(GraphHopperStorage ghStorage) {
         MATSimNetwork2graphhopper reader = new MATSimNetwork2graphhopper(ghStorage, network, matsim2wgs );
 
         return initDataReader(reader);
@@ -52,6 +52,10 @@ public class GraphHopperMATSim extends GraphHopper {
         Scenario scenario = ScenarioUtils.createScenario(ConfigUtils.createConfig());
         new MatsimNetworkReader(scenario.getNetwork()).readFile(path2Network);
         return scenario.getNetwork();
+    }
+
+    public CoordinateTransformation getCoordinateTransform() {
+        return matsim2wgs;
     }
 
 
