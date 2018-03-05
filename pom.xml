@@ -105,7 +105,7 @@
 	  <dependency>
 		  <groupId>com.graphhopper</groupId>
 		  <artifactId>graphhopper-reader-osm</artifactId>
-		  <version>RELEASE</version>
+		  <version>0.9.0</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/com.graphhopper/map-matching -->
 	  <dependency>
