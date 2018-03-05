@@ -1,6 +1,8 @@
 package ethz.ivt.roadpricing;
 
-import contrib.baseline.IVTBaselineScoringFunctionFactory;
+import ethz.ivt.baseline.BlackListedTimeAllocationMutatorConfigGroup;
+import ethz.ivt.baseline.BlackListedTimeAllocationMutatorStrategyModule;
+import ethz.ivt.baseline.IVTBaselineScoringFunctionFactory;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -11,8 +13,6 @@ import org.matsim.core.router.StageActivityTypesImpl;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.pt.PtConstants;
 import org.matsim.roadpricing.*;
-import playground.ivt.replanning.BlackListedTimeAllocationMutatorConfigGroup;
-import playground.ivt.replanning.BlackListedTimeAllocationMutatorStrategyModule;
 
 
 /**
