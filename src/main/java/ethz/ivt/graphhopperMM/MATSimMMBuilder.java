@@ -7,26 +7,20 @@ package ethz.ivt.graphhopperMM;
 import com.graphhopper.GraphHopper;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.routing.AlgorithmOptions;
-import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
-import com.graphhopper.util.GPXEntry;
 import com.graphhopper.util.Parameters;
-import org.apache.commons.cli.*;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
-import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
-import java.io.FileNotFoundException;
-import java.util.List;
 
 public class MATSimMMBuilder {
 
     public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans) {
         GraphHopperMATSim hopper = buildGraphHopper(networkFilename, trans);
         MapMatching mapMatcher = createMapMatching(hopper);
-        return new GHtoEvents(hopper, mapMatcher, hopper.network);
+        return new GHtoEvents(hopper, mapMatcher);
 
     }
 
@@ -37,8 +31,9 @@ public class MATSimMMBuilder {
 
         hopper.setStoreOnFlush(false)
                 .setGraphHopperLocation(new File("").getAbsolutePath());
-        CarFlagEncoder encoder = new CarFlagEncoder();
-        hopper.setEncodingManager(new EncodingManager(encoder));
+
+        //TODO: set up multiple encoders
+        hopper.setEncodingManager(new EncodingManager("bike,car"));
         hopper.getCHFactoryDecorator().setEnabled(false);
         hopper.importOrLoad();
 
@@ -48,8 +43,8 @@ public class MATSimMMBuilder {
     private MapMatching createMapMatching(GraphHopper hopper) {
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
-        //TODO: dont just get first encoder
-        Weighting weighting = new FastestWeighting(hopper.getEncodingManager().fetchEdgeEncoders().get(0));
+        //TODO: dont just get first encoder, let the searcher specify the transport type
+        Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
         MapMatching mapMatching = new MapMatching(hopper, algoOptions);
 

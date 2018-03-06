@@ -1,3 +1,5 @@
 target/
 .idea/
 *.iml
+scenarios/
+car_ownership_model/VZ_Files/

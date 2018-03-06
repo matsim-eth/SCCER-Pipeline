@@ -1,7 +1,7 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/maven-v4_0_0.xsd">
   <modelVersion>4.0.0</modelVersion>
   <groupId>org.matsim</groupId>
-	<artifactId>matsim-mapmatching</artifactId>
+	<artifactId>matsim-SCCER</artifactId>
 	<version>0.1</version>
   <name>Mapmatching for MATSim</name>
 	<build>
@@ -20,6 +20,8 @@
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
 		<java.version>1.8</java.version>
+		<matsim.version>0.10.0-SNAPSHOT</matsim.version>
+		<graphhopper.version>0.9.0</graphhopper.version>
 	</properties>
   <dependencies>
   	<dependency>
@@ -35,7 +37,7 @@
 	  <dependency>
 		  <groupId>org.matsim</groupId>
 		  <artifactId>matsim</artifactId>
-		  <version>0.10.0-SNAPSHOT</version>
+		  <version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.geotools</groupId>
@@ -50,27 +52,37 @@
 	  <dependency>
 	  	<groupId>org.matsim.contrib</groupId>
 	  	<artifactId>roadpricing</artifactId>
-	  	<version>0.10.0-SNAPSHOT</version>
+	  	<version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 	  	<groupId>org.matsim.contrib</groupId>
 	  	<artifactId>analysis</artifactId>
-	  	<version>0.10.0-SNAPSHOT</version>
+	  	<version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>accessibility</artifactId>
-		  <version>0.10.0-SNAPSHOT</version>
+		  <version>${matsim.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.matsim.contrib</groupId>
+		  <artifactId>socnetgen</artifactId>
+		  <version>${matsim.version}</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.matsim.contrib</groupId>
+		  <artifactId>locationchoice</artifactId>
+		  <version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>emissions</artifactId>
-		  <version>LATEST</version>
+		  <version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>noise</artifactId>
-		  <version>LATEST</version>
+		  <version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
 	  	<groupId>com.fasterxml.jackson.core</groupId>
@@ -87,31 +99,17 @@
 		  <artifactId>jsch</artifactId>
 		  <version>0.1.54</version>
 	  </dependency>
-	  <dependency>
-		  <groupId>com.github.gunnarfloetteroed</groupId>
-		  <artifactId>java</artifactId>
-		  <version>master</version>
-		  </dependency>
-		  <dependency>
-	  	<groupId>org.matsim.contrib</groupId>
-	  	<artifactId>dvrp</artifactId>
-	  	<version>0.10.0-SNAPSHOT</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.matsim.contrib</groupId>
-		  <artifactId>taxi</artifactId>
-		  <version>0.10.0-SNAPSHOT</version>
-	  </dependency>
-	  <dependency>
+
+      <dependency>
 		  <groupId>com.graphhopper</groupId>
 		  <artifactId>graphhopper-reader-osm</artifactId>
-		  <version>0.9.0</version>
+		  <version>${graphhopper.version}</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/com.graphhopper/map-matching -->
 	  <dependency>
 		  <groupId>com.graphhopper</groupId>
 		  <artifactId>graphhopper-map-matching-core</artifactId>
-		  <version>0.9.0</version>
+		  <version>${graphhopper.version}</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/commons-cli/commons-cli -->
 	  <dependency>

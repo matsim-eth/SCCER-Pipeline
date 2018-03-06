@@ -16,6 +16,7 @@ import org.matsim.api.core.v01.events.*;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.vehicles.Vehicle;
 
 import java.util.*;
@@ -28,18 +29,18 @@ public class GHtoEvents {
 
     private final MapMatching matcher;
     Network network;
-    private com.graphhopper.matching.MapMatching MapMatching;
-    private GraphHopper hopper;
+    private GraphHopperMATSim hopper;
+    private CoordinateTransformation coordinateTransform;
 
-    public GHtoEvents(MapMatching matcher, Network network) {
+    public GHtoEvents(MapMatching matcher, Network network) { //TODO: fix these constructors so that network and hopper are always available
         this.network = network;
         this.matcher = matcher;
     }
 
-    public GHtoEvents(GraphHopper hopper, MapMatching matcher, Network network) {
-        this.network = network;
+    public GHtoEvents(GraphHopperMATSim hopper, MapMatching matcher) {
         this.matcher = matcher;
         this.hopper = hopper;
+        this.coordinateTransform = hopper.getCoordinateTransform();
     }
 
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
@@ -181,8 +182,8 @@ public class GHtoEvents {
 
         Coordinate x0_coord = new Coordinate(x0.getEntry().getLon(), x0.getEntry().getLat()); //TODO lon lat order?
 
-        Coordinate start_coord = coordToCoordinate(l.getFromNode().getCoord());
-        Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
+        Coordinate start_coord = coordToCoordinate(getCoordinateTransform().transform(l.getFromNode().getCoord()));
+        Coordinate end_coord = coordToCoordinate(getCoordinateTransform().transform(l.getToNode().getCoord()));
 
         LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
         double distance_covered = (ls.getEndIndex() - ls.project(x0_coord)) / ls.getEndIndex();
@@ -198,8 +199,8 @@ public class GHtoEvents {
 
         Coordinate x1_coord = new Coordinate(x1.getEntry().getLon(), x1.getEntry().getLat()); //TODO lon lat order?
 
-        Coordinate start_coord = coordToCoordinate(l.getFromNode().getCoord());
-        Coordinate end_coord = coordToCoordinate(l.getToNode().getCoord());
+        Coordinate start_coord = coordToCoordinate(getCoordinateTransform().transform(l.getFromNode().getCoord()));
+        Coordinate end_coord = coordToCoordinate(getCoordinateTransform().transform(l.getToNode().getCoord()));
 
         LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
         double distance_covered = (ls.project(x1_coord) - ls.getStartIndex()) / ls.getEndIndex();
@@ -222,10 +223,18 @@ public class GHtoEvents {
     }
 
     public MapMatching getMapper() {
-        return MapMatching;
+        return matcher;
     }
 
     public GraphHopper getHopper() {
         return hopper;
+    }
+
+    public CoordinateTransformation getCoordinateTransform() {
+        return hopper.getCoordinateTransform();
+    }
+
+    public Network getNetwork() {
+        return hopper.network;
     }
 }
