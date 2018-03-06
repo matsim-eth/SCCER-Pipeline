@@ -77,12 +77,12 @@
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>emissions</artifactId>
-		  <version>${matsim.version}</version>
+		  <version>LATEST</version>
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>noise</artifactId>
-		  <version>${matsim.version}</version>
+		  <version>LATEST</version>
 	  </dependency>
 	  <dependency>
 	  	<groupId>com.fasterxml.jackson.core</groupId>
