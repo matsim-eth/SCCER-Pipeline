@@ -64,8 +64,8 @@ public class AddTypesToNetwork {
 
     Map<String, HBFEA> hbfeaMap = new HashMap<>();
     private SpatialIndex index;
-    private static int  MAX_SEARCH_DISTANCE = 2000;
-    private static String WORKING_FOLDER = "C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\network_editing\\version2\\";
+    private static int  MAX_SEARCH_DISTANCE = 5000;
+    private static String WORKING_FOLDER = "P:\\Projekte\\SCCER\\switzerland_10pct\\";
     private Map<Id<Link>, String> linkMatches = new HashMap<>();
 
     /**
@@ -97,7 +97,7 @@ public class AddTypesToNetwork {
         Config config_old = ConfigUtils.createConfig();
         Scenario sc_old = ScenarioUtils.createScenario(config_old);
         MatsimNetworkReader reader = new MatsimNetworkReader(sc_old.getNetwork());
-        reader.readFile("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\mmNetwork.xml");
+        reader.readFile(WORKING_FOLDER + "switzerland_network.xml.gz");
 
         //load shapefile of OSM network with types
         File osmShapefile = new File("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\network_editing\\version2\\new_net_shp_plus\\network_lines.shp");
@@ -109,7 +109,7 @@ public class AddTypesToNetwork {
         Path path = Paths.get(WORKING_FOLDER + "distinct_link_types.txt");
         Files.write(path, osmReference.buildHBEFAlinkTypes(link_types), StandardCharsets.UTF_8);
 
-        new NetworkWriter(sc_old.getNetwork()).writeFileV2(WORKING_FOLDER + "network_zurich_w_types.xml");
+        new NetworkWriter(sc_old.getNetwork()).writeFileV2(WORKING_FOLDER + "network_switzerland_w_types.xml");
 
 
     }
@@ -129,13 +129,13 @@ public class AddTypesToNetwork {
      */
     private void findMatchingLinks(Network network) {
         for (Link link : network.getLinks().values()) {
-            SimpleFeature matchingLink = null;
+            SimpleFeature matchingOSMLink = null;
             int searchRadius = 10;
             //keep searching with a larger radius, until a link is found
-            while (searchRadius < MAX_SEARCH_DISTANCE && (matchingLink = getOSMLink(link, searchRadius)) == null) {
+            while (searchRadius < MAX_SEARCH_DISTANCE && (matchingOSMLink = getOSMLink(link, searchRadius)) == null) {
                 searchRadius *= 2;
             }
-            updateLinkType(link, matchingLink);
+            updateLinkType(link, matchingOSMLink);
 
         }
     }
@@ -265,9 +265,9 @@ public class AddTypesToNetwork {
      */
     private void updateLinkType(Link l, SimpleFeature feature) {
 
-        if (!l.getAllowedModes().contains(TransportMode.car)) {
-            NetworkUtils.setType(l, null);
-            linkMatches.put(l.getId(), feature.getID());
+        if (l.getAllowedModes() == null || !l.getAllowedModes().contains(TransportMode.car)) {
+        NetworkUtils.setType(l, null);
+        //linkMatches.put(l.getId(), feature.getID());
         }
         else {
             String type;
@@ -291,6 +291,10 @@ public class AddTypesToNetwork {
                 NetworkUtils.setType(l, type);
 
             }
+        }
+
+        if (feature == null){
+            logger.warn("Feature not found for link " + l.getId());
         }
     }
 
