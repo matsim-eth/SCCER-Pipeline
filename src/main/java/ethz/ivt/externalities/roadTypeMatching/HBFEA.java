@@ -1,4 +1,4 @@
-package ethz.ivt;
+package ethz.ivt.externalities.roadTypeMatching;
 
 /**
  * Created by molloyj on 28.07.2017.

@@ -1,5 +1,7 @@
 package ethz.ivt;
 
+import com.google.inject.Guice;
+import com.google.inject.Injector;
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.counters.NoiseCounter;
 import ethz.ivt.externalities.data.AggregateCongestionData;
@@ -10,12 +12,16 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
+import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
+import org.matsim.contrib.emissions.roadTypeMapping.RoadTypeMappingProvider;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
@@ -75,7 +81,9 @@ public class MeasureExternalitiesFromTraceEvents {
         aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
 
         // setup externality counters
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
+        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
+
+
         EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
         CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
         NoiseCounter noiseCounter = new NoiseCounter(scenario, v2deh, date, aggregateNoiseData);
