@@ -111,8 +111,8 @@ public class MeasureAggregateNoiseFromScenario {
         noiseParameters.setScaleFactor(100.);
 
         // set parameter values to same as Kaddoura et al. 2017
-        noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
-//        noiseContext.getNoiseParams().setAnnualCostRate(78.6); // 78.6 CHF i.e. 85 DEM * 0.59827 * 1.02 ^ (2017-1995) ??
+//        noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
+        noiseParameters.setAnnualCostRate(80.0); // 80.0 CHF i.e. 85 DEM * 0.597420 * 1.02 ^ (2018-1995) ??
 
 //        double numberReceiverPoints = 2000000;
 //        double gap = computeMinimalGap(scenario, numberReceiverPoints);
