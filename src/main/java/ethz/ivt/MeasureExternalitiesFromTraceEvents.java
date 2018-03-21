@@ -26,6 +26,8 @@ import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 
+import java.util.Random;
+
 /**
  * Created by molloyj on 17.07.2017.
  */
@@ -100,18 +102,37 @@ public class MeasureExternalitiesFromTraceEvents {
         //householdid, #autos, auto1, auto2, auto3
         //get household id of person. Assign next vehicle from household.
 
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
-        car.setMaximumVelocity(60.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-3END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
+        // Petrol car setup
+        VehicleType petrol_car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
+        petrol_car.setMaximumVelocity(60.0 / 3.6);
+        petrol_car.setPcuEquivalents(1.0);
+        petrol_car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-3END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(petrol_car);
+
+        // Diesel car setup
+        VehicleType diesel_car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
+        diesel_car.setMaximumVelocity(60.0 / 3.6);
+        diesel_car.setPcuEquivalents(1.0);
+        diesel_car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;<1,4L;PC-D-Euro-3END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(diesel_car);
+
+
+        Random randomGenerator = new Random();
+        double percentDiesel = 0.3;
 
         for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
             Id<Vehicle> vid = Id.createVehicleId(pid);
-            //easy option: add
-            Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
 
-            scenario.getVehicles().addVehicle(v);
+            //add petrol or diesel vehicles according to percentage
+            double percent = randomGenerator.nextDouble();
+            if (percent < percentDiesel) {
+                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, diesel_car);
+                scenario.getVehicles().addVehicle(v);
+            } else {
+                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, petrol_car);
+                scenario.getVehicles().addVehicle(v);
+            }
+
             //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
         }
 
