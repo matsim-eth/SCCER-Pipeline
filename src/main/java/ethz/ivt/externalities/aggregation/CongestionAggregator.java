@@ -1,7 +1,8 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.data.AggregateCongestionData;
+import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
+import ethz.ivt.vsp.AgentOnLinkInfo;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -14,6 +15,7 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import ethz.ivt.vsp.CongestionEvent;
 import ethz.ivt.vsp.handlers.CongestionEventHandler;
+import org.matsim.vehicles.Vehicle;
 
 import java.util.*;
 
@@ -22,54 +24,62 @@ import java.util.*;
  */
 public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, LinkLeaveEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
-    
-//    private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    private AggregateCongestionData aggregateCongestionData;
+    private AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime;
 
-    protected Map<Id<Link>, Map<Integer, List<Id<Person>>>> linkId2timeBin2personId = new HashMap<>();
+    private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
 
-    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, AggregateCongestionData acd) {
-//        this.scenario = scenario;
+    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, AggregateCongestionDataPerLinkPerTime acd) {
         this.drivers = drivers;
-        this.aggregateCongestionData = acd;
+        this.aggregateCongestionDataPerLinkPerTime = acd;
 
-        setUpBinsForLinks(scenario);
-        log.info("Number of congestion bins: " + aggregateCongestionData.getNumBins());
-    }
-
-    protected void setUpBinsForLinks(Scenario scenario) {
-        scenario.getNetwork().getLinks().keySet().forEach(l -> {
-            linkId2timeBin2personId.put(l, new HashMap<>());
-            for(int bin = 0; bin<aggregateCongestionData.getNumBins(); bin++) {
-            	linkId2timeBin2personId.get(l).put(bin, new ArrayList<>());
-            }
+        // set up person2linkinfo
+        scenario.getPopulation().getPersons().keySet().forEach(personId -> {
+            person2linkinfo.put(personId, null);
         });
+
+        log.info("Number of congestion bins: " + aggregateCongestionDataPerLinkPerTime.getNumBins());
     }
 
     @Override
     public void handleEvent(CongestionEvent event) {
-        int bin = ExternalityUtils.getTimeBin(event.getEmergenceTime(), aggregateCongestionData.getBinSize());
-        aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("value")[bin] += event.getDelay();
+        int bin = ExternalityUtils.getTimeBin(event.getEmergenceTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
+        aggregateCongestionDataPerLinkPerTime.addValue(event.getLinkId(), bin, "delay", event.getDelay());
     }
     
 	@Override
 	public void handleEvent(LinkLeaveEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionData.getBinSize());
-		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
-        if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
-        	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-            aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("count")[bin] += 1.0;
+        Id<Vehicle> vid = event.getVehicleId();
+        Id<Link> linkId = event.getLinkId();
+        int timeBin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
+
+        if (!vehicleOnLinkDuringTimeBin(vid,linkId, timeBin)) {
+            aggregateCongestionDataPerLinkPerTime.addValue(linkId, timeBin, "count", 1.0);
         }
+        updateVehicleOnLink(vid, linkId, timeBin);
 	}
 
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
-		int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionData.getBinSize());
-		Id<Person> pid = drivers.getDriverOfVehicle(event.getVehicleId());
-        if(!this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).contains(pid) ) {
-        	this.linkId2timeBin2personId.get(event.getLinkId()).get(bin).add(pid);
-            aggregateCongestionData.getLinkId2timeBin2values().get(event.getLinkId()).get("count")[bin] += 1.0;
-        }
+		Id<Vehicle> vid = event.getVehicleId();
+		Id<Link> linkId = event.getLinkId();
+        int timeBin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
+
+        aggregateCongestionDataPerLinkPerTime.addValue(linkId, timeBin, "count", 1.0);
+        updateVehicleOnLink(vid, linkId, timeBin);
+
 	}
+
+	private boolean vehicleOnLinkDuringTimeBin(Id<Vehicle> vid, Id<Link> linkId, int timeBin) {
+        Id<Person> pid = drivers.getDriverOfVehicle(vid);
+        if (this.person2linkinfo.get(pid).getSetLinkId().equals(linkId)) {
+            return this.person2linkinfo.get(pid).getEnterTime() == timeBin;
+        }
+        return false;
+    }
+
+    private void updateVehicleOnLink(Id<Vehicle> vid, Id<Link> linkId, int timeBin) {
+        Id<Person> pid = drivers.getDriverOfVehicle(vid);
+        this.person2linkinfo.put(pid, new AgentOnLinkInfo(pid, linkId, (double)timeBin, 0.0));
+    }
 }
