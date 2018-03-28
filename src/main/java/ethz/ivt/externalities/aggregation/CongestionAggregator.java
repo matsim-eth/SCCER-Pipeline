@@ -2,6 +2,7 @@ package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
+import ethz.ivt.externalities.data.AggregateCongestionDataPerPersonPerTime;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -26,25 +27,31 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     private final Vehicle2DriverEventHandler drivers;
     private AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime;
+    private AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime;
 
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
 
-    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, AggregateCongestionDataPerLinkPerTime acd) {
+    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers,
+                                AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime,
+                                AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime) {
         this.drivers = drivers;
-        this.aggregateCongestionDataPerLinkPerTime = acd;
+        this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
+        this.aggregateCongestionDataPerPersonPerTime = aggregateCongestionDataPerPersonPerTime;
 
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
             person2linkinfo.put(personId, null);
         });
 
-        log.info("Number of congestion bins: " + aggregateCongestionDataPerLinkPerTime.getNumBins());
+        log.info("Number of congestion bins: " + this.aggregateCongestionDataPerLinkPerTime.getNumBins());
     }
 
     @Override
     public void handleEvent(CongestionEvent event) {
         int bin = ExternalityUtils.getTimeBin(event.getEmergenceTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
         aggregateCongestionDataPerLinkPerTime.addValue(event.getLinkId(), bin, "delay", event.getDelay());
+        aggregateCongestionDataPerPersonPerTime.addValue(event.getAffectedAgentId(), bin, "delay_experienced", event.getDelay());
+        aggregateCongestionDataPerPersonPerTime.addValue(event.getCausingAgentId(), bin, "delay_caused", event.getDelay());
     }
     
 	@Override
