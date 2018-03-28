@@ -7,9 +7,7 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 
-import java.io.FileNotFoundException;
-import java.io.FileReader;
-import java.io.IOException;
+import java.io.*;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -26,6 +24,7 @@ public class AggregateCongestionDataPerPersonPerTime implements AggregateDataPer
         this.scenario = scenario;
         this.numBins = (int) (30 * 3600 / binSize);
         this.binSize = binSize;
+        setUpTimeBins();
     }
 
     @Override
@@ -79,6 +78,12 @@ public class AggregateCongestionDataPerPersonPerTime implements AggregateDataPer
 
     }
 
+    public void addValue(Id<Person> personId, int timeBin, String attribute, double value) {
+        double oldValue = getValue(personId, timeBin, attribute);
+        double newValue = oldValue + value;
+        setValue(personId, timeBin, attribute, newValue);
+    }
+
     @Override
     public void setUpTimeBins() {
         scenario.getPopulation().getPersons().keySet().forEach(p -> {
@@ -103,36 +108,28 @@ public class AggregateCongestionDataPerPersonPerTime implements AggregateDataPer
                 String[] header = reader.readNext();
                 if (header != null) {
                     if (header.length < (2 + attributes.length) ) {
-                        log.error("Csv file contains too few columns");
+                        log.error("CSV file contains too few columns");
                     }
                     else {
-                        Map<String, Integer> name2index = new HashMap<>();
-                        for (int index = 0; index < header.length; index++) {
-                            name2index.putIfAbsent(header[index], index);
-                        }
-
                         // read line by line
                         while ((record = reader.readNext()) != null) {
-                            Id<Link> lid = Id.createLinkId(record[name2index.get("LinkId")]);
-                            int bin = Integer.parseInt(record[name2index.get("TimeBin")]);
-                            double count = Double.parseDouble(record[name2index.get("Count")]);
-                            double value = Double.parseDouble(record[name2index.get("Delay")]);
-                            if (Double.isNaN(count))
-                            {
-                                count = 0.;
-                            }
-                            if (Double.isNaN(value))
-                            {
-                                value = 0.;
-                            }
+                            Id<Link> lid = Id.createLinkId(record[0]);
+                            int bin = Integer.parseInt(record[1]);
 
-                            this.aggregateDataPerPersonPerTime.get(lid).get("count")[bin] = count;
-                            this.aggregateDataPerPersonPerTime.get(lid).get("delay")[bin] = value;
+                            // go through all attributes
+                            for (int i = 0; i < attributes.length; i++) {
+                                double value = Double.parseDouble(record[i+2]);
+                                if (Double.isNaN(value))
+                                {
+                                    value = 0.;
+                                }
+                                this.aggregateDataPerPersonPerTime.get(lid).get(header[i+2])[bin] = value;
+                            }
                         }
                     }
                 }
                 else {
-                    log.error("Congestion csv contains no header info.");
+                    log.error("CSV file contains no header info.");
                 }
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
@@ -152,11 +149,49 @@ public class AggregateCongestionDataPerPersonPerTime implements AggregateDataPer
             log.error("CSV file not found!");
             e.printStackTrace();
         }
-
     }
 
     @Override
-    public void writeDataToCsv(String output) {
+    public void writeDataToCsv(String outputPath) {
+
+        File dir = new File(outputPath);
+        dir.mkdirs();
+
+        String fileName = outputPath + outputFileName;
+
+        File file = new File(fileName);
+
+        try {
+            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+
+            String header = Link.class.getSimpleName() + "id" + ";timebin";
+            for (String attribute : this.attributes) {
+                header = header + ";" + attribute;
+            }
+            bw.write(header);
+            bw.newLine();
+
+            for (Map.Entry<Id<Person>, Map<String, double[]>> e : this.aggregateDataPerPersonPerTime.entrySet()) {
+                for (int bin = 0; bin<this.numBins; bin++) {
+
+                    String entry = e.getKey() + ";" + bin;
+
+                    for (String attribute : attributes) {
+                        entry = entry + ";" + e.getValue().get(attribute)[bin];
+                    }
+
+                    bw.write(entry);
+                    bw.newLine();
+
+                }
+            }
+
+            bw.close();
+            log.info("Output written to " + fileName);
+
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
 
     }
 }

@@ -27,18 +27,22 @@ public class AggregateCongestionDataPerLinkPerTime implements AggregateDataPerTi
     }
 
     // getters
+    @Override
     public int getNumBins() {
         return numBins;
     }
 
+    @Override
     public double getBinSize() {
         return binSize;
     }
 
+    @Override
     public Map<Id<Link>, Map<String, double[]>> getData() {
         return aggregateDataPerLinkPerTime;
     }
 
+    @Override
     public double getValue(Id<Link> linkId, int timeBin, String attribute) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
@@ -55,6 +59,7 @@ public class AggregateCongestionDataPerLinkPerTime implements AggregateDataPerTi
         return 0.0;
     }
 
+    @Override
     public void setValue(Id<Link> linkId, int timeBin, String attribute, double value) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". No value set.");
@@ -79,6 +84,7 @@ public class AggregateCongestionDataPerLinkPerTime implements AggregateDataPerTi
     }
 
     // setup
+    @Override
     public void setUpTimeBins() {
         scenario.getNetwork().getLinks().keySet().forEach(l -> {
             aggregateDataPerLinkPerTime.put(l, new HashMap<>());
@@ -89,6 +95,7 @@ public class AggregateCongestionDataPerLinkPerTime implements AggregateDataPerTi
     }
 
     //reader and writer
+    @Override
     public void loadDataFromCsv(String input) {
         CSVReader reader;
         try {
@@ -145,6 +152,7 @@ public class AggregateCongestionDataPerLinkPerTime implements AggregateDataPerTi
         }
     }
 
+    @Override
     public void writeDataToCsv(String outputPath) {
 
         File dir = new File(outputPath);
