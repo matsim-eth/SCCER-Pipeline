@@ -1,9 +1,6 @@
 package ethz.ivt;
 
-import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.aggregation.CongestionAggregator;
 import ethz.ivt.externalities.aggregation.EmissionsAggregator;
-import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.data.AggregateEmissionsDataPerLinkPerTime;
 import ethz.ivt.externalities.data.AggregateEmissionsDataPerPersonPerTime;
 import org.apache.log4j.Logger;
@@ -15,8 +12,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.noise.data.NoiseContext;
-import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
@@ -38,8 +33,6 @@ public class MeasureAggregateEmissionsFromScenario {
     private static String EVENTS_FILE; // = "20171117_events.xml.gz"; // "test.events.xml.gz"
 
     private Config config;
-    private NoiseContext noiseContext;
-    private NoiseTimeTracker noiseTimeTracker;
     private EventsManagerImpl eventsManager;
 
     public static void main(String[] args) {
