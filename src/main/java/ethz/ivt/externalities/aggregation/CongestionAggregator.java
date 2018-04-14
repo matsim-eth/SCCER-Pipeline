@@ -40,7 +40,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
-            person2linkinfo.put(personId, null);
+            person2linkinfo.put(personId, new AgentOnLinkInfo(personId, null, 0.0, 0.0));
         });
 
         log.info("Number of congestion bins: " + this.aggregateCongestionDataPerLinkPerTime.getNumBins());
@@ -79,7 +79,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
 	private boolean vehicleOnLinkDuringTimeBin(Id<Vehicle> vid, Id<Link> linkId, int timeBin) {
         Id<Person> pid = drivers.getDriverOfVehicle(vid);
-        if (this.person2linkinfo.get(pid).getSetLinkId().equals(linkId)) {
+        if (linkId.equals(this.person2linkinfo.get(pid).getSetLinkId())) {
             return this.person2linkinfo.get(pid).getEnterTime() == timeBin;
         }
         return false;
