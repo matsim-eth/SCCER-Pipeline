@@ -1,19 +1,20 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.counters.CongestionCounter;
+import ethz.ivt.externalities.aggregation.CongestionAggregator;
+import ethz.ivt.externalities.aggregation.EmissionsAggregator;
 import ethz.ivt.externalities.counters.EmissionsCounter;
-import ethz.ivt.externalities.counters.NoiseCounter;
-import ethz.ivt.externalities.data.AggregateCongestionData;
-import ethz.ivt.externalities.data.AggregateNoiseData;
+import ethz.ivt.externalities.data.AggregateEmissionsDataPerLinkPerTime;
+import ethz.ivt.externalities.data.AggregateEmissionsDataPerPersonPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
+import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
@@ -21,6 +22,7 @@ import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -28,7 +30,7 @@ import org.matsim.vehicles.VehicleUtils;
 
 import java.util.Random;
 
-public class MeasureEmissionsFromScenario {
+public class MeasureAggregateEmissionsFromScenario {
     private final static Logger log = Logger.getLogger(MeasureExternalitiesFromTraceEvents.class);
 
     private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
@@ -44,36 +46,47 @@ public class MeasureEmissionsFromScenario {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
-        new MeasureEmissionsFromScenario().run();
+        new MeasureAggregateEmissionsFromScenario().run();
     }
 
     public void run() {
 
         int bin_size_s = 3600;
-        String date = ExternalityUtils.getDate(EVENTS_FILE);
 
         config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup());
         config.controler().setOutputDirectory(RUN_FOLDER + "output/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
+        for (Link l : scenario.getNetwork().getLinks().values()) {
+            String type = (String) l.getAttributes().getAttribute("osm:way:highway");
+            if (type == null) type = "unclassified";
+            NetworkUtils.setType(l, type);
+        }
+
         setUpVehicles(scenario);
 
         eventsManager = new EventsManagerImpl();
-        MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
-        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
-        // setup externality counters
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
-        EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
+        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
+        eventsManager.addHandler(v2deh);
+
+        // setup aggregators
+        AggregateEmissionsDataPerLinkPerTime aggregateEmissionsDataPerLinkPerTime = new AggregateEmissionsDataPerLinkPerTime(scenario, bin_size_s);
+        AggregateEmissionsDataPerPersonPerTime aggregateEmissionsDataPerPersonPerTime = new AggregateEmissionsDataPerPersonPerTime(scenario, bin_size_s);
+        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
+        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, v2deh, aggregateEmissionsDataPerLinkPerTime, aggregateEmissionsDataPerPersonPerTime);
 
         // add event handlers
-        eventsManager.addHandler(v2deh);
-        eventsManager.addHandler(emissionsCounter);
+        eventsManager.addHandler(emissionsAggregator);
 
+        // read MATSim events
+        MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
-        // write to file
-        emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
+        // save emissions data to csv files
+        aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
+        aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
+        log.info("Emissions aggregation completed for MATSim scenario " + CONFIG_FILE + ".");
 
         eventsManager.finishProcessing();
     }
@@ -96,7 +109,7 @@ public class MeasureEmissionsFromScenario {
         diesel_car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;<1,4L;PC D Euro-3END_EMISSIONS");
         scenario.getVehicles().addVehicleType(diesel_car);
 
-
+        // 30% diesel vehicles
         Random randomGenerator = new Random();
         double percentDiesel = 0.3;
 
