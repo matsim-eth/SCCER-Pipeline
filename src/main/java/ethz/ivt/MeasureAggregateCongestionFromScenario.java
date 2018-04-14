@@ -1,35 +1,27 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
-import ethz.ivt.externalities.data.AggregateCongestionData;
+import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
+import ethz.ivt.externalities.data.AggregateCongestionDataPerPersonPerTime;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.api.core.v01.population.PlanElement;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
-import org.matsim.contrib.noise.data.NoiseContext;
-import org.matsim.contrib.noise.handler.LinkSpeedCalculation;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
-import org.matsim.contrib.noise.handler.PersonActivityTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.pt.PtConstants;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
-
-import java.util.HashSet;
-import java.util.Set;
 
 public class MeasureAggregateCongestionFromScenario {
 	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
@@ -41,8 +33,6 @@ public class MeasureAggregateCongestionFromScenario {
     private Config config;
     private EventsManagerImpl eventsManager;
     protected int bin_size_s = 3600;
-
-    private NoiseTimeTracker noiseTimeTracker;
 
     public static void main(String[] args) {
         RUN_FOLDER = args[0];
@@ -64,9 +54,10 @@ public class MeasureAggregateCongestionFromScenario {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
-        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
+        AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime = new AggregateCongestionDataPerLinkPerTime(scenario, bin_size_s);
+        AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime = new AggregateCongestionDataPerPersonPerTime(scenario, bin_size_s);
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, aggregateCongestionData);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, aggregateCongestionDataPerLinkPerTime, aggregateCongestionDataPerPersonPerTime);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -77,8 +68,11 @@ public class MeasureAggregateCongestionFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save congestion data to single csv file
-        aggregateCongestionData.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
+        aggregateCongestionDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
+        aggregateCongestionDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
         log.info("Congestion calculation completed.");
+        log.info("Total delay : " + congestionHandler.getTotalDelay());
+        log.info("Total internalized delay : " + congestionHandler.getTotalInternalizedDelay());
 
         eventsManager.finishProcessing();
     }
