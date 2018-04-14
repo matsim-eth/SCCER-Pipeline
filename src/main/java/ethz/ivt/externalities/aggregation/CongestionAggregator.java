@@ -1,8 +1,7 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
-import ethz.ivt.externalities.data.AggregateCongestionDataPerPersonPerTime;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -26,17 +25,27 @@ import java.util.*;
 public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, LinkLeaveEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     private final Vehicle2DriverEventHandler drivers;
-    private AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime;
-    private AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime;
+    public AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
+    public AggregateDataPerTimeImpl<Person> aggregateCongestionDataPerPersonPerTime;
 
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
 
-    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers,
-                                AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime,
-                                AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime) {
+    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.drivers = drivers;
-        this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
-        this.aggregateCongestionDataPerPersonPerTime = aggregateCongestionDataPerPersonPerTime;
+
+        List<String> attributes1 = new LinkedList<>();
+        attributes1.add("count");
+        attributes1.add("delay");
+
+        List<String> attributes2 = new LinkedList<>();
+        attributes2.add("delay_experienced");
+        attributes2.add("delay_caused");
+
+        String outputFileName1 = "aggregate_delay_per_link_per_time.csv";
+        String outputFileName2 = "aggregate_delay_per_person_per_time.csv";
+
+        this.aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributes1, outputFileName1);
+        this.aggregateCongestionDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributes2, outputFileName2);
 
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {

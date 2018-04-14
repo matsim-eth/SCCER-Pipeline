@@ -1,8 +1,6 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.EmissionsAggregator;
-import ethz.ivt.externalities.data.AggregateEmissionsDataPerLinkPerTime;
-import ethz.ivt.externalities.data.AggregateEmissionsDataPerPersonPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -64,10 +62,8 @@ public class MeasureAggregateEmissionsFromScenario {
         eventsManager.addHandler(v2deh);
 
         // setup aggregators
-        AggregateEmissionsDataPerLinkPerTime aggregateEmissionsDataPerLinkPerTime = new AggregateEmissionsDataPerLinkPerTime(scenario, bin_size_s);
-        AggregateEmissionsDataPerPersonPerTime aggregateEmissionsDataPerPersonPerTime = new AggregateEmissionsDataPerPersonPerTime(scenario, bin_size_s);
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
-        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, v2deh, aggregateEmissionsDataPerLinkPerTime, aggregateEmissionsDataPerPersonPerTime);
+        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, v2deh);
 
         // add event handlers
         eventsManager.addHandler(emissionsAggregator);
@@ -77,8 +73,8 @@ public class MeasureAggregateEmissionsFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save emissions data to csv files
-        aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
-        aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
+        emissionsAggregator.aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
+        emissionsAggregator.aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/");
         log.info("Emissions aggregation completed for MATSim scenario " + CONFIG_FILE + ".");
 
         eventsManager.finishProcessing();

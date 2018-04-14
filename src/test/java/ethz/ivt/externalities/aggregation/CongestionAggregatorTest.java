@@ -1,7 +1,5 @@
 package ethz.ivt.externalities.aggregation;
 
-import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
-import ethz.ivt.externalities.data.AggregateCongestionDataPerPersonPerTime;
 import ethz.ivt.vsp.CongestionEvent;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
@@ -23,9 +21,7 @@ public class CongestionAggregatorTest {
         Fixture fixture = new Fixture();
         fixture.init();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        AggregateCongestionDataPerLinkPerTime acdlt = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        AggregateCongestionDataPerPersonPerTime acdpt = new AggregateCongestionDataPerPersonPerTime(fixture.scenario, 3600.0);
-        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh,acdlt,acdpt);
+        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh);
 
         // create events on single link
         Id<Link> linkId = Id.create("0",Link.class);
@@ -40,19 +36,19 @@ public class CongestionAggregatorTest {
 
         // handle events
         ca.handleEvent(ce1);
-        assertEquals("Incorrect link delay value!",1.0,acdlt.getData().get(linkId).get("delay")[0],0.0);
-        assertEquals("Incorrect delay experienced value!",1.0,acdpt.getData().get(affectedId).get("delay_experienced")[0],0.0);
-        assertEquals("Incorrect delay caused value!",1.0,acdpt.getData().get(causingId).get("delay_caused")[0],0.0);
+        assertEquals("Incorrect link delay value!",1.0,ca.aggregateCongestionDataPerLinkPerTime.getData().get(linkId).get("delay")[0],0.0);
+        assertEquals("Incorrect delay experienced value!",1.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(affectedId).get("delay_experienced")[0],0.0);
+        assertEquals("Incorrect delay caused value!",1.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(causingId).get("delay_caused")[0],0.0);
 
         ca.handleEvent(ce2);
-        assertEquals("Delay values not added correctly!",2.0,acdlt.getData().get(linkId).get("delay")[0],0.0);
-        assertEquals("Delay experienced value not added correctly!",2.0,acdpt.getData().get(affectedId).get("delay_experienced")[0],0.0);
-        assertEquals("Delay caused value not added correctly!",2.0,acdpt.getData().get(causingId).get("delay_caused")[0],0.0);
+        assertEquals("Delay values not added correctly!",2.0,ca.aggregateCongestionDataPerLinkPerTime.getData().get(linkId).get("delay")[0],0.0);
+        assertEquals("Delay experienced value not added correctly!",2.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(affectedId).get("delay_experienced")[0],0.0);
+        assertEquals("Delay caused value not added correctly!",2.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(causingId).get("delay_caused")[0],0.0);
 
         ca.handleEvent(ce3);
-        assertEquals("Delay value not entered in correct bin!", 1.0,acdlt.getData().get(linkId).get("delay")[2],0.0);
-        assertEquals("Delay experienced value not entered in correct bin!",1.0,acdpt.getData().get(affectedId).get("delay_experienced")[2],0.0);
-        assertEquals("Delay caused value not entered in correct bin!",1.0,acdpt.getData().get(causingId).get("delay_caused")[2],0.0);
+        assertEquals("Delay value not entered in correct bin!", 1.0,ca.aggregateCongestionDataPerLinkPerTime.getData().get(linkId).get("delay")[2],0.0);
+        assertEquals("Delay experienced value not entered in correct bin!",1.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(affectedId).get("delay_experienced")[2],0.0);
+        assertEquals("Delay caused value not entered in correct bin!",1.0,ca.aggregateCongestionDataPerPersonPerTime.getData().get(causingId).get("delay_caused")[2],0.0);
     }
 
     @Test
@@ -60,9 +56,7 @@ public class CongestionAggregatorTest {
         Fixture fixture = new Fixture();
         fixture.init();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        AggregateCongestionDataPerLinkPerTime acdlt = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        AggregateCongestionDataPerPersonPerTime acdpt = new AggregateCongestionDataPerPersonPerTime(fixture.scenario, 3600.0);
-        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh,acdlt,acdpt);
+        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh);
 
         // create events on single link
         Id<Link> linkId0 = Id.create("0",Link.class);
@@ -77,24 +71,24 @@ public class CongestionAggregatorTest {
         v2deh.handleEvent(new VehicleEntersTrafficEvent(0.0, pid1, linkId0, vid1, "car", 0.0));
         LinkEnterEvent lee1 = new LinkEnterEvent(  0.0, vid1, linkId0);
         ca.handleEvent(lee1);
-        assertEquals("First person enters link: Incorrect count value!", 1.0, acdlt.getValue(linkId0,0,"count"),0.0);
+        assertEquals("First person enters link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,0,"count"),0.0);
 
         // same vehicle exiting link within time span, i.e count does not change
         LinkLeaveEvent lle1 = new LinkLeaveEvent(100.0, vid1, linkId0);
         ca.handleEvent(lle1);
-        assertEquals("First person leaves link: Incorrect count value!", 1.0, acdlt.getValue(linkId0,0,"count"),0.0);
+        assertEquals("First person leaves link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,0,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(100.0, pid1, linkId0, vid1, "car", 0.0));
 
         // new vehicle on link within time span, i.e. count + 1
         v2deh.handleEvent(new VehicleEntersTrafficEvent(100.0, pid2, linkId0, vid2, "car", 0.0));
         LinkEnterEvent lee2 = new LinkEnterEvent(100.0, vid2, linkId0);
         ca.handleEvent(lee2);
-        assertEquals("Second person enters link: Incorrect count value!", 2.0, acdlt.getValue(linkId0,0,"count"),0.0);
+        assertEquals("Second person enters link: Incorrect count value!", 2.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,0,"count"),0.0);
 
         // same vehicle on link within time span, i.e count does not change
         LinkLeaveEvent lle2 = new LinkLeaveEvent(200.0, vid2, linkId0);
         ca.handleEvent(lle2);
-        assertEquals("Second person leaves link: Incorrect count value!", 2.0, acdlt.getValue(linkId0,0,"count"),0.0);
+        assertEquals("Second person leaves link: Incorrect count value!", 2.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,0,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(200.0, pid2, linkId0, vid2, "car", 0.0));
 
     }
@@ -104,9 +98,7 @@ public class CongestionAggregatorTest {
         Fixture fixture = new Fixture();
         fixture.init();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        AggregateCongestionDataPerLinkPerTime acdlt = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        AggregateCongestionDataPerPersonPerTime acdpt = new AggregateCongestionDataPerPersonPerTime(fixture.scenario, 3600.0);
-        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh,acdlt,acdpt);
+        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh);
 
         // create events on single link
         Id<Link> linkId0 = Id.create("0",Link.class);
@@ -120,24 +112,24 @@ public class CongestionAggregatorTest {
         v2deh.handleEvent(new VehicleEntersTrafficEvent(0.0, pid1, linkId0, vid1, "car", 0.0));
         LinkEnterEvent lee1 = new LinkEnterEvent(  0.0, vid1, linkId0);
         ca.handleEvent(lee1);
-        assertEquals("Person enters first link: Incorrect count value!", 1.0, acdlt.getValue(linkId0,0,"count"),0.0);
+        assertEquals("Person enters first link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,0,"count"),0.0);
 
         // vehicle leaves link in current time bin, i.e. count[bin] + 1
         LinkLeaveEvent lle1 = new LinkLeaveEvent(3650.0, vid1, linkId0);
         ca.handleEvent(lle1);
-        assertEquals("Person leaves first link: Incorrect count value!", 1.0, acdlt.getValue(linkId0,1,"count"),0.0);
+        assertEquals("Person leaves first link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,1,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(3650.0, pid1, linkId0, vid1, "car", 0.0));
 
         // vehicle enters new link within same time bin, i.e. count[bin] + 1
         v2deh.handleEvent(new VehicleEntersTrafficEvent(3650.0, pid1, linkId1, vid1, "car", 0.0));
         LinkEnterEvent lee2 = new LinkEnterEvent(3650.0, vid1, linkId1);
         ca.handleEvent(lee2);
-        assertEquals("Person enters second link: Incorrect count value!", 1.0, acdlt.getValue(linkId1,1,"count"),0.0);
+        assertEquals("Person enters second link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId1,1,"count"),0.0);
 
         // same vehicle leaves link within same time bin, i.e count does not change
         LinkLeaveEvent lle2 = new LinkLeaveEvent(4000.0, vid1, linkId1);
         ca.handleEvent(lle2);
-        assertEquals("Person leaves second link: Incorrect count value!", 1.0, acdlt.getValue(linkId0,1,"count"),0.0);
+        assertEquals("Person leaves second link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId0,1,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(4000.0, pid1, linkId0, vid1, "car", 0.0));
 
     }
@@ -147,9 +139,7 @@ public class CongestionAggregatorTest {
         Fixture fixture = new Fixture();
         fixture.init();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        AggregateCongestionDataPerLinkPerTime acdlt = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        AggregateCongestionDataPerPersonPerTime acdpt = new AggregateCongestionDataPerPersonPerTime(fixture.scenario, 3600.0);
-        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh,acdlt,acdpt);
+        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh);
 
         // create events on single link
         Id<Link> linkId = Id.create("0",Link.class);
@@ -162,24 +152,24 @@ public class CongestionAggregatorTest {
         v2deh.handleEvent(new VehicleEntersTrafficEvent(0.0, pid, linkId, vid, "car", 0.0));
         LinkEnterEvent lee1 = new LinkEnterEvent(  0.0, vid, linkId);
         ca.handleEvent(lee1);
-        assertEquals("Person enters link: Incorrect count value!", 1.0, acdlt.getValue(linkId,0,"count"),0.0);
+        assertEquals("Person enters link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId,0,"count"),0.0);
 
         // vehicle leaves link, i.e. count does not change
         LinkLeaveEvent lle1 = new LinkLeaveEvent(100.0, vid, linkId);
         ca.handleEvent(lle1);
-        assertEquals("Person exits link: Incorrect count value!", 1.0, acdlt.getValue(linkId,0,"count"),0.0);
+        assertEquals("Person exits link: Incorrect count value!", 1.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId,0,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(100.0, pid, linkId, vid, "car", 0.0));
 
         // vehicle enters link, i.e. count[bin] + 1
         v2deh.handleEvent(new VehicleEntersTrafficEvent(1000.0, pid, linkId, vid, "car", 0.0));
         LinkEnterEvent lee2 = new LinkEnterEvent(  1000.0, vid, linkId);
         ca.handleEvent(lee2);
-        assertEquals("Person re-enters link: Incorrect count value!", 2.0, acdlt.getValue(linkId,0,"count"),0.0);
+        assertEquals("Person re-enters link: Incorrect count value!", 2.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId,0,"count"),0.0);
 
         // vehicle leaves link, i.e. count does not change
         LinkLeaveEvent lle2 = new LinkLeaveEvent(1100.0, vid, linkId);
         ca.handleEvent(lle2);
-        assertEquals("Person re-exits link: Incorrect count value!", 2.0, acdlt.getValue(linkId,0,"count"),0.0);
+        assertEquals("Person re-exits link: Incorrect count value!", 2.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId,0,"count"),0.0);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(1100.0, pid, linkId, vid, "car", 0.0));
     }
 
@@ -188,9 +178,7 @@ public class CongestionAggregatorTest {
         Fixture fixture = new Fixture();
         fixture.init();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        AggregateCongestionDataPerLinkPerTime acdlt = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        AggregateCongestionDataPerPersonPerTime acdpt = new AggregateCongestionDataPerPersonPerTime(fixture.scenario, 3600.0);
-        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh,acdlt,acdpt);
+        CongestionAggregator ca = new CongestionAggregator(fixture.scenario,v2deh);
 
         // create events on single link
         Id<Link> linkId = Id.create("0",Link.class);
@@ -226,20 +214,20 @@ public class CongestionAggregatorTest {
         ca.handleEvent(lle2);
         v2deh.handleEvent(new VehicleLeavesTrafficEvent(110.0, pid2, linkId, vid2, "car", 0.0));
 
-        assertEquals("Incorrect count value!", 2.0, acdlt.getValue(linkId,0,"count"),0.0);
-        assertEquals("Incorrect congestion value!", 10.0, acdlt.getValue(linkId, 0, "delay"), 0.0);
+        assertEquals("Incorrect count value!", 2.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId,0,"count"),0.0);
+        assertEquals("Incorrect congestion value!", 10.0, ca.aggregateCongestionDataPerLinkPerTime.getValue(linkId, 0, "delay"), 0.0);
         double totalDelay = 0.0;
         double totalCausedDelay = 0.0;
         double totalExperiencedDelay = 0.0;
-        for (Id<Link> lid : acdlt.getData().keySet()) {
+        for (Id<Link> lid : ca.aggregateCongestionDataPerLinkPerTime.getData().keySet()) {
             for (int bin = 0; bin < 30; bin++) {
-                totalDelay += acdlt.getValue(lid, bin, "delay");
+                totalDelay += ca.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, "delay");
             }
         }
-        for (Id<Person> pid : acdpt.getData().keySet()) {
+        for (Id<Person> pid : ca.aggregateCongestionDataPerPersonPerTime.getData().keySet()) {
             for (int bin = 0; bin < 30; bin++) {
-                totalCausedDelay += acdpt.getValue(pid, bin, "delay_caused");
-                totalExperiencedDelay += acdpt.getValue(pid, bin, "delay_experienced");
+                totalCausedDelay += ca.aggregateCongestionDataPerPersonPerTime.getValue(pid, bin, "delay_caused");
+                totalExperiencedDelay += ca.aggregateCongestionDataPerPersonPerTime.getValue(pid, bin, "delay_experienced");
             }
         }
         assertEquals("Total delay != total caused delay!", 0.0, totalDelay-totalCausedDelay, 0.0);

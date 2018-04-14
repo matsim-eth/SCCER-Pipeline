@@ -4,11 +4,13 @@ import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Random;
 
 import static org.junit.Assert.*;
 
-public class AggregateCongestionDataPerLinkPerTimeTest {
+public class AggregateDataPerTimeTest {
 
     @Test
     public void testConstructor() {
@@ -16,11 +18,15 @@ public class AggregateCongestionDataPerLinkPerTimeTest {
         Fixture fixture = new Fixture();
         fixture.init();
 
-        AggregateCongestionDataPerLinkPerTime acd1 = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
+        List<String> att = new LinkedList<>();
+        att.add("count");
+        att.add("delay");
+
+        AggregateDataPerTimeImpl<Link> acd1 = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
         assertEquals("Incorrect number of bins!",30, acd1.getNumBins());
         assertEquals("Incorrect bin size!",3600.0, acd1.getBinSize(), 0.0);
 
-        AggregateCongestionDataPerLinkPerTime acd2 = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 7200.0);
+        AggregateDataPerTimeImpl<Link> acd2 = new AggregateDataPerTimeImpl<Link>(7200.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
         assertEquals("Incorrect number of bins!", 15, acd2.getNumBins());
         assertEquals("Incorrect bin size!", 7200.0, acd2.getBinSize(), 0.0);
 
@@ -34,7 +40,12 @@ public class AggregateCongestionDataPerLinkPerTimeTest {
     public void testSetAndGetValues() {
         Fixture fixture = new Fixture();
         fixture.init();
-        AggregateCongestionDataPerLinkPerTime acd = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
+
+        List<String> att = new LinkedList<>();
+        att.add("count");
+        att.add("delay");
+
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -73,7 +84,12 @@ public class AggregateCongestionDataPerLinkPerTimeTest {
     public void testAddValues() {
         Fixture fixture = new Fixture();
         fixture.init();
-        AggregateCongestionDataPerLinkPerTime acd = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
+
+        List<String> att = new LinkedList<>();
+        att.add("count");
+        att.add("delay");
+
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -93,7 +109,14 @@ public class AggregateCongestionDataPerLinkPerTimeTest {
     public void testWriteAndReadCSV() {
         Fixture fixture = new Fixture();
         fixture.init();
-        AggregateCongestionDataPerLinkPerTime acdToWrite = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
+
+        List<String> att = new LinkedList<>();
+        att.add("count");
+        att.add("delay");
+
+        String outputFile = "aggregate_delay_per_link_per_time.csv";
+
+        AggregateDataPerTimeImpl<Link> acdToWrite = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, outputFile);
 
         Random randomGenerator = new Random();
         for (Id<Link> lid : fixture.network.getLinks().keySet()) {
@@ -105,8 +128,8 @@ public class AggregateCongestionDataPerLinkPerTimeTest {
 
         acdToWrite.writeDataToCsv("");
 
-        AggregateCongestionDataPerLinkPerTime acdToRead = new AggregateCongestionDataPerLinkPerTime(fixture.scenario, 3600.0);
-        acdToRead.loadDataFromCsv("aggregate_delay_per_link_per_time.csv");
+        AggregateDataPerTimeImpl<Link> acdToRead = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        acdToRead.loadDataFromCsv(outputFile);
 
         for (Id<Link> linkId : acdToWrite.getData().keySet()) {
             for (int bin = 0; bin < 30; bin++) {

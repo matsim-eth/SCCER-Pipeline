@@ -1,8 +1,7 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.data.AggregateEmissionsDataPerLinkPerTime;
-import ethz.ivt.externalities.data.AggregateEmissionsDataPerPersonPerTime;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -16,6 +15,8 @@ import org.matsim.contrib.emissions.types.ColdPollutant;
 import org.matsim.contrib.emissions.types.WarmPollutant;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.util.Map;
 
 /**
@@ -25,15 +26,24 @@ import java.util.Map;
 public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissionEventHandler {
     private static final Logger log = Logger.getLogger(EmissionsAggregator.class);
     private final Vehicle2DriverEventHandler drivers;
-    private AggregateEmissionsDataPerLinkPerTime aggregateEmissionsDataPerLinkPerTime;
-    private AggregateEmissionsDataPerPersonPerTime aggregateEmissionsDataPerPersonPerTime;
+    public AggregateDataPerTimeImpl<Link> aggregateEmissionsDataPerLinkPerTime;
+    public AggregateDataPerTimeImpl<Person> aggregateEmissionsDataPerPersonPerTime;
 
-    public EmissionsAggregator(Scenario scenario, Vehicle2DriverEventHandler v2deh,
-                               AggregateEmissionsDataPerLinkPerTime aggregateEmissionsDataPerLinkPerTime,
-                               AggregateEmissionsDataPerPersonPerTime aggregateEmissionsDataPerPersonPerTime) {
+    public EmissionsAggregator(Scenario scenario, Vehicle2DriverEventHandler v2deh) {
         this.drivers = v2deh;
-        this.aggregateEmissionsDataPerLinkPerTime = aggregateEmissionsDataPerLinkPerTime;
-        this.aggregateEmissionsDataPerPersonPerTime = aggregateEmissionsDataPerPersonPerTime;
+        List<String> attributes = new LinkedList<>();
+        for(WarmPollutant wp : WarmPollutant.values()) {
+            if(!attributes.contains(wp.getText())) {
+                attributes.add(wp.getText());
+            }
+        }
+        for(ColdPollutant cp : ColdPollutant.values()) {
+            if(!attributes.contains(cp.getText())) {
+                attributes.add(cp.getText());
+            }
+        }
+        this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributes, "aggregate_emissions_per_link_per_time.csv");
+        this.aggregateEmissionsDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributes, "aggregate_emissions_per_person_per_time.csv");
     }
 
     @Override

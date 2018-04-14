@@ -1,8 +1,6 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
-import ethz.ivt.externalities.data.AggregateCongestionDataPerLinkPerTime;
-import ethz.ivt.externalities.data.AggregateCongestionDataPerPersonPerTime;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
@@ -12,7 +10,6 @@ import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
-import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
@@ -54,10 +51,8 @@ public class MeasureAggregateCongestionFromScenario {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
-        AggregateCongestionDataPerLinkPerTime aggregateCongestionDataPerLinkPerTime = new AggregateCongestionDataPerLinkPerTime(scenario, bin_size_s);
-        AggregateCongestionDataPerPersonPerTime aggregateCongestionDataPerPersonPerTime = new AggregateCongestionDataPerPersonPerTime(scenario, bin_size_s);
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, aggregateCongestionDataPerLinkPerTime, aggregateCongestionDataPerPersonPerTime);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -68,8 +63,8 @@ public class MeasureAggregateCongestionFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save congestion data to single csv file
-        aggregateCongestionDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
-        aggregateCongestionDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
+        congestionAggregator.aggregateCongestionDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
+        congestionAggregator.aggregateCongestionDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
         log.info("Congestion calculation completed.");
         log.info("Total delay : " + congestionHandler.getTotalDelay());
         log.info("Total internalized delay : " + congestionHandler.getTotalInternalizedDelay());

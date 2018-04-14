@@ -1,27 +1,23 @@
 package ethz.ivt;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.counters.NoiseCounter;
-import ethz.ivt.externalities.data.AggregateCongestionData;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.AggregateNoiseData;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
-import org.matsim.contrib.emissions.roadTypeMapping.RoadTypeMappingProvider;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
@@ -76,8 +72,8 @@ public class MeasureExternalitiesFromTraceEvents {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
 
         // load precomputed aggregate data
-        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
-        aggregateCongestionData.loadDataFromCsv(RUN_FOLDER + CONGESTION_FILE);
+        AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(bin_size_s, scenario.getNetwork().getLinks().keySet(), null, null);
+        aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(RUN_FOLDER + CONGESTION_FILE);
 
         AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
         aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
@@ -87,7 +83,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
 
         EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionDataPerLinkPerTime);
         NoiseCounter noiseCounter = new NoiseCounter(scenario, v2deh, date, aggregateNoiseData);
 
         // add event handlers
