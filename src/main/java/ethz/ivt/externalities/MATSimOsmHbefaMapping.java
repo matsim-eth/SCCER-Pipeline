@@ -1,6 +1,6 @@
 package ethz.ivt.externalities;
 
-import org.matsim.contrib.emissions.HbefaRoadTypeMapping;
+import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 
 import java.util.HashMap;
 import java.util.Map;
