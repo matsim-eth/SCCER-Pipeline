@@ -16,6 +16,7 @@
 			</plugin>
 		</plugins>
 	</build>
+
 	<properties>
 		<maven.compiler.source>1.8</maven.compiler.source>
 		<maven.compiler.target>1.8</maven.compiler.target>
@@ -23,6 +24,30 @@
 		<matsim.version>0.11.0-SNAPSHOT</matsim.version>
 		<graphhopper.version>0.9.0</graphhopper.version>
 	</properties>
+
+	<profiles>
+		<profile>
+			<id>zip</id>
+			<build>
+				<plugins>
+					<plugin>
+						<groupId>org.apache.maven.plugins</groupId>
+						<artifactId>maven-shade-plugin</artifactId>
+						<version>3.1.0</version>
+						<executions>
+							<execution>
+								<phase>package</phase>
+								<goals>
+									<goal>shade</goal>
+								</goals>
+							</execution>
+						</executions>
+					</plugin>
+				</plugins>
+			</build>
+		</profile>
+	</profiles>
+
   <dependencies>
   	<dependency>
   		<groupId>org.apache.commons</groupId>
@@ -99,7 +124,6 @@
 		  <artifactId>jsch</artifactId>
 		  <version>0.1.54</version>
 	  </dependency>
-
       <dependency>
 		  <groupId>com.graphhopper</groupId>
 		  <artifactId>graphhopper-reader-osm</artifactId>
@@ -117,9 +141,9 @@
 		  <artifactId>commons-cli</artifactId>
 		  <version>1.4</version>
 	  </dependency>
-  </dependencies>
+    </dependencies>
 
-	<repositories>
+    <repositories>
 		<repository>
 			<id>jitpack.io</id>
 			<url>https://jitpack.io</url>
