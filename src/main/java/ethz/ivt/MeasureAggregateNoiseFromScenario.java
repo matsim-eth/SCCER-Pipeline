@@ -80,7 +80,7 @@ public class MeasureAggregateNoiseFromScenario {
         final String[] workingDirectories = {config.controler().getOutputDirectory() + "/noise/" + "/" + DataLabel.marginal_damages_link_car.toString() + "/"};
 
         MergeNoiseCSVFile merger = new MergeNoiseCSVFile() ;
-        merger.setNetworkFile(RUN_FOLDER + "network_zurich_w_types.xml");
+        merger.setNetworkFile(RUN_FOLDER + config.network().getInputFile());
         merger.setOutputDirectory(config.controler().getOutputDirectory() + "/noise/");
         merger.setStartTime(1.*3600.);
         merger.setEndTime(30.*3600.);
