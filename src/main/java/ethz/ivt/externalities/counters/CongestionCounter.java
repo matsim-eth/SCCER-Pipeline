@@ -2,6 +2,7 @@ package ethz.ivt.externalities.counters;
 
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.CongestionPerLinkField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -34,9 +35,14 @@ public class CongestionCounter extends ExternalityCounter {
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
-		double delay = this.aggregateCongestionDataPerLinkPerTime.getData().get(lid).get("delay")[bin];
+
+		double count = this.aggregateCongestionDataPerLinkPerTime.getData().get(lid).get(CongestionPerLinkField.COUNT.getText())[bin];
+        double delay = this.aggregateCongestionDataPerLinkPerTime.getData().get(lid).get(CongestionPerLinkField.DELAY.getText())[bin];
+
+        double avg_link_delay = delay / count;
+
 		double previous = this.tempValues.get(personId).get("Delay");
-		this.tempValues.get(personId).put("Delay", previous + delay);
+		this.tempValues.get(personId).put("Delay", previous + avg_link_delay);
 		
 		super.handleEvent(event); //add distance
 	}

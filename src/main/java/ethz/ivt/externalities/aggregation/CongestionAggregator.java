@@ -2,6 +2,8 @@ package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.CongestionPerLinkField;
+import ethz.ivt.externalities.data.CongestionPerPersonField;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -34,12 +36,12 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         this.drivers = drivers;
 
         List<String> attributes1 = new LinkedList<>();
-        attributes1.add("count");
-        attributes1.add("delay");
+        attributes1.add(CongestionPerLinkField.COUNT.getText());
+        attributes1.add(CongestionPerLinkField.DELAY.getText());
 
         List<String> attributes2 = new LinkedList<>();
-        attributes2.add("delay_experienced");
-        attributes2.add("delay_caused");
+        attributes2.add(CongestionPerPersonField.DELAY_CAUSED.getText());
+        attributes2.add(CongestionPerPersonField.DELAY_EXPERIENCED.getText());
 
         String outputFileName1 = "aggregate_delay_per_link_per_time.csv";
         String outputFileName2 = "aggregate_delay_per_person_per_time.csv";
