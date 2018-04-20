@@ -36,8 +36,8 @@ public class CongestionCounter extends ExternalityCounter {
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-		double count = this.aggregateCongestionDataPerLinkPerTime.getData().get(lid).get(CongestionPerLinkField.COUNT.getText())[bin];
-        double delay = this.aggregateCongestionDataPerLinkPerTime.getData().get(lid).get(CongestionPerLinkField.DELAY.getText())[bin];
+		double count = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionPerLinkField.COUNT.getText());
+        double delay = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionPerLinkField.DELAY.getText());
 
         double avg_link_delay = delay / count;
 
