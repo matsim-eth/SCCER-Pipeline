@@ -22,9 +22,21 @@
 		<java.version>1.8</java.version>
 		<matsim.version>0.11.0-SNAPSHOT</matsim.version>
 		<graphhopper.version>0.9.0</graphhopper.version>
-	</properties>
+
+        <scala.version>2.11</scala.version>
+		<scala.binary.version>${scala.version}.12</scala.binary.version>
+        <spark.version>2.2.1</spark.version>
+
+    </properties>
   <dependencies>
-  	<dependency>
+	  <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-library -->
+	  <dependency>
+		  <groupId>org.scala-lang</groupId>
+		  <artifactId>scala-library</artifactId>
+		  <version>${scala.binary.version}</version>
+	  </dependency>
+
+	  <dependency>
   		<groupId>org.apache.commons</groupId>
   		<artifactId>commons-math</artifactId>
   		<version>2.2</version>
@@ -117,6 +129,27 @@
 		  <artifactId>commons-cli</artifactId>
 		  <version>1.4</version>
 	  </dependency>
+
+  <!--
+	  <dependency>
+		  <groupId>org.apache.spark</groupId>
+		  <artifactId>spark-core_${scala.version}</artifactId>
+		  <version>${spark.version}</version>
+		  <scope>provided</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.spark</groupId>
+		  <artifactId>spark-sql_${scala.version}</artifactId>
+		  <version>${spark.version}</version>
+		  <scope>provided</scope>
+	  </dependency>
+
+	  -->
+      <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>9.4-1201-jdbc41</version>
+      </dependency>
   </dependencies>
 
 	<repositories>
@@ -133,6 +166,10 @@
 		<repository>
 			<id>matsim</id>
 			<url>https://dl.bintray.com/matsim/matsim</url>
+		</repository>
+		<repository>
+			<id>spark maven</id>
+			<url>https://dl.bintray.com/spark-packages/maven/</url>
 		</repository>
 	</repositories>
 

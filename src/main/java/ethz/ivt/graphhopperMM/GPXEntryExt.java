@@ -34,4 +34,9 @@ public class GPXEntryExt{
     public Tuple<Integer, String> getLegModeTuple() {
         return new Tuple<>(leg, mode);
     }
+
+    @Override
+    public String toString() {
+        return "leg=" + leg + ", mode='" + mode + '(' + gpxEntry.lat + "," + gpxEntry.lon  + "," + gpxEntry.getTime() + ")";
+    }
 }

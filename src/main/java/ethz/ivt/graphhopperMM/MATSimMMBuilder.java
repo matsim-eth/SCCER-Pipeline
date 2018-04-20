@@ -33,7 +33,7 @@ public class MATSimMMBuilder {
                 .setGraphHopperLocation(new File("").getAbsolutePath());
 
         //TODO: set up multiple encoders
-        hopper.setEncodingManager(new EncodingManager("bike,car"));
+        hopper.setEncodingManager(new EncodingManager("car"));
         hopper.getCHFactoryDecorator().setEnabled(false);
         hopper.importOrLoad();
 
