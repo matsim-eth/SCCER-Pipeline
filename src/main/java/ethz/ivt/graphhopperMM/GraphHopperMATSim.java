@@ -2,6 +2,7 @@ package ethz.ivt.graphhopperMM;
 
 import com.graphhopper.GraphHopper;
 import com.graphhopper.reader.DataReader;
+import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.storage.GraphHopperStorage;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Network;
@@ -20,18 +21,29 @@ public class GraphHopperMATSim extends GraphHopper {
 
     final Network network;
     CoordinateTransformation matsim2wgs;
-    //TODO; refactor this so that the reader makes more sense and stuff
-    public GraphHopperMATSim(String networkFilename, CoordinateTransformation matsim2wgs) {
 
-        this.network =  readNetwork(networkFilename);
-        this.matsim2wgs = matsim2wgs;
-        this.setDataReaderFile(networkFilename);
-    }
-
-    public GraphHopperMATSim(Network network, CoordinateTransformation matsim2wgs) {
+    private GraphHopperMATSim(Network network, CoordinateTransformation matsim2wgs) {
         this.network =  network;
         this.matsim2wgs = matsim2wgs;
         this.setDataReaderFile("/");
+    }
+
+    public static GraphHopperMATSim build(String networkFilename, CoordinateTransformation coordinateTransformation) {
+        return build(readNetwork(networkFilename), coordinateTransformation);
+    }
+
+    public static GraphHopperMATSim build(Network network, CoordinateTransformation coordinateTransformation) {
+        GraphHopperMATSim hopper = new GraphHopperMATSim(network, coordinateTransformation);
+
+        hopper.setStoreOnFlush(false)
+                .setGraphHopperLocation(new File("").getAbsolutePath());
+
+        //TODO: set up multiple encoders
+        hopper.setEncodingManager(new EncodingManager("car"));
+        hopper.getCHFactoryDecorator().setEnabled(false);
+        hopper.importOrLoad();
+
+        return hopper;
     }
 
     @Override

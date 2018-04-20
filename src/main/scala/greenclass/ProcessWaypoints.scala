@@ -6,7 +6,12 @@ import javax.jws.WebParam.Mode
 import com.graphhopper.util.GPXEntry
 import ethz.ivt.graphhopperMM.{GHtoEvents, GPXEntryExt, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
+import org.matsim.api.core.v01.{Id, Scenario}
 import org.matsim.api.core.v01.events.Event
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
+import org.matsim.contrib.noise.NoiseConfigGroup
+import org.matsim.core.config.ConfigUtils
+import org.matsim.core.scenario.ScenarioUtils
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84
 
 import scala.collection.MapLike
@@ -20,10 +25,6 @@ object ProcessWaypoints {
   import scala.collection.JavaConverters._
   Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
-
-
-  val matsim_network_file = "P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_network.xml.gz"
-  val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(matsim_network_file, new CH1903LV03PlustoWGS84)
 
   // Change to Your Database Config
   var properties = new java.util.Properties()
@@ -75,6 +76,14 @@ object ProcessWaypoints {
   def getEvents(x: Stream[GPXEntryExt]): Stream[Event] = ???
 
   def main(args : Array[String]): Unit = {
+
+    val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
+    //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
+    val scenario: Scenario = ScenarioUtils.loadScenario(config)
+    val eventWriter = new EventWriterXML("test_events.xml")
+
+
+    val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
 
     try {
       // Configure to be Read Only

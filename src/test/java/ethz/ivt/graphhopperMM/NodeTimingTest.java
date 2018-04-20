@@ -90,7 +90,7 @@ public class NodeTimingTest {
     }
 
     public void setUpMapMatching() {
-        GraphHopperMATSim hopper = new GraphHopperMATSim(network, new IdentityTransformation());
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(network, new IdentityTransformation());
 
 
         hopper.setStoreOnFlush(false)
