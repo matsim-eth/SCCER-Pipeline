@@ -154,21 +154,29 @@ public class GHtoEvents {
         if (!x.hasNext()) return Collections.emptyList();
         List<Event> events = new ArrayList<>();
         LinkGPXStruct firstE = x.next();
-        events.add(new PersonDepartureEvent(firstE.entryTime, personId, firstE.getLink().getId(), mode));
-        events.add(new LinkLeaveEvent(firstE.exitTime, vehicleId, firstE.getLink().getId()));
+        double entryTimeSeconds = toSeconds(firstE.entryTime);
+        double exitTimeSeconds = toSeconds(firstE.exitTime);
+        events.add(new PersonDepartureEvent(entryTimeSeconds, personId, firstE.getLink().getId(), mode));
+        events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId()));
 
         while (x.hasNext()) {
             LinkGPXStruct curr = x.next();
+            double currEntryTimeSeconds = toSeconds(curr.entryTime);
+            double currExitTimeSeconds = toSeconds(curr.exitTime);
             if (x.hasNext()) {
-                events.add(new LinkEnterEvent(curr.entryTime, vehicleId, firstE.getLink().getId()));
-                events.add(new LinkLeaveEvent(curr.exitTime, vehicleId, firstE.getLink().getId()));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
+                events.add(new LinkLeaveEvent(currExitTimeSeconds, vehicleId, firstE.getLink().getId()));
             } else { //process final element
-                events.add(new LinkEnterEvent(curr.entryTime, vehicleId, firstE.getLink().getId()));
-                events.add(new PersonArrivalEvent(curr.exitTime, personId, firstE.getLink().getId(), mode));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
+                events.add(new PersonArrivalEvent(currExitTimeSeconds, personId, firstE.getLink().getId(), mode));
             }
         }
 
         return events;
+    }
+
+    private double toSeconds(double time) {
+        return time / 1000;
     }
 
 
