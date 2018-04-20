@@ -86,7 +86,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
                 //graph.edge(nodes.get(fromNode), nodes.get(toNode), l.getLength(), false);
             }
             else {
-                log.info(l.getId());
+                log.debug(l.getId());
             }
         });
     }
@@ -111,12 +111,8 @@ public class MATSimNetwork2graphhopper implements DataReader  {
         way.setTag("estimated_center", estmCentre);
         way.setTag("motorroad", "yes");
         // read the highway type
-        String typeString = road.getAttributes().getAttribute("type").toString();
-        int type = Integer.parseInt(typeString);
-        if (type <= 10) typeString = "motorway";
-        if (typeString != null) {
-            way.setTag("highway", typeString); //TODO: this isnt great, we should use the names from the link types
-        }
+        String typeString = road.getAttributes().getAttribute("osm:way:highway").toString();
+        way.setTag("highway", typeString); //TODO: this isnt great, we should use the names from the link types
 
         // read maxspeed filtering for 0 which for Geofabrik shapefiles appears
         // to correspond to no tag
@@ -127,6 +123,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
         }
 
         // read oneway
+
         way.setTag("oneway", "yes");
 
 /* ignore as we are using the matsim network
@@ -141,18 +138,18 @@ public class MATSimNetwork2graphhopper implements DataReader  {
         long includeWay = 1;
 
         long wayFlags = encodingManager.handleWayTags(way, includeWay, relationFlags);
-  //      log.info("default speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
+        //      log.info("default speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
 
         //set link speed to matsim speed, as we don't want to use the OSM defaults
-        wayFlags = encodingManager.fetchEdgeEncoders().get(0).setSpeed(wayFlags, road.getFreespeed());
+        wayFlags = encodingManager.getEncoder("car").setSpeed(wayFlags, road.getFreespeed());
 
-  //      log.info("matsim speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
+        //      log.info("matsim speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
         if (wayFlags == 0)
             return;
 
         edge.setDistance(distance);
         edge.setFlags(wayFlags);
-    //    edge.setWayGeometry(pillarNodes);
+        //    edge.setWayGeometry(pillarNodes);
 
         if (edgeAddedListeners.size() > 0) {
             // check size first so we only allocate the iterator if we have
@@ -171,7 +168,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
     private void processJunctions() {
         AtomicInteger i = new AtomicInteger();
-        log.info(network);
+        log.debug(network);
 
         this.network.getNodes().values().forEach(x -> {
             Coord wgs_from_node = convertor.transform(x.getCoord());
