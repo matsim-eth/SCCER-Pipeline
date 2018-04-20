@@ -1,9 +1,11 @@
 package greenclass
 
-import java.sql.{Connection, Date, DriverManager, ResultSet}
+import java.sql.{Connection, Date, DriverManager, ResultSet, Timestamp}
+import java.text.SimpleDateFormat
 import javax.jws.WebParam.Mode
 
 import com.graphhopper.util.GPXEntry
+import com.sun.xml.internal.stream.writers.XMLEventWriterImpl
 import ethz.ivt.graphhopperMM.{GHtoEvents, GPXEntryExt, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario}
@@ -11,6 +13,7 @@ import org.matsim.api.core.v01.events.Event
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.contrib.noise.NoiseConfigGroup
 import org.matsim.core.config.ConfigUtils
+import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84
 
@@ -20,7 +23,8 @@ import scala.collection.MapLike
 
 
 object ProcessWaypoints {
-  case class TripRecord(user_id: Int, date: Date, mode: String)
+  case class TripRecord(user_id: Int, date: Date)
+  case class TripLeg(leg_id: Int, mode: String)
 
   import scala.collection.JavaConverters._
   Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
@@ -97,12 +101,17 @@ object ProcessWaypoints {
       val rs = statement.executeQuery(tripleg_query)
 
       val personday_triplegs = results(rs)(
-        x => TripRecord(x.getInt("user_id"), x.getDate("started_at"), x.getString("mode_validated")) -> x.getInt("tripleg_id")
+        x => TripRecord(
+          x.getInt("user_id"), x.getDate("started_at"))
+          -> TripLeg(x.getInt("tripleg_id"), x.getString("mode_validated")
+        )
       ).toStream
         .groupBy(_._1)
         .mapValues(_.map(_._2)) //just take the trip id from the pair of (trip record, tripleg_id
-
-      val waypoints_query = """select w.longitude, w.latitude, tracked_at, t.tl_id
+        .filterKeys(_.date.equals(new SimpleDateFormat("yyyy-MM-dd").parse(" 2016-12-03")))
+      //return the time, but not date of the point, we can get that from the trip_leg id
+      val waypoints_query = """select w.longitude, w.latitude,
+                         cast(extract(epoch from tracked_at::time) * 1000 as bigint) as tracked_at_millis, t.tl_id
                               from swiss_car_tripleg_waypoints as t
                               join waypoints as w
                               on t.wp_id = w.id
@@ -112,13 +121,33 @@ object ProcessWaypoints {
 
       //get convert waypoints into trip_leg -> list(waypoints) map
       val tripleg_waypoints = results(rs_waypoints)(
-        {rs => rs.getInt("tl_id") -> new GPXEntry(rs.getDouble("latitude"), rs.getDouble("longitude"), rs.getTimestamp("tracked_at").getTime)}
+        {rs => rs.getInt("tl_id") -> new GPXEntry(rs.getDouble("latitude"), rs.getDouble("longitude"), rs.getLong("tracked_at_millis"))}
       ).toList.groupBy(_._1)
         .map{ case (k, ss) => (k, ss.map(_._2))}
 
+      //get the events for each person
+      val person_events = personday_triplegs
+        .map {
+          case (tr, triplegs) =>
+            val waypoints: Stream[(TripLeg, List[GPXEntry])] =
+              triplegs.flatMap {tlr => tripleg_waypoints.get(tlr.leg_id).map(tlr -> _)}
+            val events = waypoints.flatMap { case (trip_id, wp2) =>
+              gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala //TODO keep vehicle type here (mode : e-car)
+            }
+            (tr, events)
+        }
+      //group events by date
+      person_events.groupBy { case (tr,events) => tr.date } //group by date to
+            .filterKeys(_.equals(new SimpleDateFormat("yyyy-MM-dd").parse(" 2016-12-03")))
+        .foreach { case (date, xs) =>
+            val interleaved_events = xs.flatMap{_._2}.toSeq.sortBy(_.getTime) //interleave events
+            interleaved_events.foreach(eventWriter.handleEvent)
+        }
+      eventWriter.closeFile()
 
-      //calculate the number of waypoints and links for each person and date
-      val person_events = personday_triplegs.foreach{
+        /*
+              //calculate the number of waypoints and links for each person and date
+        .foreach{
         case (tr, triplegs) =>
           val waypoints : Map[Int, List[GPXEntry]] = triplegs.flatMap(tl => tripleg_waypoints.get(tl).map(tl -> _)).toMap
           val links = waypoints.mapValues( v => gh.mapMatchWithTravelTimes(v.asJava))
@@ -127,7 +156,7 @@ object ProcessWaypoints {
           println("%d - %s - %s | tl: %d | w: %d | l: %d"
             .format(tr.user_id, tr.date.toString, tr.mode, triplegs.size, numWaypoints, numLinks))
       }
-
+*/
       //TODO: output data from postgres as binary parquet files for running on euler
 
       //TODO: integrate emissions analysis
