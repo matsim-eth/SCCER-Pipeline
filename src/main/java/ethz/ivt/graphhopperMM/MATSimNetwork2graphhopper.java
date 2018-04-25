@@ -17,6 +17,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
 import org.apache.log4j.Logger;
+import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 
 import java.io.File;
@@ -111,8 +112,9 @@ public class MATSimNetwork2graphhopper implements DataReader  {
         way.setTag("estimated_center", estmCentre);
         way.setTag("motorroad", "yes");
         // read the highway type
-        String typeString = road.getAttributes().getAttribute("osm:way:highway").toString();
-        way.setTag("highway", typeString); //TODO: this isnt great, we should use the names from the link types
+        Object typeString = road.getAttributes().getAttribute("osm:way:highway");
+        if (typeString == null) typeString = NetworkUtils.getType(road);
+        way.setTag("highway", typeString.toString()); //TODO: this isnt great, we should use the names from the link types
 
         // read maxspeed filtering for 0 which for Geofabrik shapefiles appears
         // to correspond to no tag

@@ -1,5 +1,6 @@
 package greenclass
 
+import java.io.File
 import java.sql.{Connection, Date, DriverManager, ResultSet, Timestamp}
 import java.text.SimpleDateFormat
 import javax.jws.WebParam.Mode
@@ -13,6 +14,7 @@ import org.matsim.api.core.v01.events.Event
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.contrib.noise.NoiseConfigGroup
 import org.matsim.core.config.ConfigUtils
+import org.matsim.core.events.EventsManagerImpl
 import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84
@@ -23,6 +25,8 @@ import scala.collection.MapLike
 
 
 object ProcessWaypoints {
+  val logger = Logger.getLogger(this.getClass)
+
   case class TripRecord(user_id: Int, date: Date)
   case class TripLeg(leg_id: Int, mode: String)
 
@@ -36,6 +40,7 @@ object ProcessWaypoints {
   properties.put("password", "password")
   properties.put("driver", "org.postgresql.Driver")
   val conn_str = "jdbc:postgresql://localhost:5432/green_class"
+
 
   // Load the driver
   classOf[org.postgresql.Driver]
@@ -82,10 +87,9 @@ object ProcessWaypoints {
   def main(args : Array[String]): Unit = {
 
     val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
+    val OUTPUT_DIR = args(1)
     //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
-    val eventWriter = new EventWriterXML("test_events.xml")
-
 
     val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
 
@@ -96,7 +100,8 @@ object ProcessWaypoints {
       //read in user / date / mode / trip leg ids
       val tripleg_query = """select user_id, started_at::date, mode_validated, id as tripleg_id
                             from swiss_car_triplegs
-                            where user_id = 1595"""
+                            --where user_id = 1595
+                          """
 
       val rs = statement.executeQuery(tripleg_query)
 
@@ -109,13 +114,13 @@ object ProcessWaypoints {
         .groupBy(_._1)
         .mapValues(_.map(_._2)) //just take the trip id from the pair of (trip record, tripleg_id
         .filterKeys(_.date.equals(new SimpleDateFormat("yyyy-MM-dd").parse(" 2016-12-03")))
+
       //return the time, but not date of the point, we can get that from the trip_leg id
       val waypoints_query = """select w.longitude, w.latitude,
                          cast(extract(epoch from tracked_at::time) * 1000 as bigint) as tracked_at_millis, t.tl_id
                               from swiss_car_tripleg_waypoints as t
                               join waypoints as w
-                              on t.wp_id = w.id
-                              where w.user_id = 1595"""
+                              on t.wp_id = w.id"""
 
       val rs_waypoints = statement.executeQuery(waypoints_query)
 
@@ -136,14 +141,21 @@ object ProcessWaypoints {
             }
             (tr, events)
         }
+      val dateFormat = new SimpleDateFormat("yyyy-MM-dd")
       //group events by date
       person_events.groupBy { case (tr,events) => tr.date } //group by date to
-            .filterKeys(_.equals(new SimpleDateFormat("yyyy-MM-dd").parse(" 2016-12-03")))
-        .foreach { case (date, xs) =>
-            val interleaved_events = xs.flatMap{_._2}.toSeq.sortBy(_.getTime) //interleave events
-            interleaved_events.foreach(eventWriter.handleEvent)
+            .filterKeys(_.equals(dateFormat.parse(" 2016-12-03")))
+          .par.foreach { case (date, xs) =>
+          println(s"processing ${dateFormat.format(date)}")
+          new File(OUTPUT_DIR).mkdirs
+          val eventWriter = new EventWriterXML(s"${OUTPUT_DIR}/${dateFormat.format(date)}-events.xml")
+
+          val interleaved_events = xs.flatMap{_._2}.toSeq.sortBy(_.getTime) //interleave events
+          interleaved_events.foreach(eventWriter.handleEvent)
+
+          eventWriter.closeFile()
+
         }
-      eventWriter.closeFile()
 
         /*
               //calculate the number of waypoints and links for each person and date

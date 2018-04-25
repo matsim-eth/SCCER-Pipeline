@@ -93,18 +93,10 @@ public class NodeTimingTest {
         GraphHopperMATSim hopper = GraphHopperMATSim.build(network, new IdentityTransformation());
 
 
-        hopper.setStoreOnFlush(false)
-                .setGraphHopperLocation(new File("").getAbsolutePath())
-                .setDataReaderFile("C:/");
-        CarFlagEncoder encoder = new CarFlagEncoder();
-        hopper.setEncodingManager(new EncodingManager(encoder));
-        hopper.getCHFactoryDecorator().setEnabled(false);
-        hopper.importOrLoad();
-
 // create MapMatching object, can and should be shared accross threads
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
-        Weighting weighting = new FastestWeighting(encoder);
+        Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
         mapMatching = new MapMatching(hopper, algoOptions);
         graphhopper = hopper;
@@ -294,13 +286,13 @@ public class NodeTimingTest {
 
         assertEquals(events.size(),10);
 
-        assertEquals(events.get(0).getTime(),g1.getEntry().getTime(), 0.001);
+        assertEquals(g1.getEntry().getTime()/1000, events.get(0).getTime(),0.001);
         assertTrue(events.get(0) instanceof PersonDepartureEvent);
 
-        assertEquals(events.get(1).getTime(), 1500, 0.0001);
-        assertEquals(events.get(3).getTime(), 2500, 0.0001);
-        assertEquals(events.get(5).getTime(), 3500, 0.0001);
-        assertEquals(events.get(7).getTime(), 4500, 0.0001);
+        assertEquals(events.get(1).getTime(), 1.5, 0.0001);
+        assertEquals(events.get(3).getTime(), 2.5, 0.0001);
+        assertEquals(events.get(5).getTime(), 3.5, 0.0001);
+        assertEquals(events.get(7).getTime(), 4.5, 0.0001);
 
         for (int i=1; i < events.size()-1;  i+=2) {
             assertEquals(events.get(i).getTime(), events.get(i+1).getTime(), 0.0001);
