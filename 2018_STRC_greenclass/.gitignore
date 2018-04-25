@@ -1,0 +1,11 @@
+tmp/
+.DS_Store
+out/
+template.aux
+template.synctex.gz
+template.out
+*.bbl
+*.blg
+_latexfiles/
+*.out
+*.aux
