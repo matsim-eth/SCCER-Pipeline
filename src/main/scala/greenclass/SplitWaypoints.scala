@@ -79,15 +79,15 @@ object SplitWaypoints {
           val gpxEntry: Stream[(Int, Seq[GPXEntry])] =
             tl_ids.map {tlr => tlr._2.leg_id -> tripleg_waypoints.getOrElse(tlr._2.leg_id, Seq.empty)}
 
-          val date_dir = s"$OUTPUT_DIR/${tr.date.format(dateFormatter)}/${tr.user_id}"
+          val date_dir = s"$OUTPUT_DIR/csv/${tr.date.format(dateFormatter)}/"
           new File(date_dir).mkdirs
+          val eventWriter = new FileWriter(new File(s"$date_dir/${tr.user_id}-gpx.csv"))
+          eventWriter.write("tl_id,longitude,latitude,time\n")
 
-          gpxEntry.foreach { case (tl_id, gs) =>
-            val eventWriter = new FileWriter(new File(s"$date_dir/$tl_id-gpx.csv"))
-            eventWriter.write("longitude,latitude,time\n")
-            gs.foreach(g => eventWriter.write("%f, %f, %d\n".format(g.lon, g.lat, g.getTime)))
-            eventWriter.close()
+          gpxEntry.sortBy(_._1).foreach { case (tl_id, gs) =>
+            gs.sortBy(_.getTime).foreach(g => eventWriter.write("%d,%f,%f,%d\n".format(tl_id,g.lon, g.lat, g.getTime)))
           }
+          eventWriter.close()
 
       }
 
