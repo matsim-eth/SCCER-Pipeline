@@ -25,6 +25,10 @@ object ProcessWaypointsCsv {
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
   def main(args : Array[String]) {
+
+    //val args = {"P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_config_no_facilities.xml", "C:\\Projects\\spark\\green_class_swiss_triplegs.csv","C:\\Projects\\spark\\green_class_waypoints.csv","C:\\Projects\\SCCER_project\\output_gc"}
+
+
     val logger = Logger.getLogger(this.getClass)
 
     val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
@@ -63,37 +67,33 @@ object ProcessWaypointsCsv {
 
     logger.info("network and graphhopper set up")
 
-
+    new File(OUTPUT_DIR).mkdirs
+    val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
     //get the events for each person
-    val person_events = personday_triplegs
-          .filterKeys(_.date == new LocalDate("2017-08-31"))
-          .par.map {
+    personday_triplegs
+          //.filterKeys(_.date.toLocalDate == LocalDate.parse("2017-08-31"))
+          .filterKeys(_.date == LocalDateTime.parse("2017-08-31T17:47:43.542999"))
+        .filterKeys(_.user_id == 1674)
+          .par.foreach {
           case (tr, triplegs) =>
             val waypoints: Stream[(TripLeg, List[GPXEntry])] =
               triplegs.flatMap {tlr => tripleg_waypoints.get(tlr._2.leg_id).map(tlr._2 -> _) }
             val events = waypoints.flatMap { case (trip_id, wp2) =>
               gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala //TODO keep vehicle type here (mode : e-car)
             }
-            (tr, events)
+
+            println(s"processing ${tr.user_id}, ${tr.date}, ${tr.date.format(dateFormatter)}")
+            val date_dir = s"$OUTPUT_DIR/${tr.date.format(dateFormatter)}/"
+            new File(date_dir).mkdirs
+            val eventWriter = new EventWriterXML(s"$date_dir/${tr.user_id}-events.xml")
+
+            events.foreach(eventWriter.handleEvent)
+
+            eventWriter.closeFile()
+
         }
 
-    logger.info("data joined, writing data")
 
-    //TODO: run dates in batch
-    //group events by date
-      person_events.groupBy { case (tr,events) => tr.date } //group by date to
-        .filterKeys(_.equals(LocalDateTime.parse(" 2016-12-03")))
-        .foreach { case (date, xs) =>
-        println(s"processing ${date.formatted("yyyy-MM-dd")}")
-        new File(OUTPUT_DIR).mkdirs
-        val eventWriter = new EventWriterXML(s"${OUTPUT_DIR}/${date.formatted("yyyy-MM-dd")}-events.xml")
-
-        val interleaved_events = xs.flatMap{_._2}.toSeq.seq.sortBy(_.getTime) //interleave events
-        interleaved_events.foreach(eventWriter.handleEvent)
-
-        eventWriter.closeFile()
-
-      }
 
     //group by user / date / mode
 
