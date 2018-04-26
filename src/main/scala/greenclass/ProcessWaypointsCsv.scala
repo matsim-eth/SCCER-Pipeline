@@ -2,7 +2,7 @@ package greenclass
 
 import java.io.File
 import java.text.SimpleDateFormat
-import java.time.LocalDateTime
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
 import com.graphhopper.util.GPXEntry
@@ -47,21 +47,26 @@ object ProcessWaypointsCsv {
 
     //return the time, but not date of the point, we can get that from the trip_leg id
 
-    val tripleg_waypoints =  waypoints_src.getLines.drop(1).map(_.split(","))
-        .map { case Array(long, lat, tracked_at, tl_id) =>
+    val tripleg_waypoints =  waypoints_src.getLines.drop(1)
+      .map(_.split(","))
+      .map { case Array(long, lat, tracked_at, tl_id) =>
           tl_id.toInt -> new GPXEntry(lat.toDouble, long.toDouble, tracked_at.toLong)
         }
-        .toList.groupBy(_._1)
-        .map{ case (k, ss) => (k, ss.map(_._2))}
+      .toStream.groupBy(_._1)
+      .map{ case (k, ss) => (k, ss.map(_._2).toList)}
+
 
     logger.info(s"${tripleg_waypoints.map(_._2.size).sum} waypoints loaded")
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
     val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
 
+    logger.info("network and graphhopper set up")
+
+
     //get the events for each person
     val person_events = personday_triplegs
-          .filterKeys(_.user_id == 1595)
+          .filterKeys(_.date == new LocalDate("2017-08-31"))
           .par.map {
           case (tr, triplegs) =>
             val waypoints: Stream[(TripLeg, List[GPXEntry])] =
@@ -74,11 +79,11 @@ object ProcessWaypointsCsv {
 
     logger.info("data joined, writing data")
 
-
+    //TODO: run dates in batch
     //group events by date
       person_events.groupBy { case (tr,events) => tr.date } //group by date to
         .filterKeys(_.equals(LocalDateTime.parse(" 2016-12-03")))
-        .par.foreach { case (date, xs) =>
+        .foreach { case (date, xs) =>
         println(s"processing ${date.formatted("yyyy-MM-dd")}")
         new File(OUTPUT_DIR).mkdirs
         val eventWriter = new EventWriterXML(s"${OUTPUT_DIR}/${date.formatted("yyyy-MM-dd")}-events.xml")
