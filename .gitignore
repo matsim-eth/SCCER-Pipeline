@@ -3,3 +3,4 @@ target/
 *.iml
 scenarios/
 car_ownership_model/VZ_Files/
+output_gc/
