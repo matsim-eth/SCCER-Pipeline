@@ -35,8 +35,9 @@ object ProcessWaypointsCsv {
 
     val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
     val triplegs_src = Source.fromFile(args(1))
-    val waypoints_src = Source.fromFile(args(2))
+    val waypoints_folder = args(2)
     val OUTPUT_DIR = args(3)
+    val overwrite : Boolean = args.applyOrElse(4, (_ : Int) => "False" ).toBoolean
 
     new File(OUTPUT_DIR).mkdirs
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -62,7 +63,7 @@ object ProcessWaypointsCsv {
 
     import scala.concurrent._
 
-    def getCsvs(tr : TripRecord ) =  new File(s"$OUTPUT_DIR/csv/${tr.date}/${tr.user_id}-gpx.csv")
+    def getCsvs(tr : TripRecord ) =  new File(s"$waypoints_folder/${tr.date}/${tr.user_id}-gpx.csv")
 
     def readCsv(f : File) = {
       Source.fromFile(f).getLines.drop(1)
@@ -74,28 +75,34 @@ object ProcessWaypointsCsv {
     }
 
     personday_triplegs
-        .filterKeys(tr => tr.date == LocalDate.parse("2017-08-31")) //TODO: set up selectable filter from command line
+    //    .filterKeys(tr => tr.date == LocalDate.parse("2017-08-31")) //TODO: set up selectable filter from command line
       .par.foreach {
       case (tr, tl_ids) =>
-        println(s"processing ${tr.user_id}, ${tr.date}")
+        logger.info(s"processing ${tr.user_id}, ${tr.date}")
         val tripLegsCsv = getCsvs(tr)
-        println(tripLegsCsv.getName)
 
-        val events =
-          readCsv(tripLegsCsv)
-            .map { case (_, wp2) => gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala }
-            .filterNot(_.isEmpty) //remove empty triplegs
-            .toList.sortBy(_.head.getTime) //sort by the first event
-            .flatten
+        new File(getDateFolder(tr)).mkdirs
 
-        val date_dir = s"$OUTPUT_DIR/events/${tr.date.format(dateFormatter)}/"
-        new File(date_dir).mkdirs
+        def getDateFolder(tr: TripRecord) = s"$OUTPUT_DIR/events/${tr.date.format(dateFormatter)}/"
 
-        val eventWriter = new EventWriterXML(s"$date_dir/${tr.user_id}-events.xml")
+        def getEventFileName(tr: TripRecord) = s"${getDateFolder(tr)}/${tr.user_id}-events.xml"
 
-        events.foreach(eventWriter.handleEvent)
+        val eventLocation = new File(getEventFileName(tr))
+        if (!eventLocation.exists() || overwrite) {
 
-        eventWriter.closeFile()
+          val events =
+            readCsv(tripLegsCsv)
+              .map { case (_, wp2) => gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala }
+              .filterNot(_.isEmpty) //remove empty triplegs
+              .toList.sortBy(_.head.getTime) //sort by the first event
+              .flatten
+
+          val eventWriter = new EventWriterXML(eventLocation.getAbsolutePath)
+          events.foreach(eventWriter.handleEvent)
+          eventWriter.closeFile()
+        } else {
+          logger.info(s"${eventLocation.getCanonicalPath} already exists, skipping")
+      }
 
     }
 
