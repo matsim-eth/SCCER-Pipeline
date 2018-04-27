@@ -9,7 +9,7 @@ import com.graphhopper.util.GPXEntry
 import com.sun.xml.internal.stream.writers.XMLEventWriterImpl
 import ethz.ivt.graphhopperMM.{GHtoEvents, GPXEntryExt, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
-import org.matsim.api.core.v01.{Id, Scenario}
+import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
 import org.matsim.api.core.v01.events.Event
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.contrib.noise.NoiseConfigGroup
@@ -137,7 +137,7 @@ object ProcessWaypoints {
             val waypoints: Stream[(TripLeg, List[GPXEntry])] =
               triplegs.flatMap {tlr => tripleg_waypoints.get(tlr.leg_id).map(tlr -> _)}
             val events = waypoints.flatMap { case (trip_id, wp2) =>
-              gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala //TODO keep vehicle type here (mode : e-car)
+              gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id), TransportMode.car).asScala //TODO keep vehicle type here (mode : e-car)
             }
             (tr, events)
         }

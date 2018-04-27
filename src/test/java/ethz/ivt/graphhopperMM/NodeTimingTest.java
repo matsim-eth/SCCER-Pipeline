@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
@@ -282,7 +283,7 @@ public class NodeTimingTest {
 
         GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
-        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId);
+        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId, TransportMode.car);
 
         assertEquals(events.size(),10);
 

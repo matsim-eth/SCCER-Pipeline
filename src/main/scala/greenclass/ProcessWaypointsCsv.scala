@@ -9,7 +9,7 @@ import com.graphhopper.util.GPXEntry
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.events.Event
-import org.matsim.api.core.v01.{Id, Scenario}
+import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.algorithms.EventWriterXML
@@ -22,9 +22,10 @@ import scala.concurrent.{Await, Future, TimeoutException}
 
 object ProcessWaypointsCsv {
   case class TripRecord(user_id: Int, date: LocalDate)
-  case class TripLeg(leg_id: Int, mode: String)
+  case class TripLeg(leg_id: Long, mode: String)
   Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
+
 
   def main(args : Array[String]) {
 
@@ -77,13 +78,15 @@ object ProcessWaypointsCsv {
     personday_triplegs
     //    .filterKeys(tr => tr.date == LocalDate.parse("2017-08-31")) //TODO: set up selectable filter from command line
       .par.foreach {
-      case (tr, tl_ids) =>
+      case (tr, tls) =>
         logger.info(s"processing ${tr.user_id}, ${tr.date}")
+        val modeMapping = tls.unzip._2.map { case TripLeg(leg_id, mode) => leg_id -> mode}.toMap
+
         val tripLegsCsv = getCsvs(tr)
 
         new File(getDateFolder(tr)).mkdirs
 
-        def getDateFolder(tr: TripRecord) = s"$OUTPUT_DIR/events/${tr.date.format(dateFormatter)}/"
+        def getDateFolder(tr: TripRecord) = s"$OUTPUT_DIR/${tr.date.format(dateFormatter)}/"
 
         def getEventFileName(tr: TripRecord) = s"${getDateFolder(tr)}/${tr.user_id}-events.xml"
 
@@ -92,7 +95,9 @@ object ProcessWaypointsCsv {
 
           val events =
             readCsv(tripLegsCsv)
-              .map { case (_, wp2) => gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id)).asScala }
+              .map { case (tl, wp2) =>
+                val vehicleId = determineVehicleType(tr.user_id, modeMapping.get(tl))
+                gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), vehicleId, TransportMode.car).asScala }
               .filterNot(_.isEmpty) //remove empty triplegs
               .toList.sortBy(_.head.getTime) //sort by the first event
               .flatten
@@ -105,6 +110,11 @@ object ProcessWaypointsCsv {
       }
 
     }
+
+    def determineVehicleType(user_id: Int, modeOption: Option[String]) = {
+      Id.createVehicleId(user_id.toString + modeOption.filter(_.equals("Mode::Ecar")).getOrElse(""))
+    }
+
 
 
 

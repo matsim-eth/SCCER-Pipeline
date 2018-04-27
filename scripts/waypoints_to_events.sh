@@ -6,3 +6,7 @@ scp -r /P/Projekte/SCCER/switzerland_10pct/ molloyj@euler.ethz.ch:data/switzerla
 
 
 tar czf - /C/Projects/SCCER_project/output_gc/csv/*  | ssh molloyj@euler.ethz.ch "cd data/ && tar xvzf -"
+
+bsub -n 36 -R fullnode -W 10:00 -B < ~/programs/sccer_large.lsf
+
+find . -type f | wc -l #get number of created files in directory

@@ -55,8 +55,8 @@ public class GHtoEvents {
         return links;
     }
 
-    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId) {
-        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), personId, vehicleId);
+    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
+        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), personId, vehicleId, mode);
     }
 
 
@@ -143,11 +143,6 @@ public class GHtoEvents {
             }
         }
         return resultLinks;
-    }
-
-    @Deprecated
-    public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId) {
-        return linkGPXToEvents(x, personId, vehicleId, TransportMode.car);
     }
 
     public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
