@@ -18,8 +18,9 @@ import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
+import org.matsim.core.events.handler.EventHandler;
 
-public abstract class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler {
+public abstract class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler, EventHandler {
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 	protected final Scenario scenario;
     protected final Vehicle2DriverEventHandler drivers;
@@ -33,7 +34,6 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
     	this.drivers = drivers;
     	this.date = date;
     	initializeFields();
-    	initializeHashMaps();
     }
     
     //basic fields
@@ -43,16 +43,25 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         keys.add("Distance");
     }
     
-    protected void initializeHashMaps() {
-        scenario.getPopulation().getPersons().keySet().forEach(p -> {
-            personId2Leg2Values.put(p, new ArrayList<>());
-            tempValues.put(p, new HashMap<>());
-            for (String key : keys) {
-            	tempValues.get(p).put(key, 0.0);
-            }           
-        });
+    protected void initializeHashMaps(Id<Person> p) {
+        personId2Leg2Values.put(p, new ArrayList<>());
+        tempValues.put(p, new HashMap<>());
+        for (String key : keys) {
+         	tempValues.get(p).put(key, 0.0);
+        }
     }
-    
+
+	// Check if leg is traveled by car and get start time
+	@Override
+	public void handleEvent(PersonDepartureEvent e) {
+		Id<Person> pid = e.getPersonId();
+		//check if person in map, assume that first event is always departure event
+		if (!personId2Leg2Values.containsKey(pid)) initializeHashMaps(pid);
+		if (e.getLegMode().equals(TransportMode.car)) {
+			tempValues.get(pid).put("StartTime", e.getTime());
+		}
+	}
+
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
 		Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
@@ -62,15 +71,6 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         double linkLength = scenario.getNetwork().getLinks().get(event.getLinkId()).getLength();
         tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
 	}
-    
-    // Check if leg is traveled by car and get start time
-    @Override
-    public void handleEvent(PersonDepartureEvent e) {
-        Id<Person> pid = e.getPersonId();
-        if (e.getLegMode().equals(TransportMode.car.toString())) {
-        	tempValues.get(pid).put("StartTime", e.getTime());
-        }
-    }
 
     // Get leg end time and append new leg to list
     @Override
