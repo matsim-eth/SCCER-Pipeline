@@ -14,6 +14,7 @@ import org.junit.Before;
 import org.junit.Test;
 import org.matsim.api.core.v01.Coord;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
@@ -59,6 +60,7 @@ public class NodeTimingTest {
 
     Id<Person> personId = Id.createPersonId(1);
     Id<Vehicle> vehicleId = Id.createVehicleId(1);
+    private GraphHopperMATSim graphhopper;
 
     @Before
     public void setUpTestNetwork() {
@@ -83,30 +85,22 @@ public class NodeTimingTest {
         l4 = NetworkUtils.createAndAddLink(network,Id.create( 4, Link.class), node4, node5, 100, freespeed, capacity, numLanes );
         l5 = NetworkUtils.createAndAddLink(network,Id.create( 5, Link.class), node5, node6, 100, freespeed, capacity, numLanes );
 
-        network.getLinks().values().forEach(l -> NetworkUtils.setType(l, "motorroad"));
+        network.getLinks().values().forEach(l -> l.getAttributes().putAttribute("osm:way:highway", "motorroad"));
 
         setUpMapMatching();
     }
 
     public void setUpMapMatching() {
-        GraphHopperMATSim hopper = new GraphHopperMATSim(network, new IdentityTransformation());
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(network, new IdentityTransformation());
 
-
-        hopper.setStoreOnFlush(false)
-                .setGraphHopperLocation(new File("").getAbsolutePath())
-                .setDataReaderFile("C:/");
-        CarFlagEncoder encoder = new CarFlagEncoder();
-        hopper.setEncodingManager(new EncodingManager(encoder));
-        hopper.getCHFactoryDecorator().setEnabled(false);
-        hopper.importOrLoad();
 
 // create MapMatching object, can and should be shared accross threads
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
-        Weighting weighting = new FastestWeighting(encoder);
+        Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
         mapMatching = new MapMatching(hopper, algoOptions);
-
+        graphhopper = hopper;
     }
 
     @Test
@@ -120,7 +114,7 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l1, Arrays.asList(g1)));
         path.add(new MockEdgeMatch(l2, Arrays.asList(g2)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
@@ -141,7 +135,7 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l2, Collections.emptyList()));
         path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
@@ -166,7 +160,7 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l4, Collections.emptyList()));
         path.add(new MockEdgeMatch(l5, Arrays.asList(g3)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching); //TODO: refactor graphhopper and mapmatcher so that both aren't needed
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
@@ -198,7 +192,7 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l2a, Collections.emptyList()));
         path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
@@ -222,7 +216,7 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l2b, Collections.emptyList()));
         path.add(new MockEdgeMatch(l3, Arrays.asList(g2)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
         System.out.println(res);
 
@@ -234,7 +228,7 @@ public class NodeTimingTest {
     @Test
     public void testWhole() {
 
-        GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
 
         List<GPXEntry> entries = Arrays.asList(
                 new GPXEntry( start_y, start_x + 0.5*step,1000),
@@ -258,7 +252,7 @@ public class NodeTimingTest {
     @Test
     public void testWhole2() { //same as test2, but using the mapMatching as well
 
-        GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
 
         List<GPXEntry> entries = Arrays.asList(
                 new GPXEntry( start_y, start_x + 0.5*step,1000),
@@ -287,19 +281,19 @@ public class NodeTimingTest {
         path.add(new MockEdgeMatch(l4, Collections.emptyList()));
         path.add(new MockEdgeMatch(l5, Arrays.asList(g3)));
 
-        GHtoEvents gHtoEvents = new GHtoEvents(null, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
-        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId);
+        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId, TransportMode.car);
 
         assertEquals(events.size(),10);
 
-        assertEquals(events.get(0).getTime(),g1.getEntry().getTime(), 0.001);
+        assertEquals(g1.getEntry().getTime()/1000, events.get(0).getTime(),0.001);
         assertTrue(events.get(0) instanceof PersonDepartureEvent);
 
-        assertEquals(events.get(1).getTime(), 1500, 0.0001);
-        assertEquals(events.get(3).getTime(), 2500, 0.0001);
-        assertEquals(events.get(5).getTime(), 3500, 0.0001);
-        assertEquals(events.get(7).getTime(), 4500, 0.0001);
+        assertEquals(events.get(1).getTime(), 1.5, 0.0001);
+        assertEquals(events.get(3).getTime(), 2.5, 0.0001);
+        assertEquals(events.get(5).getTime(), 3.5, 0.0001);
+        assertEquals(events.get(7).getTime(), 4.5, 0.0001);
 
         for (int i=1; i < events.size()-1;  i+=2) {
             assertEquals(events.get(i).getTime(), events.get(i+1).getTime(), 0.0001);
@@ -313,7 +307,7 @@ public class NodeTimingTest {
     @Test
     public void testWholeNoTiming() {
 
-        GHtoEvents gHtoEvents = new GHtoEvents(mapMatching, network);
+        GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
 
         List<GPXEntry> entries = Arrays.asList(
                 new GPXEntry(start_y, start_x + 0.5*step, 0),

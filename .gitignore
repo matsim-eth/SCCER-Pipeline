@@ -4,3 +4,4 @@ target/
 scenarios/
 car_ownership_model/VZ_Files/
 *.csv
+output_gc/

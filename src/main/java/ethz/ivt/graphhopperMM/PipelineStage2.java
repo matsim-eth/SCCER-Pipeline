@@ -5,31 +5,21 @@ import ethz.ivt.graphhopperMM.outputters.LinkIdWriter;
 import ethz.ivt.graphhopperMM.outputters.PipelineEventsWriter;
 import ethz.ivt.graphhopperMM.outputters.PipelineWriter;
 import org.apache.commons.cli.CommandLineParser;
-import org.apache.commons.cli.DefaultParser;
-import org.apache.commons.lang3.tuple.Pair;
-import org.apache.commons.lang3.tuple.Triple;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.core.events.algorithms.EventWriter;
-import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.utils.collections.Tuple;
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 
 import java.io.File;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 import static java.util.stream.Collectors.groupingBy;
-import static java.util.stream.Collectors.mapping;
 import static java.util.stream.Collectors.toList;
 
 /**
@@ -60,9 +50,6 @@ public class PipelineStage2 {
         //arg 1 = network
         //arg 2 = gpx folder
         //arg 3 = output format
-
-        // create the command line parser
-        CommandLineParser parser = new DefaultParser();
 
         if (args.length != 4){
             throw new IllegalArgumentException("there must be four arguments, in the following structure:....");

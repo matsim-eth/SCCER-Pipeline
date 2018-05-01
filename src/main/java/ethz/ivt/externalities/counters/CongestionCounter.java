@@ -11,6 +11,8 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
+import java.nio.file.Path;
+
 public class CongestionCounter extends ExternalityCounter {
 	private static final Logger log = Logger.getLogger(CongestionCounter.class);
 	private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
@@ -47,9 +49,10 @@ public class CongestionCounter extends ExternalityCounter {
 		super.handleEvent(event); //add distance
 	}
 
-	public void writeCsvFile(String outputPath, String date) {
-		String outputFileName = date + "_congestion.csv";
-		super.writeCsvFile(outputPath, outputFileName);
+
+	public void writeCsvFile(Path outputPath, String filename) {
+		Path outputFileName = outputPath.resolve(filename + "_congestion.csv");
+		super.writeCsvFile(outputFileName);
 	}
 
 }

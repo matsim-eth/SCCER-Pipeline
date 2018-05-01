@@ -20,6 +20,7 @@ import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.vehicles.Vehicle;
 
 import java.util.*;
+import java.util.logging.Logger;
 import java.util.stream.Collectors;
 
 /**
@@ -28,26 +29,15 @@ import java.util.stream.Collectors;
 public class GHtoEvents {
 
     private final MapMatching matcher;
-    Network network;
     private GraphHopperMATSim hopper;
-    private CoordinateTransformation coordinateTransform;
-
-    public GHtoEvents(MapMatching matcher, Network network) { //TODO: fix these constructors so that network and hopper are always available
-        this.network = network;
-        this.matcher = matcher;
-    }
+    private Logger logger = Logger.getLogger(this.getClass().getName());
 
     public GHtoEvents(GraphHopperMATSim hopper, MapMatching matcher) {
         this.matcher = matcher;
         this.hopper = hopper;
-        this.coordinateTransform = hopper.getCoordinateTransform();
     }
 
-    public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
 
-        MatchResult mr = matcher.doWork(entries);
-        return calculateNodeVisitTimes(mr.getEdgeMatches());
-    }
 
     public List<Link> reduceLinkGPX(List<LinkGPXStruct> points) {
         List<Link> links = points
@@ -60,13 +50,26 @@ public class GHtoEvents {
         MatchResult mr = matcher.doWork(points);
         List<Link> links = mr.getEdgeMatches()
                 .stream()
-                .map(em -> network.getLinks().get(Id.createLinkId(em.getEdgeState().getName()))
+                .map(em -> getNetwork().getLinks().get(Id.createLinkId(em.getEdgeState().getName()))
                 ).collect(Collectors.toList());
         return links;
     }
 
-    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId) {
-        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), personId, vehicleId);
+    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
+        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), personId, vehicleId, mode);
+    }
+
+
+    public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
+        if (entries.size() < 2) return new ArrayList<>();
+        try {
+            MatchResult mr = getMatcher().doWork(entries);
+            return calculateNodeVisitTimes(mr.getEdgeMatches());
+        } catch (IllegalArgumentException ex) {
+            logger.warning(ex.getMessage());
+            return Collections.EMPTY_LIST;
+
+        }
     }
 
     public String getEdgeString(List<Link> links) {
@@ -76,7 +79,7 @@ public class GHtoEvents {
 
     private LinkGPXStruct convertToLinkStruct(EdgeMatch e) {
         String edgeIndex = e.getEdgeState().getName();
-        Link link = network.getLinks().get(Id.createLinkId(edgeIndex));
+        Link link = getNetwork().getLinks().get(Id.createLinkId(edgeIndex));
         return new LinkGPXStruct(link, e.getGpxExtensions());
     }
 
@@ -142,29 +145,33 @@ public class GHtoEvents {
         return resultLinks;
     }
 
-    @Deprecated
-    public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId) {
-        return linkGPXToEvents(x, personId, vehicleId, TransportMode.car);
-    }
-
     public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
+        if (!x.hasNext()) return Collections.emptyList();
         List<Event> events = new ArrayList<>();
         LinkGPXStruct firstE = x.next();
-        events.add(new PersonDepartureEvent(firstE.entryTime, personId, firstE.getLink().getId(), mode));
-        events.add(new LinkLeaveEvent(firstE.exitTime, vehicleId, firstE.getLink().getId()));
+        double entryTimeSeconds = toSeconds(firstE.entryTime);
+        double exitTimeSeconds = toSeconds(firstE.exitTime);
+        events.add(new PersonDepartureEvent(entryTimeSeconds, personId, firstE.getLink().getId(), mode));
+        events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId()));
 
         while (x.hasNext()) {
             LinkGPXStruct curr = x.next();
+            double currEntryTimeSeconds = toSeconds(curr.entryTime);
+            double currExitTimeSeconds = toSeconds(curr.exitTime);
             if (x.hasNext()) {
-                events.add(new LinkEnterEvent(curr.entryTime, vehicleId, firstE.getLink().getId()));
-                events.add(new LinkLeaveEvent(curr.exitTime, vehicleId, firstE.getLink().getId()));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
+                events.add(new LinkLeaveEvent(currExitTimeSeconds, vehicleId, firstE.getLink().getId()));
             } else { //process final element
-                events.add(new LinkEnterEvent(curr.entryTime, vehicleId, firstE.getLink().getId()));
-                events.add(new PersonArrivalEvent(curr.exitTime, personId, firstE.getLink().getId(), mode));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
+                events.add(new PersonArrivalEvent(currExitTimeSeconds, personId, firstE.getLink().getId(), mode));
             }
         }
 
         return events;
+    }
+
+    private double toSeconds(double time) {
+        return time / 1000;
     }
 
 
@@ -219,8 +226,13 @@ public class GHtoEvents {
         return time_e;
     }
     private Coordinate getNodeCoordinate(int node) {
-        return coordToCoordinate(network.getNodes().get(Id.createNodeId(node)).getCoord());
+        return coordToCoordinate(getNetwork().getNodes().get(Id.createNodeId(node)).getCoord());
     }
+
+    public MapMatching getMatcher() {
+        return matcher;
+    }
+
 
     public MapMatching getMapper() {
         return matcher;
@@ -237,4 +249,6 @@ public class GHtoEvents {
     public Network getNetwork() {
         return hopper.network;
     }
+
+
 }

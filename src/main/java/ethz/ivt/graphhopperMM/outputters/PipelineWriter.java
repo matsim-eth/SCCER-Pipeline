@@ -2,7 +2,6 @@ package ethz.ivt.graphhopperMM.outputters;
 
 import ethz.ivt.graphhopperMM.GHtoEvents;
 import ethz.ivt.graphhopperMM.GPXEntryExt;
-import ethz.ivt.graphhopperMM.LinkGPXStruct;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.utils.collections.Tuple;

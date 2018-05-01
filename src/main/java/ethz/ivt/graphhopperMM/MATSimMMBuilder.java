@@ -11,6 +11,7 @@ import com.graphhopper.routing.util.EncodingManager;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.util.Parameters;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 
 import java.io.File;
@@ -18,27 +19,21 @@ import java.io.File;
 public class MATSimMMBuilder {
 
     public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans) {
-        GraphHopperMATSim hopper = buildGraphHopper(networkFilename, trans);
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(networkFilename, trans);
         MapMatching mapMatcher = createMapMatching(hopper);
         return new GHtoEvents(hopper, mapMatcher);
 
     }
 
-    private GraphHopperMATSim buildGraphHopper(String networkFileName, CoordinateTransformation coordinateTransformation) {
 
+    public GHtoEvents buildGhToEvents(Network network, CoordinateTransformation trans) {
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(network, trans);
+        MapMatching mapMatcher = createMapMatching(hopper);
+        return new GHtoEvents(hopper, mapMatcher);
 
-        GraphHopperMATSim hopper = new GraphHopperMATSim(networkFileName, coordinateTransformation);
-
-        hopper.setStoreOnFlush(false)
-                .setGraphHopperLocation(new File("").getAbsolutePath());
-
-        //TODO: set up multiple encoders
-        hopper.setEncodingManager(new EncodingManager("bike,car"));
-        hopper.getCHFactoryDecorator().setEnabled(false);
-        hopper.importOrLoad();
-
-        return hopper;
     }
+
+
 
     private MapMatching createMapMatching(GraphHopper hopper) {
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;

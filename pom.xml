@@ -6,6 +6,29 @@
   <name>Mapmatching for MATSim</name>
 	<build>
 		<plugins>
+			<!-- This plugin compiles Scala files -->
+			<plugin>
+				<groupId>net.alchim31.maven</groupId>
+				<artifactId>scala-maven-plugin</artifactId>
+				<version>3.3.2</version>
+				<executions>
+					<execution>
+						<id>scala-compile-first</id>
+						<phase>process-resources</phase>
+						<goals>
+							<goal>add-source</goal>
+							<goal>compile</goal>
+						</goals>
+					</execution>
+					<execution>
+						<id>scala-test-compile</id>
+						<phase>process-test-resources</phase>
+						<goals>
+							<goal>testCompile</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
 			<plugin>
 				<groupId>org.apache.maven.plugins</groupId>
 				<artifactId>maven-compiler-plugin</artifactId>
@@ -13,6 +36,27 @@
 					<source>1.8</source>
 					<target>1.8</target>
 				</configuration>
+			</plugin>
+			<plugin>
+				<artifactId>maven-assembly-plugin</artifactId>
+				<configuration>
+					<descriptorRefs>
+						<descriptorRef>jar-with-dependencies</descriptorRef>
+					</descriptorRefs>
+					<archive>
+						<manifest>
+							<mainClass>greenclass.ProcessWaypointsCsv</mainClass>
+						</manifest>
+					</archive>
+				</configuration>
+				<executions>
+					<execution>
+						<phase>package</phase>
+						<goals>
+							<goal>single</goal>
+						</goals>
+					</execution>
+				</executions>
 			</plugin>
 		</plugins>
 	</build>
@@ -23,7 +67,10 @@
 		<java.version>1.8</java.version>
 		<matsim.version>0.11.0-SNAPSHOT</matsim.version>
 		<graphhopper.version>0.9.0</graphhopper.version>
-	</properties>
+        <scala.version>2.11</scala.version>
+		<scala.binary.version>${scala.version}.12</scala.binary.version>
+        <spark.version>2.2.1</spark.version>
+    </properties>
 
 	<profiles>
 		<profile>
@@ -49,7 +96,14 @@
 	</profiles>
 
   <dependencies>
-  	<dependency>
+	  <!-- https://mvnrepository.com/artifact/org.scala-lang/scala-library -->
+	  <dependency>
+		  <groupId>org.scala-lang</groupId>
+		  <artifactId>scala-library</artifactId>
+		  <version>${scala.binary.version}</version>
+	  </dependency>
+
+	  <dependency>
   		<groupId>org.apache.commons</groupId>
   		<artifactId>commons-math</artifactId>
   		<version>2.2</version>
@@ -141,7 +195,28 @@
 		  <artifactId>commons-cli</artifactId>
 		  <version>1.4</version>
 	  </dependency>
-    </dependencies>
+  <!--
+	  <dependency>
+		  <groupId>org.apache.spark</groupId>
+		  <artifactId>spark-core_${scala.version}</artifactId>
+		  <version>${spark.version}</version>
+		  <scope>provided</scope>
+	  </dependency>
+	  <dependency>
+		  <groupId>org.apache.spark</groupId>
+		  <artifactId>spark-sql_${scala.version}</artifactId>
+		  <version>${spark.version}</version>
+		  <scope>provided</scope>
+	  </dependency>
+
+	  -->
+      <dependency>
+          <groupId>org.postgresql</groupId>
+          <artifactId>postgresql</artifactId>
+          <version>9.4-1201-jdbc41</version>
+      </dependency>
+  </dependencies>
+
 
     <repositories>
 		<repository>
@@ -157,6 +232,10 @@
 		<repository>
 			<id>matsim</id>
 			<url>https://dl.bintray.com/matsim/matsim</url>
+		</repository>
+		<repository>
+			<id>spark maven</id>
+			<url>https://dl.bintray.com/spark-packages/maven/</url>
 		</repository>
 	</repositories>
 
