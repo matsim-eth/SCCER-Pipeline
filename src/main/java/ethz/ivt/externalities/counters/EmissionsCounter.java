@@ -11,6 +11,7 @@ import org.matsim.contrib.emissions.types.ColdPollutant;
 import org.matsim.contrib.emissions.types.WarmPollutant;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
+import java.nio.file.Path;
 import java.util.Map;
 
 /**
@@ -67,9 +68,9 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
         }
     }
 
-    public void writeCsvFile(String outputPath, String date) {
-        String outputFileName = date + "_emissions.csv";
-        super.writeCsvFile(outputPath, outputFileName);
+    public void writeCsvFile(Path outputPath, String filename) {
+        Path outputFileName = outputPath.resolve(filename + "_emissions.csv");
+        super.writeCsvFile(outputFileName);
     }
 
 }

@@ -4,6 +4,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.Path;
 import java.util.*;
 
 import org.apache.log4j.Logger;
@@ -87,15 +88,12 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         }
     }
     
-    public void writeCsvFile(String outputPath, String outputFileName) {
+    public void writeCsvFile(Path outputFileName) {
     	
-		File dir = new File(outputPath);
-		dir.mkdirs();
+		File file = outputFileName.toFile();
+		file.getParentFile().mkdirs();
 		
-		String fileName = outputPath + outputFileName;
-		
-		File file = new File(fileName);
-		
+
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 			
@@ -121,7 +119,7 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	    		}
 	    	}	
 			bw.close();
-			log.info("Output written to " + fileName);
+			log.info("Output written to " + outputFileName);
 			
 		} catch (IOException e) {
 			e.printStackTrace();

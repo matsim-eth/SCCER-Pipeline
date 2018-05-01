@@ -10,6 +10,8 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
+import java.nio.file.Path;
+
 public class NoiseCounter extends ExternalityCounter {
 	private static final Logger log = Logger.getLogger(CongestionCounter.class);
     private AggregateNoiseData aggregateNoiseData;
@@ -41,8 +43,9 @@ public class NoiseCounter extends ExternalityCounter {
         super.handleEvent(event); //add distance
     }
 
-    public void writeCsvFile(String outputPath, String date) {
-        String outputFileName = date + "_noise.csv";
-        super.writeCsvFile(outputPath, outputFileName);
+
+    public void writeCsvFile(Path outputPath, String filename) {
+        Path outputFileName = outputPath.resolve(filename + "_noise.csv");
+        super.writeCsvFile(outputFileName);
     }
 }

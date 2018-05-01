@@ -35,7 +35,10 @@ import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.util.Map;
 
 /**
  * Created by molloyj on 17.07.2017.
@@ -53,6 +56,8 @@ public class MeasureExternalitiesFromTraceEvents {
     private NoiseContext noiseContext;
     private NoiseTimeTracker noiseTimeTracker;
     private EventsManagerImpl eventsManager;
+    private final CongestionCounter congestionCounter;
+    private final EmissionsCounter emissionsCounter;
 
     public MeasureExternalitiesFromTraceEvents(Config config, String congestionFile) {
         CONGESTION_FILE = congestionFile;
@@ -63,28 +68,40 @@ public class MeasureExternalitiesFromTraceEvents {
 
         this.config = config;
         scenario = ScenarioUtils.loadScenario(config);
+
+        log.info("load road types");
         setUpRoadTypes(scenario.getNetwork());
         setUpVehicleTypes();
 
         eventsManager = new EventsManagerImpl();
         reader = new MatsimEventsReader(eventsManager);
+        log.info("add vehicles");
+
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(new JITvehicleCreator(scenario));
+
+        log.info("load aggregate congestion data");
 
         // load precomputed aggregate data
         AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
         aggregateCongestionData.loadDataFromCsv(CONGESTION_FILE);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
+        congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
+        log.trace("add congestion handler");
+
         eventsManager.addHandler(congestionCounter);
 
         //AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
         //aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
         //NoiseCounter noiseCounter = new NoiseCounter(scenario, v2deh, date, aggregateNoiseData);
         //eventsManager.addHandler(noiseCounter);
-
+        log.info("load emissions module");
         // setup externality counters
+        EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
+        ecg.setUsingDetailedEmissionCalculation(false);
+
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
-        EmissionsCounter emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
+
+        emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
         eventsManager.addHandler(emissionsCounter);
 
         // add event handlers
@@ -94,8 +111,10 @@ public class MeasureExternalitiesFromTraceEvents {
     }
 
     public void process(String eventsFile) {
+        log.info("start processing event file");
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
+        log.info("finish processing event file");
 
         // write to file
    //     emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
@@ -107,6 +126,12 @@ public class MeasureExternalitiesFromTraceEvents {
 
         //return results here
 
+    }
+
+    public void write(String folder, String date, String person) {
+        Path outputFolder = Paths.get(folder, date);
+        congestionCounter.writeCsvFile(outputFolder, person);
+        emissionsCounter.writeCsvFile(outputFolder, person);
     }
 
     private void setUpRoadTypes(Network network) {
