@@ -1,6 +1,6 @@
 package greenclass
 
-import java.nio.file.{Files, Paths}
+import java.nio.file.{Files, Path, Paths}
 import java.util
 import java.util.{LinkedList, List}
 
@@ -54,7 +54,7 @@ object ProcessEvents {
     val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
     calculatorsQueue.addAll(calculators.asJava)
 
-    Files.walk(events_folder).filter(Files.isRegularFile(_)).filter(f => f.toString.contains("2017-07-19")).forEach {
+    Files.walk(events_folder).filter (Files.isDirectory(_)).filter(f => f.toString.contains("2017-07-19")).forEach {
       f =>
         val externalitiyCalculator = calculatorsQueue.take()
         externalitiyCalculator.process(f.toString)
