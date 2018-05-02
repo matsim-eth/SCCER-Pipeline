@@ -28,6 +28,7 @@ object ProcessEvents {
     val events_folder = Paths.get(args(1))
     val congestion_file = args(2)
     val outputFolder = args(3)
+    val ncores = args.applyOrElse(4, (_ : Int) => "1").toInt
 
     logger.info("load aggregate congestion data")
     val scenario = ScenarioUtils.loadScenario(config)
@@ -38,19 +39,27 @@ object ProcessEvents {
     val aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s)
     aggregateCongestionData.loadDataFromCsv(congestion_file)
 
+    import scala.collection.JavaConverters._
+
     //get number of cores n
     //create n externality calculators
-    //val calculators = 1 to ncores foreach {}
+    val calculators = 1 to ncores map { _ => new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionData) }
+    val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
+    calculatorsQueue.addAll(calculators.asJava)
 
     Files.walk(events_folder).filter(Files.isRegularFile(_)).filter(f => f.toString.contains("2017-07-19")).forEach {
       f =>
-        val externalitiyCalculator = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionData)
+        val externalitiyCalculator = calculatorsQueue.take()
         externalitiyCalculator.process(f.toString)
         val date = f.getParent.getFileName.toString
         val person_id = f.getFileName.toString.split("-").head
         logger.debug(s"processing $date/$person_id")
 
+
         externalitiyCalculator.write(outputFolder, date, person_id)
+
+        calculatorsQueue.put(externalitiyCalculator)
+
     }
 
 
