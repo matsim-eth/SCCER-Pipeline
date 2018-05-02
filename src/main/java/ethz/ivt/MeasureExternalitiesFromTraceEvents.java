@@ -59,19 +59,12 @@ public class MeasureExternalitiesFromTraceEvents {
     private final CongestionCounter congestionCounter;
     private final EmissionsCounter emissionsCounter;
 
-    public MeasureExternalitiesFromTraceEvents(Config config, String congestionFile) {
-        CONGESTION_FILE = congestionFile;
+    public MeasureExternalitiesFromTraceEvents(Scenario scenario, AggregateCongestionData aggregateCongestionData) {
         //NOISE_FILE = "";
         bin_size_s = 3600;
+        this.scenario = scenario;
 
         String date = "2018-07-27"; //ExternalityUtils.getDate(LocalDate.now());
-
-        this.config = config;
-        scenario = ScenarioUtils.loadScenario(config);
-
-        log.info("load road types");
-        setUpRoadTypes(scenario.getNetwork());
-        setUpVehicleTypes();
 
         eventsManager = new EventsManagerImpl();
         reader = new MatsimEventsReader(eventsManager);
@@ -80,13 +73,7 @@ public class MeasureExternalitiesFromTraceEvents {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
-        log.info("load aggregate congestion data");
-
-        // load precomputed aggregate data
-        AggregateCongestionData aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s);
-        aggregateCongestionData.loadDataFromCsv(CONGESTION_FILE);
         congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
-        log.trace("add congestion handler");
 
         eventsManager.addHandler(congestionCounter);
 
@@ -111,10 +98,8 @@ public class MeasureExternalitiesFromTraceEvents {
     }
 
     public void process(String eventsFile) {
-        log.info("start processing event file");
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
-        log.info("finish processing event file");
 
         // write to file
    //     emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
@@ -134,13 +119,13 @@ public class MeasureExternalitiesFromTraceEvents {
         emissionsCounter.writeCsvFile(outputFolder, person);
     }
 
-    private void setUpRoadTypes(Network network) {
+    public static void setUpRoadTypes(Network network) {
         for (Link l : network.getLinks().values()) {
             NetworkUtils.setType(l, (String) l.getAttributes().getAttribute("osm:way:highway"));
         }
     }
 
-    private void setUpVehicleTypes() {
+    public static void addVehicleTypes(Scenario scenario) {
         //householdid, #autos, auto1, auto2, auto3
         //get household id of person. Assign next vehicle from household.
 
