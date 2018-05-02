@@ -362,25 +362,52 @@
 %%   organization. The command then is:
 %%     \input{abstract-first}
 %%   see also below (include sections)
-\createabstract{Providing people with information on the external costs of their mobility, including generated emissions, contribution to congestion, and noise pollution, has been shown to influence their travel behavior. However, directly measuring these externalities at the source is unfeasible. We have therefore developed a pipeline for estimating the generated externalities of recorded trips using the multi-agent simulation software MATSim. First, collected GPS traces are matched to the MATSim network and converted to MATSim events. These events are then processed to impute externalities for each individual. Emission values for various pollutants are calculated for each link using  the HBEFA database, accounting for vehicle type, road category and traffic conditions. For congestion, we leverage MATSim modules developed by Kaddoura to compute average link delays for each hour of the day using the MATSim scenario of Switzerland, which are then assigned to links traveled by the participants. We adapt this pipeline to further account for the Swiss valuation of externalities. To validate our approach, the externalities generated for the Swiss MATSim scenario will be compared to ARE estimates and the swiss norm values. The application of the pipeline will be demonstrated for GPS traces collected from the SBB Green Class project.}
+\createabstract{
+Providing people with information on the external costs of their mobility, including generated emissions, contribution to congestion, and noise pollution, has been shown to influence their travel behavior.
+However, directly measuring these externalities at the source is unfeasible.
+We have therefore developed a pipeline for estimating the generated externalities of recorded trips using the multi-agent simulation software MATSim. First, collected GPS traces are matched to the MATSim network and converted to MATSim events.
+These events are then processed to impute externalities for each individual.
+Emission values for various pollutants are calculated for each link using  the HBEFA database, accounting for vehicle type, road category and traffic conditions.
+For congestion, we leverage MATSim modules developed by Kaddoura to compute average link delays for each hour of the day using the MATSim scenario of Switzerland, which are then assigned to links traveled by the participants.
+We adapt this pipeline to further account for the Swiss valuation of externalities.
+To validate our approach, the externalities generated for the Swiss MATSim scenario will be compared to ARE estimates and the swiss norm values.
+The application of the pipeline will be demonstrated for GPS traces collected from the SBB Green Class project.
+}
 
 \section{Introduction}
 
 It is increasingly recognized that both the environmental and social costs of travel need to be internalized to meet the demand on already strained transport networks by encouraging shifts in travel patterns. 
-In this direction, there is a growing body of evidence that informal feedback on energy use can encourage more efficient behavior, both regarding home energy use \citep{faruqui2010impact} and travel behavior \citep{taniguchi2003psychological, fujii2006determinants}. However, providing feedback on external costs in transport is particularly challenging, due to the heterogeneous nature of the users and privacy constraints.
+In this direction, there is a growing body of evidence that informal feedback on energy use can encourage more efficient behavior, both regarding home energy use \citep{faruqui2010impact} and travel behavior \citep{taniguchi2003psychological, fujii2006determinants}.
+However, providing feedback on external costs in transport is particularly challenging, due to the heterogeneous nature of the users and privacy constraints.
 
 %%Start here on externalities - Joe, already written
-The main externalities of transportation can be divided into two groups: Those that affect other road users, namely congestion, and those that affect non-road users such as noise and emissions \cite{button2004rationale}. The impact of congestion is primarily the loss of time spent waiting in traffic, where as emissions and noise have both environmental and health consequences. When a person chooses to drive on a road, they only have to pay for the private time and car usage costs. However, they do not have to pay the \textit{marginal social cost} (MSC) of their trip. That is, the additional costs the driver imposes on other drivers by increasing demand on the route. From economic theory, internalising this MSC in the form of a tax would reduce congestion and provide an overall social benefit \cite{arnott1994economics, pigou2013economics}). 
+The main externalities of transportation can be divided into two groups: Those that affect other road users, namely congestion, and those that affect non-road users such as noise and emissions \cite{button2004rationale}.
+The impact of congestion is primarily the loss of time spent waiting in traffic, where as emissions and noise have both environmental and health consequences.
+When a person chooses to drive on a road, they only have to pay for the private time and car usage costs.
+However, they do not have to pay the \textit{marginal social cost} (MSC) of their trip.
+That is, the additional costs the driver imposes on other drivers by increasing demand on the route.
+From economic theory, internalising this MSC in the form of a tax would reduce congestion and provide an overall social benefit \cite{arnott1994economics, pigou2013economics}). 
 
-Micrsosimulation provides advantages from both the supply (network representation) and demand (individual agents) sides when modeling road pricing. \citet{arnott2001economic} notes that traditional macroscopic models focus on link congestion, while ignoring or simplifying other elements of congestion such as nodal congestion, parking and interactions with pedestrians and spillback. Microsimulated models allow for the representation of non-homogenous driver behaviour and preferences. In particular, the importance of value of time heterogenity among individuals in road pricing models has been recognised by numerous researchers \citet{small2001value, verhoef2004product}. Modern traffic microsimulation frameworks such as MATSim \cite{balmer2009matsim} are to capture range of externalities.
+Micrsosimulation provides advantages from both the supply (network representation) and demand (individual agents) sides when modeling road pricing.
+\citet{arnott2001economic} notes that traditional macroscopic models focus on link congestion, while ignoring or simplifying other elements of congestion such as nodal congestion, parking and interactions with pedestrians and spillback.
+Microsimulated models allow for the representation of non-homogenous driver behaviour and preferences.
+In particular, the importance of value of time heterogenity among individuals in road pricing models has been recognised by numerous researchers \citet{small2001value, verhoef2004product}.
+Modern traffic microsimulation frameworks such as MATSim \cite{balmer2009matsim} are to capture range of externalities.
 
-\citet{kaddoura2015marginal} developed an agent based marginal cost-pricing approaches for congestion, emissions and noise exteralities, and applied numerous models successfully to a large scale scenario of Greater Berlin. When considering the internalisation of congestion costs, a particular contribution of his work, was to assign the external congestion costs to the causing agents. In particular, \citet{kaddoura2015marginal} notes that it is simple to calculate the incurred congestion for each agent, but much more challenging to map it back to the causing agent. The approach calculates each agent's contribution to the delays on traveled links using a queue based node-link model including spillback.
+\citet{kaddoura2015marginal} developed an agent based marginal cost-pricing approaches for congestion, emissions and noise exteralities, and applied numerous models successfully to a large scale scenario of Greater Berlin.
+When considering the internalisation of congestion costs, a particular contribution of his work, was to assign the external congestion costs to the causing agents.
+In particular, \citet{kaddoura2015marginal} notes that it is simple to calculate the incurred congestion for each agent, but much more challenging to map it back to the causing agent.
+The approach calculates each agent's contribution to the delays on traveled links using a queue based node-link model including spillback.
 
-In real networks such an approach requires knowing the location and VTTS of every driver connected to a particular incident of congestion. This is clearly unrealistic. Instead, this work presents an approach to impute externalities using just the GPS trace of the trip, a representation of the road network and aggregated congestion values generated from an agent-based MATSim simulation for Switzerland.
+In real networks such an approach requires knowing the location and VTTS of every driver connected to a particular incident of congestion.
+This is clearly unrealistic. Instead, this work presents an approach to impute externalities using just the GPS trace of the trip, a representation of the road network and aggregated congestion values generated from an agent-based MATSim simulation for Switzerland.
 
 \subsection{Swiss MATSim Scenario}
 %%Chris or Joe
-The IVT 2015 Baseline Scenario \cite{boesch2015ivt} represents a typical working day in Switzerland for the year 2015. As a MATSim scenario, the population consists of individual agents, each with daily travel plans (preferences), and social-demographic characteristics. These agents represent the entire population of Switzerland on the network from \cite{boesch2015network}. Of particular importance to this work, the 2015 scenario extends the work of \cite{Balmer2007switzerland} by including households and their incomes. 
+The IVT 2015 Baseline Scenario \cite{boesch2015ivt} represents a typical working day in Switzerland for the year 2015.
+As a MATSim scenario, the population consists of individual agents, each with daily travel plans (preferences), and social-demographic characteristics.
+These agents represent the entire population of Switzerland on the network from \cite{boesch2015network}.
+Of particular importance to this work, the 2015 scenario extends the work of \cite{Balmer2007switzerland} by including households and their incomes. 
 
 \subsection{Swiss norms, ARE report, HBEFA}
 %%Chris
@@ -400,7 +427,12 @@ Something about norms?
 
 \subsection{Green Class Data}
 %%Joe
-In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA), an electric BMW i3, park+ride subscription, car and bike sharing subscriptions. The 139 participants were tracked for the duration of the project using a mobile app enabled with GPS. \red{how much detail on the work from geoINFK?} These GPS traces were processed to identify individual trips and modes of travel \cite{rabaul2016greenclassprocessing}. A core component of the pilot project was the availability of an electric car to subscribers, powered by renewable energy. Asumming similar driving behaviour independent of the drive-train type, the emissions avoided for each trip can calculated. For this analysis, the dataset was filtered to include only trips with a start and finish within switzerland using either the electric car or personal automobile. 
+In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA), an electric BMW i3, park+ride subscription, car and bike sharing subscriptions.
+The 139 participants were tracked for the duration of the project using a mobile app enabled with GPS.
+\red{how much detail on the work from geoINFK?} These GPS traces were processed to identify individual trips and modes of travel \cite{rabaul2016greenclassprocessing}.
+A core component of the pilot project was the availability of an electric car to subscribers, powered by renewable energy.
+Asumming similar driving behaviour independent of the drive-train type, the emissions avoided for each trip can calculated.
+For this analysis, the dataset was filtered to include only trips with a start and finish within switzerland using either the electric car or personal automobile. 
 
 \section{Methodology}
 %% i.e. Pipeline structure
