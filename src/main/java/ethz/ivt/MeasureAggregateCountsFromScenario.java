@@ -1,6 +1,7 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
+import ethz.ivt.externalities.aggregation.CountPerLinkAggregator;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
@@ -20,8 +21,8 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
-public class MeasureAggregateCongestionFromScenario {
-	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
+public class MeasureAggregateCountsFromScenario {
+	private final static Logger log = Logger.getLogger(MeasureAggregateCountsFromScenario.class);
 
     private static String RUN_FOLDER; // = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pc/scenario/";
 	private static String CONFIG_FILE; // = "defaultIVTConfig_w_emissions.xml";
@@ -35,7 +36,7 @@ public class MeasureAggregateCongestionFromScenario {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
-        new MeasureAggregateCongestionFromScenario().run();
+        new MeasureAggregateCountsFromScenario().run();
     }
     
     public void run() {
@@ -51,10 +52,8 @@ public class MeasureAggregateCongestionFromScenario {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
-        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
-        eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionAggregator);
+        CountPerLinkAggregator countPerLinkAggregator = new CountPerLinkAggregator(scenario, v2deh);
+        eventsManager.addHandler(countPerLinkAggregator);
 
         setUpVehicles(scenario);
 
@@ -63,12 +62,7 @@ public class MeasureAggregateCongestionFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save congestion data to single csv file
-        congestionAggregator.aggregateCongestionDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
-        congestionAggregator.aggregateCongestionDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
-        log.info("Congestion calculation completed.");
-        log.info("Total delay : " + congestionHandler.getTotalDelay());
-        log.info("Total internalized delay : " + congestionHandler.getTotalInternalizedDelay());
-
+        countPerLinkAggregator.aggregateCountDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory());
         eventsManager.finishProcessing();
     }
     

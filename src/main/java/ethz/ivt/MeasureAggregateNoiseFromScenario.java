@@ -1,9 +1,5 @@
 package ethz.ivt;
 
-import ethz.ivt.externalities.aggregation.CongestionAggregator;
-import ethz.ivt.externalities.data.AggregateCongestionData;
-import ethz.ivt.vsp.handlers.CongestionHandler;
-import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -84,7 +80,7 @@ public class MeasureAggregateNoiseFromScenario {
         final String[] workingDirectories = {config.controler().getOutputDirectory() + "/noise/" + "/" + DataLabel.marginal_damages_link_car.toString() + "/"};
 
         MergeNoiseCSVFile merger = new MergeNoiseCSVFile() ;
-        merger.setNetworkFile(RUN_FOLDER + "network_zurich_w_types.xml");
+        merger.setNetworkFile(RUN_FOLDER + config.network().getInputFile());
         merger.setOutputDirectory(config.controler().getOutputDirectory() + "/noise/");
         merger.setStartTime(1.*3600.);
         merger.setEndTime(30.*3600.);
@@ -111,8 +107,8 @@ public class MeasureAggregateNoiseFromScenario {
         noiseParameters.setScaleFactor(100.);
 
         // set parameter values to same as Kaddoura et al. 2017
-        noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
-//        noiseContext.getNoiseParams().setAnnualCostRate(78.6); // 78.6 CHF i.e. 85 DEM * 0.59827 * 1.02 ^ (2017-1995) ??
+//        noiseParameters.setAnnualCostRate(63.3); // 63.3 EUR i.e. 85 DEM * 0.51129 * 1.02 ^ (2014-1995)
+        noiseParameters.setAnnualCostRate(80.0); // 80.0 CHF i.e. 85 DEM * 0.597420 * 1.02 ^ (2018-1995) ??
 
 //        double numberReceiverPoints = 2000000;
 //        double gap = computeMinimalGap(scenario, numberReceiverPoints);

@@ -1,44 +1,36 @@
 package ethz.ivt;
 
-import com.google.inject.Guice;
-import com.google.inject.Injector;
-import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.counters.NoiseCounter;
-import ethz.ivt.externalities.data.AggregateCongestionData;
-import ethz.ivt.externalities.data.AggregateNoiseData;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.CongestionPerLinkField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
+
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
+
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
-import org.matsim.contrib.emissions.roadTypeMapping.RoadTypeMappingProvider;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.AbstractModule;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 
+import java.util.LinkedList;
+import java.util.List;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.time.LocalDate;
-import java.util.Map;
+
 
 /**
  * Created by molloyj on 17.07.2017.
@@ -59,7 +51,7 @@ public class MeasureExternalitiesFromTraceEvents {
     private final CongestionCounter congestionCounter;
     private final EmissionsCounter emissionsCounter;
 
-    public MeasureExternalitiesFromTraceEvents(Scenario scenario, AggregateCongestionData aggregateCongestionData) {
+    public MeasureExternalitiesFromTraceEvents(Scenario scenario, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
         //NOISE_FILE = "";
         bin_size_s = 3600;
         this.scenario = scenario;
@@ -73,7 +65,8 @@ public class MeasureExternalitiesFromTraceEvents {
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
-        congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionData);
+
+        congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionDataPerLinkPerTime);
 
         eventsManager.addHandler(congestionCounter);
 
@@ -94,7 +87,6 @@ public class MeasureExternalitiesFromTraceEvents {
         // add event handlers
         eventsManager.addHandler(v2deh);
 
-
     }
 
     public void process(String eventsFile) {
@@ -102,9 +94,9 @@ public class MeasureExternalitiesFromTraceEvents {
         reader.readFile(eventsFile);
 
         // write to file
-   //     emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
-   //     congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
-   //     noiseCounter.writeCsvFile(config.controler().getOutputDirectory(), noiseCounter.getDate());
+        //     emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
+        //     congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
+        //     noiseCounter.writeCsvFile(config.controler().getOutputDirectory(), noiseCounter.getDate());
 
         eventsManager.finishProcessing();
         //TODO: make sure that the handlers get reset!!!!!!!!!!

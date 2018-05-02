@@ -1,10 +1,13 @@
 package greenclass
 
 import java.nio.file.{Files, Paths}
+import java.util
+import java.util.{LinkedList, List}
 
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
-import ethz.ivt.externalities.data.AggregateCongestionData
+import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionPerLinkField}
 import org.apache.log4j.{Level, Logger}
+import org.matsim.api.core.v01.network.Link
 import org.matsim.contrib.emissions.{WarmEmissionAnalysisModule, WarmEmissionHandler}
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
@@ -36,14 +39,18 @@ object ProcessEvents {
     MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork)
 
     // load precomputed aggregate data
-    val aggregateCongestionData = new AggregateCongestionData(scenario, bin_size_s)
-    aggregateCongestionData.loadDataFromCsv(congestion_file)
+    val attributes: util.List[String] = new util.LinkedList[String]
+    attributes.add(CongestionPerLinkField.COUNT.getText)
+    attributes.add(CongestionPerLinkField.DELAY.getText)
+    val aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl[Link](bin_size_s, scenario.getNetwork.getLinks.keySet, attributes, null)
+    aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
+
 
     import scala.collection.JavaConverters._
 
     //get number of cores n
     //create n externality calculators
-    val calculators = 1 to ncores map { _ => new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionData) }
+    val calculators = 1 to ncores map { _ => new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime) }
     val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
     calculatorsQueue.addAll(calculators.asJava)
 
