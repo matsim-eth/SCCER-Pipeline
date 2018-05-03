@@ -45,7 +45,7 @@ public class JITvehicleCreator implements PersonDepartureEventHandler {
 
     @Override
     public void reset(int iteration) {
-        addedVehicles.forEach(vid ->scenario.getVehicles().removeVehicle(vid));
-        addedVehicles.clear();
+    //    addedVehicles.forEach(vid ->scenario.getVehicles().removeVehicle(vid));
+    //   addedVehicles.clear();
     }
 }
