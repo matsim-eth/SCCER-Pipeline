@@ -80,7 +80,7 @@ object ProcessEvents {
           val date = f.getParent.getFileName.toString
           logger.debug(s"processing $date/$person_id")
 
-          externalitiyCalculator.process(f.toString, date)
+          externalitiyCalculator.process(f.toString, date, person_id)
 
           externalitiyCalculator.write(outputFolder, date, person_id)
           pw.println(f)

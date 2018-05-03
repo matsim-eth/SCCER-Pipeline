@@ -20,19 +20,20 @@ import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.events.handler.EventHandler;
+import org.matsim.vehicles.Vehicle;
 
 public abstract class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler, EventHandler {
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
-	protected final Scenario scenario;
-    protected final Vehicle2DriverEventHandler drivers;
+    private static final double ECAR = 1;
+    private static final double CAR = 0;
+    protected final Scenario scenario;
 	private String date;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
     List<String> keys = new ArrayList<>(); //list of all leg data fields
     
-    public ExternalityCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date) {
+    public ExternalityCounter(Scenario scenario, String date) {
     	this.scenario = scenario;
-    	this.drivers = drivers;
     	this.date = date;
     	initializeFields();
     }
@@ -42,6 +43,7 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         keys.add("StartTime");
         keys.add("EndTime");
         keys.add("Distance");
+        keys.add("Mode");
     }
     
     protected void initializeHashMaps(Id<Person> p) {
@@ -51,6 +53,11 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
          	tempValues.get(p).put(key, 0.0);
         }
     }
+
+    protected Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
+        return Id.createPersonId(vehicleId.toString().substring(0,4)); //TODO: better handling of IDs -> this wil only work for 4 digit ids
+    }
+
 
 	// Check if leg is traveled by car and get start time
 	@Override
@@ -65,12 +72,15 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 
 	@Override
 	public void handleEvent(LinkEnterEvent event) {
-		Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
+		Id<Person> personId = getDriverOfVehicle(event.getVehicleId());
+		double carType = event.getVehicleId().toString().contains("Ecar") ? ECAR : CAR;
+
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
         double linkLength = scenario.getNetwork().getLinks().get(event.getLinkId()).getLength();
         tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
+        tempValues.get(personId).put("Mode", carType);
 	}
 
     // Get leg end time and append new leg to list
@@ -103,14 +113,17 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	    		int legCount = 0;
 	    		for (Map<String, Double> leg : person.getValue()) {
 	    			legCount++;
-	    			String header = "PersonId;Date;Leg;";
 	    			String record = person.getKey() + ";" + this.date + ";" + legCount + ";";
 	    	        for (String key : keys) {
-	    	        	header = header + key + ";";
-	    	        	record = record + leg.get(key) + ";";
+	    	            String val = String.format("%.4f", leg.get(key));
+	    	            if ("Mode".equals(key)) {
+	    	                val = leg.get(key) > 0.5 ? "Ecar" : "Car";
+                        }
+	    	        	record = record + val + ";";
 	    	        }
 	    	        if (!headerWritten) {
-	    	        	bw.write(header);
+                        String header = "PersonId;Date;Leg;";
+                        bw.write(header + String.join(";", keys));
 	    				bw.newLine();
 	    	        	headerWritten = true;
 	    	        } 

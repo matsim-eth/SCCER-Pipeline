@@ -33,7 +33,7 @@ public class JITvehicleCreator implements PersonDepartureEventHandler {
             Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
             scenario.getVehicles().addVehicle(v);
 
-            Id<Vehicle> vid2 = Id.createVehicleId(pid.toString() + "Ecar");
+            Id<Vehicle> vid2 = Id.createVehicleId(pid.toString() + "Mode::Ecar");
             Vehicle v2 = scenario.getVehicles().getFactory().createVehicle(vid2, car);
             scenario.getVehicles().addVehicle(v2);
 

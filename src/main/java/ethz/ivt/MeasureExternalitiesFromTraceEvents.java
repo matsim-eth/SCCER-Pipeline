@@ -21,6 +21,7 @@ import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
@@ -62,11 +63,10 @@ public class MeasureExternalitiesFromTraceEvents {
         reader = new MatsimEventsReader(eventsManager);
         log.info("add vehicles");
 
-        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
 
-        congestionCounter = new CongestionCounter(scenario, v2deh, date, aggregateCongestionDataPerLinkPerTime);
+        congestionCounter = new CongestionCounter(scenario, date, aggregateCongestionDataPerLinkPerTime);
 
         eventsManager.addHandler(congestionCounter);
 
@@ -81,11 +81,8 @@ public class MeasureExternalitiesFromTraceEvents {
 
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
 
-        emissionsCounter = new EmissionsCounter(scenario, v2deh, date);
+        emissionsCounter = new EmissionsCounter(scenario, date);
         eventsManager.addHandler(emissionsCounter);
-
-        // add event handlers
-        eventsManager.addHandler(v2deh);
 
     }
 
@@ -93,8 +90,7 @@ public class MeasureExternalitiesFromTraceEvents {
         eventsManager.resetHandlers(0);
     }
 
-    public void process(String eventsFile, String date) {
-
+    public void process(String eventsFile, String date, String personId) {
         congestionCounter.setDate(date);
         emissionsCounter.setDate(date);
         eventsManager.initProcessing();

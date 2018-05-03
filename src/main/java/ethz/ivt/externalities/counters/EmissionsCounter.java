@@ -9,7 +9,6 @@ import org.matsim.contrib.emissions.events.WarmEmissionEvent;
 import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
 import org.matsim.contrib.emissions.types.ColdPollutant;
 import org.matsim.contrib.emissions.types.WarmPollutant;
-import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import java.nio.file.Path;
 import java.util.Map;
@@ -19,8 +18,8 @@ import java.util.Map;
  */
 public class EmissionsCounter extends ExternalityCounter implements WarmEmissionEventHandler, ColdEmissionEventHandler {
 
-    public EmissionsCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date) {
-    	super(scenario, drivers, date);
+    public EmissionsCounter(Scenario scenario, String date) {
+    	super(scenario, date);
     }
     
     @Override
@@ -40,10 +39,7 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
     
     @Override
     public void handleEvent(ColdEmissionEvent e) {
-        Id<Person> personId = drivers.getDriverOfVehicle(e.getVehicleId());
-        if (personId == null) { //TODO fix this, so that the person id is retrieved properly
-            personId = Id.createPersonId(e.getVehicleId().toString());
-        }
+        Id<Person> personId = getDriverOfVehicle(e.getVehicleId());
 
         // add emissions
         Map<ColdPollutant, Double> pollutants = e.getColdEmissions();
@@ -53,9 +49,10 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
         }
     }
 
+
     @Override
     public void handleEvent(WarmEmissionEvent e) {
-        Id<Person> personId = drivers.getDriverOfVehicle(e.getVehicleId());
+        Id<Person> personId = getDriverOfVehicle(e.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
         }

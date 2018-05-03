@@ -17,7 +17,7 @@ public class NoiseCounter extends ExternalityCounter {
     private AggregateNoiseData aggregateNoiseData;
 
 	public NoiseCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date, AggregateNoiseData aggregateNoiseData) {
-    	super(scenario, drivers, date);
+    	super(scenario, date);
         this.aggregateNoiseData = aggregateNoiseData;
         log.info("Number of congestion bins: " + aggregateNoiseData.getNumBins());
     }
@@ -32,7 +32,7 @@ public class NoiseCounter extends ExternalityCounter {
     public void handleEvent(LinkEnterEvent event) {
         int timeBin = ExternalityUtils.getTimeBin(event.getTime(), aggregateNoiseData.getBinSize());
         Id<Link> linkId = event.getLinkId();
-        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
+        Id<Person> personId = getDriverOfVehicle(event.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
         }

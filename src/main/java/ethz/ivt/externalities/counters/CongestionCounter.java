@@ -17,8 +17,8 @@ public class CongestionCounter extends ExternalityCounter {
 	private static final Logger log = Logger.getLogger(CongestionCounter.class);
 	private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
 
-    public CongestionCounter(Scenario scenario, Vehicle2DriverEventHandler drivers, String date, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
-    	super(scenario, drivers, date);
+    public CongestionCounter(Scenario scenario, String date, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
+    	super(scenario, date);
     	this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
         log.info("Number of congestion bins: " + aggregateCongestionDataPerLinkPerTime.getNumBins());
     }
@@ -33,7 +33,7 @@ public class CongestionCounter extends ExternalityCounter {
 	public void handleEvent(LinkEnterEvent event) {
 		int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
 		Id<Link> lid = event.getLinkId();
-        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
+        Id<Person> personId = getDriverOfVehicle(event.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
