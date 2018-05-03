@@ -3,6 +3,7 @@ package greenclass
 import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.util
+import java.util.stream.Collectors
 import java.util.{LinkedList, List}
 
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
@@ -60,24 +61,26 @@ object ProcessEvents {
 
     //get number of cores n
     //create n externality calculators
+    logger.info(s"creating $ncores calculators")
     val calculators = 1 to ncores map { _ => new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime) }
     val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
     calculatorsQueue.addAll(calculators.asJava)
 
-    Files.walk(events_folder)
-      .filter (!Files.isDirectory(_))
+    Files.walk(events_folder).iterator().asScala.toList
+      .par
+      .filterNot{ Files.isDirectory(_) }
       //.filter(f => f.toString.contains("2017-07-19"))
-      .filter( f => f.toString.endsWith(".xml") )
-      .forEach { f =>
+      .filter( _.toString.endsWith(".xml") )
+      .foreach { f =>
         if (filesToSkip.contains(f)) logger.info(s"skipping $f")
         else {
           val externalitiyCalculator = calculatorsQueue.take()
 
-          val date = f.getParent.getFileName.toString
-          externalitiyCalculator.process(f.toString, date)
           val person_id = f.getFileName.toString.split("-").head
+          val date = f.getParent.getFileName.toString
           logger.debug(s"processing $date/$person_id")
 
+          externalitiyCalculator.process(f.toString, date)
 
           externalitiyCalculator.write(outputFolder, date, person_id)
           pw.println(f)
