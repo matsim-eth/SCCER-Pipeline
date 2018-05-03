@@ -159,11 +159,11 @@ public class GHtoEvents {
             double currEntryTimeSeconds = toSeconds(curr.entryTime);
             double currExitTimeSeconds = toSeconds(curr.exitTime);
             if (x.hasNext()) {
-                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
-                events.add(new LinkLeaveEvent(currExitTimeSeconds, vehicleId, firstE.getLink().getId()));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
+                events.add(new LinkLeaveEvent(currExitTimeSeconds, vehicleId, curr.getLink().getId()));
             } else { //process final element
-                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, firstE.getLink().getId()));
-                events.add(new PersonArrivalEvent(currExitTimeSeconds, personId, firstE.getLink().getId(), mode));
+                events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
+                events.add(new PersonArrivalEvent(currExitTimeSeconds, personId, curr.getLink().getId(), mode));
             }
         }
 
