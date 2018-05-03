@@ -89,7 +89,14 @@ public class MeasureExternalitiesFromTraceEvents {
 
     }
 
-    public void process(String eventsFile) {
+    public void reset() {
+        eventsManager.resetHandlers(0);
+    }
+
+    public void process(String eventsFile, String date) {
+
+        congestionCounter.setDate(date);
+        emissionsCounter.setDate(date);
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
 

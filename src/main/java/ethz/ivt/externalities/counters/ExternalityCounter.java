@@ -25,7 +25,7 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 	protected final Scenario scenario;
     protected final Vehicle2DriverEventHandler drivers;
-	protected final String date;
+	private String date;
     Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
     Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
     List<String> keys = new ArrayList<>(); //list of all leg data fields
@@ -127,8 +127,17 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
     	
     }
 
+	@Override
+	public void reset(int iteration) {
+		personId2Leg2Values.clear();
+		tempValues.clear();
+	}
+
 	public String getDate() {
 		return date;
 	}
 
+	public void setDate(String date) {
+		this.date = date;
+	}
 }

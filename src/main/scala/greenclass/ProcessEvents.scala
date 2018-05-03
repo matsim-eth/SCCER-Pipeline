@@ -1,5 +1,6 @@
 package greenclass
 
+import java.io.{File, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.util
 import java.util.{LinkedList, List}
@@ -13,6 +14,8 @@ import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.EventsManagerImpl
 import org.matsim.core.scenario.ScenarioUtils
+
+import scala.io.Source
 
 
 object ProcessEvents {
@@ -48,24 +51,41 @@ object ProcessEvents {
 
     import scala.collection.JavaConverters._
 
+    //read list of already processed files, in case of failure
+    val processedListFile = new File(outputFolder, "processed.txt" )
+    if (!processedListFile.exists()) processedListFile.createNewFile()
+    val filesToSkip :Set[Path] = Source.fromFile(processedListFile).getLines().map{ case x : String => Paths.get(x)}.toSet
+    val pw = new PrintWriter(processedListFile)
+
+
     //get number of cores n
     //create n externality calculators
     val calculators = 1 to ncores map { _ => new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime) }
     val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
     calculatorsQueue.addAll(calculators.asJava)
 
-    Files.walk(events_folder).filter (Files.isDirectory(_)).filter(f => f.toString.contains("2017-07-19")).forEach {
-      f =>
-        val externalitiyCalculator = calculatorsQueue.take()
-        externalitiyCalculator.process(f.toString)
-        val date = f.getParent.getFileName.toString
-        val person_id = f.getFileName.toString.split("-").head
-        logger.debug(s"processing $date/$person_id")
+    Files.walk(events_folder)
+      .filter (!Files.isDirectory(_))
+      //.filter(f => f.toString.contains("2017-07-19"))
+      .filter( f => f.toString.endsWith(".xml") )
+      .forEach { f =>
+        if (filesToSkip.contains(f)) logger.info(s"skipping $f")
+        else {
+          val externalitiyCalculator = calculatorsQueue.take()
+
+          val date = f.getParent.getFileName.toString
+          externalitiyCalculator.process(f.toString, date)
+          val person_id = f.getFileName.toString.split("-").head
+          logger.debug(s"processing $date/$person_id")
 
 
-        externalitiyCalculator.write(outputFolder, date, person_id)
-
-        calculatorsQueue.put(externalitiyCalculator)
+          externalitiyCalculator.write(outputFolder, date, person_id)
+          pw.println(f)
+          pw.flush()
+          externalitiyCalculator.reset() //reset handlers before returning
+          calculatorsQueue.put(externalitiyCalculator)
+        }
+      pw.close()
 
     }
 
