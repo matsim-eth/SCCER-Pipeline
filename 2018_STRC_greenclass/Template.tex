@@ -420,10 +420,9 @@ The emission factors used in calculating these emissions are based on Version 3.
 The HBEFA database contains emission factors for different vehicle categories and traffic situations, differentiated by emission type, pollutant and year.
 
 An additional supplementary report on external traffic delay costs between 2010 and 2014 was published by MK Consulting and Infras in 2016 \cite{}.
-- how is 2013 data collected and results calculated?
-- how are 2010-2014 values extrapolated?
-
-Something about norms?
+\red{- how is 2013 data collected and results calculated?}
+\red{- how are 2010-2014 values extrapolated?}
+\red{Something about norms?}
 
 \subsection{Green Class Data}
 %%Joe
@@ -442,9 +441,33 @@ For this analysis, the dataset was filtered to include only trips with a start a
 %% i.e. validation against swiss norms
 \subsection{Validation}
 %%Chris
-The externalities estimation is validated against existing studies.
+To validate the externality values estimated using MATSim, the produced outputs are analyzed both temporally and spatially to check for plausibility and then compared with the estimations from previous Swiss external cost reports.
+
 \subsubsection{Emissions}
+Emissions values can be estimated with MATSim directly from the processed GPS traces and therefore do not explicitely require a calibrated MATSim scenario for Switzerland.
+Nevertheless, in order to validate our estimation, emission values are first calculated using a 10\% MATSim scenario for Switzerland.
+To comply with new vehicle registrations statistics according to \cite{autoschweiz2010} and \cite{autoschweiz2012} as well as the vehicle ownership predictions from \cite{foen2010pollutants}, two scenarios where 30\% and 40\% of vehicles are assigned a diesel engine were examined.
+
+The emission values are estimated for each road link in the MATSim network for the following pollutants: CO, CO$_2$(total), FC, HC, NMHC, NO$_2$, NO$_x$, PM and SO$_2$.
+The values are aggregated into hourly time bins.
+These emission estimates are then first analyzed temporally and spatially to assure the plausibility of the output.
+
+When analyzing the temporal evolution of emissions over the course of a typical workday, we would expect it to correlate with typical commuter patterns, i.e. low emissions both in the early morning and late evening and higher emissions during the day, with spikes corresponding to rush-hour periods.
+Fig. shows the typical daily emission of each pollutant per hourly time bin estimated from the MATSim scenario.
+As expected, two distinct peaks corresponding to morning and evening rush-hours can be observed, while the early morning and late-night values are near zero and the midday values lie somewhere in between.
+
+The spatial analysis of emissions is expected to show higher emissions in and around larger cities and within highly populated cantons, where more people live and therefore more commutes are observed.
+Fig. shows the spatial distribution of the total daily emissions over entire Switzerland whereas Fig. show aggregated total daily emissions per canton.
+Indeed, it can be seen that larger cities such as Zurich and Bern and highly populated canton such as Zurich, Bern and Vaud produce higher total emissions than rural areas within e.g. Graubünden, Schwyz or Appenzell.
+
 The MATSim computed emissions values are then compared to those calculated by \cite{foen2010pollutants} for 2015.
+Since MATSim simulates a single typical workday for 10\% of the entire Swiss population, our values need to be scaled in order to be comparable.
+The emissions values are thus multiplied by 10 to account for the population sampling, then by 365 days and finally by an additional scale factor such that the total traveled distance matches the one reported by \cite{foen2010pollutants} for 2015.
+Fig. shows the percent deviation of the MATSim estimates from the reported 2015 estimates.
+The total emission values for all pollutants are within \% of the reported values, thereby demonstrating that MATSim provides a reliable means of estimating emission values for pollutants.
+
+\subsubsection{Congestion}
+
 \subsection{Green Class Emission Reductions}
 %%Joe
 \section{Conclusion}
