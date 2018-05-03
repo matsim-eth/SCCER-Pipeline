@@ -51,6 +51,7 @@ public class MeasureExternalitiesFromTraceEvents {
     private EventsManagerImpl eventsManager;
     private final CongestionCounter congestionCounter;
     private final EmissionsCounter emissionsCounter;
+    private final EmissionModule emissionModule;
 
     public MeasureExternalitiesFromTraceEvents(Scenario scenario, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
         //NOISE_FILE = "";
@@ -79,8 +80,7 @@ public class MeasureExternalitiesFromTraceEvents {
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
         ecg.setUsingDetailedEmissionCalculation(false);
 
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
-
+        emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
         emissionsCounter = new EmissionsCounter(scenario, date);
         eventsManager.addHandler(emissionsCounter);
 

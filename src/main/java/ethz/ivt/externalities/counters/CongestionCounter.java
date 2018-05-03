@@ -42,6 +42,7 @@ public class CongestionCounter extends ExternalityCounter {
         double delay = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionPerLinkField.DELAY.getText());
 
         double avg_link_delay = delay / count;
+        if (Double.isNaN(avg_link_delay)) avg_link_delay = 0.0 ;
 
 		double previous = this.tempValues.get(personId).get("Delay");
 		this.tempValues.get(personId).put("Delay", previous + avg_link_delay);

@@ -69,7 +69,7 @@ object ProcessEvents {
     Files.walk(events_folder).iterator().asScala.toList
       .par
       .filterNot{ Files.isDirectory(_) }
-      //.filter(f => f.toString.contains("2017-07-19"))
+      //.filter(f => f.toString.contains("2017-05-08"))
       .filter( _.toString.endsWith(".xml") )
       .foreach { f =>
         if (filesToSkip.contains(f)) logger.info(s"skipping $f")
