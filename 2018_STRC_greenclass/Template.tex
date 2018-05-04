@@ -453,20 +453,114 @@ The values are aggregated into hourly time bins.
 These emission estimates are then first analyzed temporally and spatially to assure the plausibility of the output.
 
 When analyzing the temporal evolution of emissions over the course of a typical workday, we would expect it to correlate with typical commuter patterns, i.e. low emissions both in the early morning and late evening and higher emissions during the day, with spikes corresponding to rush-hour periods.
-Fig. shows the typical daily emission of each pollutant per hourly time bin estimated from the MATSim scenario.
+\Cref{fig:hourlyEmissions} shows the typical daily emission of each pollutant per hourly time bin estimated from the MATSim scenario, for both the 30\% and 40\% diesel engine ownership scenarios.
+Note that only total CO$_2$ and FC are shown, as the emissions values for the other pollutants are negligeable in comparison.
 As expected, two distinct peaks corresponding to morning and evening rush-hours can be observed, while the early morning and late-night values are near zero and the midday values lie somewhere in between.
+
+\createfigure%
+{Hourly emissions values for Switzerland}%
+{Hourly emissions values for Switzerland. Only CO$_2$ and FC emissions are shown, as the values for the other pollutants are negligeable in comparison.}%
+{\label{fig:hourlyEmissions}}%
+{%
+  \createsubfigure%
+  {30\% diesel vehicles}%
+  {\includegraphics[width=0.49\textwidth,
+angle=0]{figures/hourly_emissions_30pct_diesel.pdf}}%
+  {\label{fig:hourlyEmissions-30pctDiesel}}%
+  {}%
+  \createsubfigure%
+  {40\% diesel vehicles}%
+  {\includegraphics[width=0.49\textwidth,
+angle=0]{figures/hourly_emissions_40pct_diesel.pdf}}%
+  {\label{fig:hourlyEmissions-30pctDiesel}}%
+  {}%
+}%
+{}
 
 The spatial analysis of emissions is expected to show higher emissions in and around larger cities and within highly populated cantons, where more people live and therefore more commutes are observed.
 Fig. shows the spatial distribution of the total daily emissions over entire Switzerland whereas Fig. show aggregated total daily emissions per canton.
 Indeed, it can be seen that larger cities such as Zurich and Bern and highly populated canton such as Zurich, Bern and Vaud produce higher total emissions than rural areas within e.g. Graubünden, Schwyz or Appenzell.
 
+\createfigure%
+{Spatial distribution of total emissions in Switzerland}%
+{Spatial distribution of total emissions in Switzerland}%
+{\label{fig:spatialEmissions}}%
+{\includegraphics[width=1.0\textwidth, angle=0]{figures/total_emissions_heatmap.png}}%
+{}
+
 The MATSim computed emissions values are then compared to those calculated by \cite{foen2010pollutants} for 2015.
 Since MATSim simulates a single typical workday for 10\% of the entire Swiss population, our values need to be scaled in order to be comparable.
 The emissions values are thus multiplied by 10 to account for the population sampling, then by 365 days and finally by an additional scale factor such that the total traveled distance matches the one reported by \cite{foen2010pollutants} for 2015.
-Fig. shows the percent deviation of the MATSim estimates from the reported 2015 estimates.
-The total emission values for all pollutants are within \% of the reported values, thereby demonstrating that MATSim provides a reliable means of estimating emission values for pollutants.
+\Cref{tab:emissionValueMatsimFoenComparison} shows the total estimated emissions values for both MATSim scenarios and \cite{foen2010pollutants} and \Cref{fig:emissionValueMatsimFoenComparison} plots the percent deviation of the MATSim estimates from the reported 2015 estimates.
+The total emission values for all pollutants except PM are within 20\% of the reported values with 30\% diesel engine ownership; they lie within 10\% in the 40\% diesel engine ownership case.
+These deviations are possibly due to the fact that emissions factors depend on the exact type of petrol or diesel engine.
+In the MATSim model, only one type of petrol and diesel engine is considered, whereas in reality, these are further subdivided into specific subtypes.
+Nevertheless, the estimed values are coincide with the previously reported values, thereby demonstrating that MATSim provides a reliable means of estimating emission values for pollutants.
+
+\createtable%
+{MATSim and FOEN estimated emission value comparison}%
+{MATSim and FOEN estimated emission value comparison}%
+{\label{tab:emissionValueMatsimFoenComparison}}%
+{%
+  \begin{tabular}[c]{lrrrrr}
+    \toprule
+    \multirow{3}{*}{Pollutant} & \multirow{3}{*}{FOEN} & \multicolumn{4}{c}{MATSim} \\ 
+    & & \multicolumn{2}{c}{30\% diesel} & \multicolumn{2}{c}{40\% diesel}\\
+    & g & g & \% & g & \% \\
+    \midrule
+    CO$_2$(total) & 10687911 & 11770667 &  10.13 & 10893138 &   1.92 \\
+    FC &                  NA &  3872146 &    --- &  3582233 &    --- \\
+    CO &               67424 &    69526 &   3.12 &    61283 &  -9.11 \\
+    NOx &              16496 &    14004 & -15.11 &    17220 &   4.39 \\
+    HC &                9546 &     9820 &   2.87 &     8777 &  -8.06 \\
+    NMHC &              9037 &     9291 &   2.81 &     8315 &  -7.98 \\
+    NO2 &               4127 &     3410 & -17.38 &     4471 &   8.34 \\
+    PM &                 418 &      523 &  25.16 &      672 &  60.85 \\
+    SO2 &                 59 &       57 &  -3.56 &       53 & -10.48 \\
+    \bottomrule
+  \end{tabular}
+}%
+{}
+
+\createfigure%
+{MATSim and FOEN estimated emission value comparison}%
+{MATSim and FOEN estimated emission value comparison}%
+{\label{fig:emissionValueMatsimFoenComparison}}%
+{\includegraphics[width=1.0\textwidth, angle=0]{figures/percent_differences.pdf}}%
+{}
 
 \subsubsection{Congestion}
+
+Contrary to emissions, congestion and delays caused to others cannot directly be estimated from GPS traces alone, since information on how many other drivers were present on the road at that given moment is lacking.
+It is precisely for this reason that MATSim is used to estimate congestion throughout a typical workday.
+Therefore, it is crucial that the estimated aggregate congestion values are consistent with other previous estimates.
+As before, these values are calculated using a 10\% MATSim scenario for Switzerland and are aggregated into hourly time bins per road link.
+These estimates are again first analyzed temporally and spatially to assure the plausibility of the output before being compared to \cite{} \red{citation}.
+
+The typical total caused delays pattern per hourly time bin estimated from the MATSim scenario is shown in \Cref{fig:hourlyDelays}.
+As was the case for emissions, total delays also expectedly coincide with typical commuter patterns, with fewer delays the early morning and at night, two distinct peaks corresponding to morning and evening rush-hours and midrange values at midday.
+
+\createfigure%
+{Hourly total caused delays for Switzerland}%
+{Hourly total caused delays for Switzerland}%
+{\label{fig:hourlyDelays}}%
+{\includegraphics[width=0.49\textwidth,
+angle=0]{figures/hourly_caused_delays.pdf}}%
+{}
+
+\Cref{fig:hourlyDelays} shows the spatial distribution of the total daily caused delays over entire Switzerland.
+Following an anogolous reasoning as for emissions, longer delay times are observed in and around larger cities and within highly populated cantons, where more people live and commute to.
+
+\createfigure%
+{Spatial distribution of total emissions in Switzerland}%
+{Spatial distribution of total emissions in Switzerland}%
+{\label{fig:spatialDelays}}%
+{\includegraphics[width=1.0\textwidth, angle=0]{figures/delays_heatmap.png}}%
+{}
+
+The MATSim computed emissions values are then compared to those calculated by \cite{}.
+The same scaling operations are performed as in the case of emissions: multiplication by 10 to account for the population sampling, then by 365 days and finally by an additional scale factor such that the total traveled distance matches the one reported by \cite{foen2010pollutants} for 2015.
+
 
 \subsection{Green Class Emission Reductions}
 %%Joe
