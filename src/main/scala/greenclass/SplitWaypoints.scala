@@ -29,16 +29,12 @@ object SplitWaypoints {
 
     def main(args : Array[String]) {
 
-      //val args = {"P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_config_no_facilities.xml", "C:\\Projects\\spark\\green_class_swiss_triplegs.csv","C:\\Projects\\spark\\green_class_waypoints.csv","C:\\Projects\\SCCER_project\\output_gc"}
-
 
       val logger = Logger.getLogger(this.getClass)
 
-      val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
-      val triplegs_src = Source.fromFile(args(1))
-      val waypoints_src = Source.fromFile(args(2))
-      val OUTPUT_DIR = args(3)
-      val timeout_duration = args(4).toInt
+      val triplegs_src = Source.fromFile(args(0))
+      val waypoints_src = Source.fromFile(args(1))
+      val OUTPUT_DIR = args(2)
 
       new File(OUTPUT_DIR).mkdirs
       val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
@@ -60,14 +56,9 @@ object SplitWaypoints {
 
       //return the time, but not date of the point, we can get that from the trip_leg id
 
-      val tripleg_waypoints : Map[Int, Seq[GPXEntry]] =  waypoints_src.getLines.drop(1)
-        .map(_.split(","))
-        .map { case Array(long, lat, tracked_at, tl_id) =>
-          tl_id.toInt -> new GPXEntry(lat.toDouble, long.toDouble, tracked_at.toLong)
-        }
-        .toStream.groupBy(_._1)
-        .map{ case (k, ss) => (k, ss.map(_._2))}
-
+      val tripleg_waypoints : Map[Long, Seq[WaypointRecord]] =  waypoints_src.getLines.drop(1)
+        .map(WaypointRecord.parseFromCSV(_, ','))
+        .toStream.groupBy(_.tl_id)
 
       logger.info(s"${tripleg_waypoints.map(_._2.size).sum} waypoints loaded")
 
@@ -76,16 +67,16 @@ object SplitWaypoints {
       personday_triplegs.par.foreach {
         case (tr, tl_ids) =>
           println(s"processing ${tr.user_id}, ${tr.date}, ${tr.date.format(dateFormatter)}")
-          val gpxEntry: Stream[(Int, Seq[GPXEntry])] =
+          val gpxEntry: Stream[(Int, Seq[WaypointRecord])] =
             tl_ids.map {tlr => tlr._2.leg_id -> tripleg_waypoints.getOrElse(tlr._2.leg_id, Seq.empty)}
 
-          val date_dir = s"$OUTPUT_DIR/csv/${tr.date.format(dateFormatter)}/"
+          val date_dir = s"$OUTPUT_DIR/csv_long/${tr.date.format(dateFormatter)}/"
           new File(date_dir).mkdirs
           val eventWriter = new FileWriter(new File(s"$date_dir/${tr.user_id}-gpx.csv"))
-          eventWriter.write("tl_id,longitude,latitude,time\n")
+          eventWriter.write("wp_id,longitude,latitude,time,accuracy,tl_id\n")
 
           gpxEntry.sortBy(_._1).foreach { case (tl_id, gs) =>
-            gs.sortBy(_.getTime).foreach(g => eventWriter.write("%d,%f,%f,%d\n".format(tl_id,g.lon, g.lat, g.getTime)))
+            gs.sortBy(_.time).foreach(g => eventWriter.write(g.toString()))
           }
           eventWriter.close()
 
@@ -107,3 +98,4 @@ object SplitWaypoints {
 
 
 }
+

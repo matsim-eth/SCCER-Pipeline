@@ -87,7 +87,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
                 //graph.edge(nodes.get(fromNode), nodes.get(toNode), l.getLength(), false);
             }
             else {
-                log.debug(l.getId());
+                //log.debug(l.getId());
             }
         });
     }
@@ -170,7 +170,7 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
     private void processJunctions() {
         AtomicInteger i = new AtomicInteger();
-        log.debug(network);
+        //log.debug(network);
 
         this.network.getNodes().values().forEach(x -> {
             Coord wgs_from_node = convertor.transform(x.getCoord());

@@ -34,7 +34,7 @@ public class GraphHopperMATSim extends GraphHopper {
 
     public static GraphHopperMATSim build(Network network, CoordinateTransformation coordinateTransformation) {
         GraphHopperMATSim hopper = new GraphHopperMATSim(network, coordinateTransformation);
-
+ //       hopper.setPreciseIndexResolution(300); //TODO: refactor this so that the index resoltion can be set on startup. but this is needed to find edges on some nodes
         hopper.setStoreOnFlush(false)
                 .setGraphHopperLocation(new File("").getAbsolutePath());
 
