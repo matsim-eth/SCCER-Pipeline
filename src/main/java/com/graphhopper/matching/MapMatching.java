@@ -71,7 +71,7 @@ public class MapMatching {
     private final Graph graph;
     private final Graph routingGraph;
     private final LocationIndexMatch locationIndex;
-    private double measurementErrorSigma = 50;
+    private double measurementErrorSigma = 100;
     private int maxDistBetweenPoints = Integer.MAX_VALUE;
     private double transitionProbabilityBeta = 2.0;
     private final int nodeCount;

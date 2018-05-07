@@ -68,10 +68,9 @@ object ProcessWaypointsCsv {
 
     def readCsv(f : File) = {
       Source.fromFile(f).getLines.drop(1)
-        .map(_.split(","))
-        .map { case Array(tr_id, long, lat, tracked_at) =>
-          tr_id.trim.toLong -> new GPXEntry(lat.trim.toDouble, long.trim.toDouble, tracked_at.trim.toLong)
-        }.toStream.groupBy(_._1).map{case (k,v) => (k, v.map(_._2))}
+        .map(WaypointRecord.parseFromCSV(_, ','))
+          .filter(_.accuracy < 200)
+        .toStream.groupBy(_.tl_id)
 
     }
 
@@ -97,7 +96,7 @@ object ProcessWaypointsCsv {
             readCsv(tripLegsCsv)
               .map { case (tl, wp2) =>
                 val vehicleId = determineVehicleType(tr.user_id, modeMapping.get(tl))
-                gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), vehicleId, TransportMode.car).asScala }
+                gh.gpsToEvents(wp2.map(_.toGPX).asJava, Id.createPersonId(tr.user_id), vehicleId, TransportMode.car).asScala }
               .filterNot(_.isEmpty) //remove empty triplegs
               .toList.sortBy(_.head.getTime) //sort by the first event
               .flatten
