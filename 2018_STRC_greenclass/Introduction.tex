@@ -80,11 +80,39 @@ Since these values were computed using a so-called "at-least" approach, they wil
 
 \red{TODO : Something about norms?}
 
+
 \subsection{Green Class Data}
 %%Joe
 In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA), an electric BMW i3, park+ride subscription, car and bike sharing subscriptions.
 The 139 participants were tracked for the duration of the project using a mobile app enabled with GPS.
+
 \red{how much detail on the work from geoINFK?} These GPS traces were processed to identify individual trips and modes of travel \cite{rabaul2016greenclassprocessing}.
+
+The trip records contain the following information:
+\begin{itemize}
+  \item user id
+  \item trip id
+  \item start timestamp
+  \item end timestamp
+  \item identified mode of travel
+\end{itemize}
+
+Each GPS waypoint records contains: 
+\begin{itemize}
+  \item longitude
+  \item latitude
+  \item timestamp
+  \item accuracy (meters)
+  \item user id
+\end{itemize}
+
+\red {summary of trips, waypoints in table}
+
+In total, for the 139 participants, there were _______ trips recorded, with an an average of ______ per person per day (see Table \ref{Table:green_class}). Figure \ref{figure:waypoint_dist} presents the distribution of the number of waypoints per trip. A large number of GPS points is important for accurate route detection and identification of the link entry and exit timings.
+
 A core component of the pilot project was the availability of an electric car to subscribers, powered by renewable energy.
 Asumming similar driving behaviour independent of the drive-train type, the emissions avoided for each trip can calculated.
 For this analysis, the dataset was filtered to include only trips with a start and finish within switzerland using either the electric car or personal automobile. 
+
+\paragraph{GPS Waypoints}
+
