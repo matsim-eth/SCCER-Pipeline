@@ -6,6 +6,7 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
+import java.util.stream.Collectors;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -114,13 +115,14 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	    		for (Map<String, Double> leg : person.getValue()) {
 	    			legCount++;
 	    			String record = person.getKey() + ";" + this.date + ";" + legCount + ";";
-	    	        for (String key : keys) {
-	    	            String val = String.format("%.4f", leg.get(key));
-	    	            if ("Mode".equals(key)) {
-	    	                val = leg.get(key) > 0.5 ? "Ecar" : "Car";
-                        }
-	    	        	record = record + val + ";";
-	    	        }
+
+	    			record += keys.stream ().map(key -> {
+	    				if ("Mode".equals(key)) {
+	    	                return leg.get(key) > 0.5 ? "Ecar" : "Car";
+                        } else {
+							return String.format("%.4f", leg.get(key));
+						}
+	    	        }).collect(Collectors.joining(";"));
 	    	        if (!headerWritten) {
                         String header = "PersonId;Date;Leg;";
                         bw.write(header + String.join(";", keys));

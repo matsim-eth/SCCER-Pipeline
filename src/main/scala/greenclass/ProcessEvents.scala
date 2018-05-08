@@ -37,7 +37,6 @@ object ProcessEvents {
     val outputFolder = args(3)
     val ncores = args.applyOrElse(4, (_ : Int) => "1").toInt
 
-    logger.info("load aggregate congestion data")
     val scenario = ScenarioUtils.loadScenario(config)
     MeasureExternalitiesFromTraceEvents.addVehicleTypes(scenario)
     MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork)
@@ -47,12 +46,14 @@ object ProcessEvents {
     attributes.add(CongestionPerLinkField.COUNT.getText)
     attributes.add(CongestionPerLinkField.DELAY.getText)
     val aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl[Link](bin_size_s, scenario.getNetwork.getLinks.keySet, attributes, null)
+    logger.info("load aggregate congestion data")
     aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
 
 
     import scala.collection.JavaConverters._
 
     //read list of already processed files, in case of failure
+    new File(outputFolder).mkdir()
     val processedListFile = new File(outputFolder, "processed.txt" )
     if (!processedListFile.exists()) processedListFile.createNewFile()
     val filesToSkip :Set[Path] = Source.fromFile(processedListFile).getLines().map{ case x : String => Paths.get(x)}.toSet
@@ -66,6 +67,7 @@ object ProcessEvents {
     val calculatorsQueue = new java.util.concurrent.ArrayBlockingQueue[MeasureExternalitiesFromTraceEvents](ncores)
     calculatorsQueue.addAll(calculators.asJava)
 
+    logger.info("processing files")
     Files.walk(events_folder).iterator().asScala.toList
       .par
       .filterNot{ Files.isDirectory(_) }
