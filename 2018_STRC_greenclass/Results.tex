@@ -9,7 +9,7 @@ Emissions values can be estimated with MATSim directly from the processed GPS tr
 Nevertheless, in order to validate our estimation, emission values are first calculated using a 10\% MATSim scenario for Switzerland.
 To comply with new vehicle registrations statistics according to \cite{autoschweiz2010} and \cite{autoschweiz2012} as well as the vehicle ownership predictions from \cite{foen2010pollutants}, two scenarios where 30\% and 40\% of vehicles are assigned a diesel engine were examined.
 
-The emission values are estimated for each road link in the MATSim network for the following pollutants: CO, CO$_2$(total), FC, HC, NMHC, NO$_2$, NO$_x$, PM and SO$_2$.
+The emission values are estimated for each road link in the MATSim network for the following pollutants: CO, total CO$_2$, FC, HC, NMHC, NO$_2$, NO$_x$, PM and SO$_2$.
 The values are aggregated into hourly time bins.
 These emission estimates are then first analyzed temporally and spatially to assure the plausibility of the output.
 
@@ -20,7 +20,7 @@ As expected, two distinct peaks corresponding to morning and evening rush-hours 
 
 \createfigure%
 {Hourly emissions values for Switzerland}%
-{Hourly emissions values for Switzerland. Only CO$_2$ and FC emissions are shown, as the values for the other pollutants are negligeable in comparison.}%
+{Hourly emissions values for Switzerland. Only total CO$_2$ and FC emissions are shown, as the values for the other pollutants are negligeable in comparison.}%
 {\label{fig:hourlyEmissions}}%
 {%
   \createsubfigure%
@@ -40,13 +40,13 @@ angle=0]{figures/hourly_emissions_40pct_diesel.pdf}}%
 
 The spatial analysis of emissions is expected to show higher emissions in and around larger cities and within highly populated cantons, where more people live and therefore more commutes are observed.
 Fig. shows the spatial distribution of the total daily emissions over entire Switzerland whereas Fig. show aggregated total daily emissions per canton.
-Indeed, it can be seen that larger cities such as Zurich and Bern and highly populated canton such as Zurich, Bern and Vaud produce higher total emissions than rural areas within e.g. Graubünden, Schwyz or Appenzell.
+Indeed, it can be seen that total emission values are higher in the main metropolitan areas (Zurich, Geneva, Basel, Bern, Lausanne, Lucerne, St-Gallen) than in rural areas within e.g. Graub\"unden, Valais, Schwyz or Appenzell.
 
 \createfigure%
 {Spatial distribution of total emissions in Switzerland}%
 {Spatial distribution of total emissions in Switzerland}%
 {\label{fig:spatialEmissions}}%
-{\includegraphics[width=1.0\textwidth, angle=0]{figures/total_emissions_heatmap.png}}%
+{\includegraphics[width=1.0\textwidth, angle=0]{figures/total_emissions_heatmap.pdf}}%
 {}
 
 The MATSim computed emissions values are then compared to those calculated by \cite{foen2010pollutants} for 2015.
@@ -97,7 +97,7 @@ Contrary to emissions, congestion and delays caused to others cannot directly be
 It is precisely for this reason that MATSim is used to estimate congestion throughout a typical workday.
 Therefore, it is crucial that the estimated aggregate congestion values are consistent with other previous estimates.
 As before, these values are calculated using a 10\% MATSim scenario for Switzerland and are aggregated into hourly time bins per road link.
-These estimates are again first analyzed temporally and spatially to assure the plausibility of the output before being compared to \cite{} \red{citation}.
+These estimates are again first analyzed temporally and spatially to assure the plausibility of the output before being compared to \cite{mkinfras2016staukosten}.
 
 The typical total caused delays pattern per hourly time bin estimated from the MATSim scenario is shown in \Cref{fig:hourlyDelays}.
 As was the case for emissions, total delays also expectedly coincide with typical commuter patterns, with fewer delays the early morning and at night, two distinct peaks corresponding to morning and evening rush-hours and midrange values at midday.
@@ -117,12 +117,12 @@ Following an anogolous reasoning as for emissions, longer delay times are observ
 {Spatial distribution of total emissions in Switzerland}%
 {Spatial distribution of total emissions in Switzerland}%
 {\label{fig:spatialDelays}}%
-{\includegraphics[width=1.0\textwidth, angle=0]{figures/delays_heatmap.png}}%
+{\includegraphics[width=1.0\textwidth, angle=0]{figures/total_delays_heatmap.pdf}}%
 {}
 
-The MATSim computed delay values are then compared to those calculated by \cite{}.
+The MATSim computed delay values are then compared to those calculated by \cite{mkinfras2016staukosten}.
 The same scaling operations are performed as in the case of emissions: multiplication by 10 to account for the population sampling, then by 365 days and finally by an additional scale factor such that the total traveled distance matches the one reported by \cite{foen2010pollutants} for 2015.
-The values are reported in \Cref{ab:delayValueComparison}.
+The values are reported in \Cref{tab:delayValueComparison}.
 
 
 \createtable%
@@ -132,7 +132,7 @@ The values are reported in \Cref{ab:delayValueComparison}.
 {%
   \begin{tabular}[c]{lrrr}
     \toprule
-    Road type & Infras/MK (Mio Veh h / a) & MATSim (Mio Veh h / a) & \%  \\ 
+    Road type & MK/Infras (Mveh-h/a) & MATSim (Mveh-h/a) & \%  \\ 
     \midrule
     Motorway      & 16.62 &    8.33 &  -49.8901 \\
     Non-motorway  & 11.23 &   95.00 &  745.9803 \\
@@ -144,6 +144,8 @@ The values are reported in \Cref{ab:delayValueComparison}.
 
 The total vehicle hour delay per year values are estimated to be much higher in MATSim than in the report.
 However, the authors do indeed state that they have taken an "at-least" approach in estimating delays and that the values for non-motorway segments are highly underestimated.
+On the other hand, our model only similulates passengers vehicles.
+Therefore, it neither accounts for the effects of the interaction of cars with trucks on motorways nor does it captures extraordinary circumstances such as accidents and holiday traffic which could increase the vehicle hours of delay.
 
 
 
