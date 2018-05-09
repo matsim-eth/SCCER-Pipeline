@@ -1,3 +1,14 @@
 \section{Methodology}
 %% i.e. Pipeline structure
 %%Joe
+
+Pipeline for processing of GPS traces
+ - filtering of waypoints
+ - map matching using graphhopper
+ - remove matched trips that have an average speed over 120kmh, or a duration less than 1 minute - 9\% of trips removed.
+ - calculate link entry and exit times - simple formula
+ - convert to matsim events
+ - run traces through event processing to calculate externalities
+ 	- for emissions cap link average speed at link freespeed 
+ 	- road types taken from OSM
+ 	- end result is calculation of emissions and delays for each trip leg
