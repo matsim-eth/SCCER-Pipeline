@@ -37,31 +37,36 @@ The 2015 scenario extends the work of \cite{Balmer2007switzerland} to add househ
 
 Numerous sources are available for the analysis of external costs in Switzerland, including Standards, government reports and databases. These sources guide and inform the evaluation of new and existing infrastructure projects. A report on the external costs and benefits analysis of transport in Switzerland is available from the \citet{are2016externalcosts}, built on the methodology developed in \cite{ecoplaninfras2014externeeffekte}.
 It presents the most recent external cost-benefit analysis for the Swiss transport system, primarily focusing on external environmental, health and accident-related costs.
-Specifically, external costs for 12 different cost categories are computed, differentiated by transport mode, \red{type} and user. 
+Specifically, external costs for 12 different cost categories are computed, differentiated according to three different perspectives: transport mode (road/rail/air/water, passenger/freight, vehicle type), transport type (particulary heavy vehicles) and transport user. 
 
 For the modeling of road transport pollutant emissions in Switzerland (and other European countries), emission factors are generally taken from the Handbook for Emission Factor Analysis (HBEFA) \cite{maibach2008emissions}.
 The HBEFA database contains emission factors for a range vehicle categories and traffic situations, differentiated by emission type, pollutant and year. The HBEFA is the standard for road pollutant analysis in Germany, Switzerland and Austria, and is supported by the European Comission. 
 
-\citet{foen2010pollutants} use the HBEFA to provide an detailed analysis of past and predicted future pollutant emissions, covering road transport in Switzerland from 1990 to 2035.\red{a bit more here on this source?}
+\citet{foen2010pollutants} use the HBEFA to provide an detailed analysis of past and predicted future pollutant emissions, covering road transport in Switzerland from 1990 to 2035.
+Emissions values are calculated for three emissions types: emissions when engine is in hot operating condition, cold-start emissions and evaporation emissions.
+The calculation of these values require both traffic volume data as well as the emissions factors from the HBEFA for each emission type.
+The authors model the development of the vehicle fleet composition, vehicle specific mileage and emission standards trends, resulting 
+traffic volumes (mileage and start/stop processes) differentiated by vehicle category, emission standard and road category.
+These traffic volumes are then multiplied by the corresponding emissions factors to obtain the final emissions values.
 
-Concerning congestion specifically, \cite{mkinfras2016staukosten} estimate the external traffic delay costs for the years 2010 to 2014.
+Concerning congestion specifically, \cite{mkinfras2016staukosten} estimate the external traffic delay costs for the years 2009 to 2014.
 The objective of this study was to estimate vehicle hours of delay and identify the contribution from heavy vehicles.
 For 2013, this was achieved by combining and aligning INRIX traffic flow data and traffic demand data from the National Passenger Transport Model.
 The time lost per road section was calculated by subtracting the free-flow travel time from actual travel time, where traffic jams are considered to occur only when the actual speed is less than 65\% of the free-flow speed.
-For previous years, online data from the Federal Roads Office (FEDRO) counting stations was used.
-A summary of thier results is provided in Table \Cref{tab:vehHoursDelayMkInfras}.
-The values provide a useful estimate of delay costs in Switzerland, however, the use of an "at-least" approach will tend to underestimate the lost time and resulting associated delay costs. \red{cite}
+For the other years, online data from the Federal Roads Office (FEDRO) counting stations was used.
+A summary of their results is provided in \Cref{tab:vehHoursDelayMkInfras}.
+The values provide a useful estimate of delay costs in Switzerland, however, the use of an "at-least" approach will tend to underestimate the lost time and resulting associated delay costs \cite{2016staukosten}.
 %This is particularly the case for non-motorways road segments, where long road lengths, flawed speed data and lack of zero mean speed cases play a significant role.
 
 \createtable%
 {Updated estimated vehicle hours of delay for 2009-2014}%
-{Updated estimated vehicle hours of delay for 2009-2014 and comparison to previously reported values from ARE 2012}%
+{Updated estimates of vehicle hours of delay for 2009-2014 and comparison to previously reported values from ARE 2012 for Light (LMV) and Heavy Motorized Vehicles (HMV)}%
 {\label{tab:vehHoursDelayMkInfras}}%
 {%
   \begin{tabular}[c]{lrrrrrrrr}
     \toprule
     \multirow{3}{*}{} & & \multicolumn{7}{c}{Vehicle hours of delay (Mio/a)}\\ 
-    & & \multicolumn{2}{c}{Motoway} & \multicolumn{2}{c}{Non-motoway} & \multicolumn{3}{c}{Total}\\
+    & & \multicolumn{2}{c}{Motorway} & \multicolumn{2}{c}{Non-motorway} & \multicolumn{3}{c}{All roads}\\
     & &  LMV & HMV & LMV & HMV & LMV & HMV & Both\\
     \midrule
     \multirow{6}{*}{Updated}
@@ -78,9 +83,11 @@ The values provide a useful estimate of delay costs in Switzerland, however, the
 }%
 {\cite{mkinfras2016staukosten}, p.141, Annexe A4}
 
-
-\red{TODO : Something about norms?}
-
+The Swiss Association of Road and Transportation Experts (VSS) has published a series of norms (SN 641 82* : Cost Benefit Analysis
+for Road Traffic) aimed at guiding the accessment of monetary effects and the cost benefit analysis of transport projects, policies and regulations.
+Norms SN 641 820 (Basic Standard), SN 641 822a (Travel Time Costs for Passenger Traffic) and SN 641 828 (External Costs) can be of particular interest in the context of external cost evaluation.
+For example, they provide standard values for time costs and willingness to pay per vehicle type and trip purposes as well as standard methods for evaluating the monetary impacts of air pollution and climate impacts.
+ 
 
 \subsection{Green Class Data}
 %%Joe
