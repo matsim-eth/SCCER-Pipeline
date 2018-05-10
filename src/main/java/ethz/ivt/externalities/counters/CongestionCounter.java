@@ -2,14 +2,13 @@ package ethz.ivt.externalities.counters;
 
 import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.CongestionPerLinkField;
+import ethz.ivt.externalities.data.CongestionField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import java.nio.file.Path;
 
@@ -26,7 +25,7 @@ public class CongestionCounter extends ExternalityCounter {
     @Override
     protected void initializeFields() {
     	super.initializeFields();
-        keys.add("Delay");
+        keys.add(CongestionField.DELAY_CAUSED.getText());
     }
 
 	@Override
@@ -38,14 +37,14 @@ public class CongestionCounter extends ExternalityCounter {
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-		double count = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionPerLinkField.COUNT.getText());
-        double delay = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionPerLinkField.DELAY.getText());
+		double count = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionField.COUNT.getText());
+        double delay = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, CongestionField.DELAY_CAUSED.getText());
 
         double avg_link_delay = delay / count;
         if (Double.isNaN(avg_link_delay)) avg_link_delay = 0.0 ;
 
-		double previous = this.tempValues.get(personId).get("Delay");
-		this.tempValues.get(personId).put("Delay", previous + avg_link_delay);
+		double previous = this.tempValues.get(personId).get(CongestionField.DELAY_CAUSED.getText());
+		this.tempValues.get(personId).put(CongestionField.DELAY_CAUSED.getText(), previous + avg_link_delay);
 		
 		super.handleEvent(event); //add distance
 	}

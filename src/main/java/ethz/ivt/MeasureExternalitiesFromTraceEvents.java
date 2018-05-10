@@ -1,7 +1,6 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.CongestionPerLinkField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -18,17 +17,12 @@ import org.matsim.contrib.noise.handler.NoiseTimeTracker;
 import org.matsim.core.config.Config;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
-import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 
-import java.util.LinkedList;
-import java.util.List;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
