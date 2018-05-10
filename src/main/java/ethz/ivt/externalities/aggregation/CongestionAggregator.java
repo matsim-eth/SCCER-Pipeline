@@ -132,28 +132,22 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
 
         double binSize = aggregateCongestionDataPerLinkPerTime.getBinSize();
-        double dt = leaveTime - enterTime;
 
         int enterTimeBin = ExternalityUtils.getTimeBin(enterTime, binSize);
         int leaveTimeBin = ExternalityUtils.getTimeBin(leaveTime, binSize);
 
+        // if agent on link during only one timebin, increment that timebin by 1
         if (leaveTimeBin == enterTimeBin) {
             aggregateCongestionDataPerLinkPerTime.addValue(linkId,
                     leaveTimeBin, CongestionField.COUNT.getText(), 1.0);
 
         }
+        // if agent on link during two timebins, increment each one by 1
         else if (leaveTimeBin > enterTimeBin) {
-            double T = binSize * leaveTimeBin;
-            double t1 = T - enterTime;
-            double t2 = leaveTime - T;
-
-            double c1 = t1 / dt;
-            double c2 = t2 / dt;
-
             aggregateCongestionDataPerLinkPerTime.addValue(linkId,
-                    enterTimeBin, CongestionField.COUNT.getText(), c1);
+                    enterTimeBin, CongestionField.COUNT.getText(), 1.0);
             aggregateCongestionDataPerLinkPerTime.addValue(linkId,
-                    leaveTimeBin, CongestionField.COUNT.getText(), c2);
+                    leaveTimeBin, CongestionField.COUNT.getText(), 1.0);
         }
 
         //TODO : Think what should happen for counts if arrival then departure occur within same timebin
