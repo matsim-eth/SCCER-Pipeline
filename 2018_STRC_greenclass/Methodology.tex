@@ -38,7 +38,7 @@ GPS data accuracy can vary considerably, depending on the sensor used, the surro
 The data collected as part of the green class project included not just longitude, latitude and time, but also an accuracy inicator, in meters. 
 The filtering was performed only using this metric, with any points with an accuracy worse than 200 meters were excluded from the dataset. 
 This proved sufficient for effective map matching. Other techniques include exluding points based on the speed between consecutive points. 
-It is worth noting that Graphhopper also performs some additoinal filtering, removing points within a measurement error of the previous point, in order to speed up the map matching computation. Inconsistencies in the provided GPS data meant that some trips had unusually high average speeds (due to ping-ponging) or very short trip durations. Therefore, Trips with an average speed over $120 kmh\textsuperscript{-1}$ or less than 1 minute duration were removed. The invalid trips made up 9\% of the dataset. The remaining trips show a nice average speed profile (\ref{fig:avg_speeds}).
+It is worth noting that Graphhopper also performs some additoinal filtering, removing points within a measurement error of the previous point, in order to speed up the map matching computation. Inconsistencies in the provided GPS data meant that some trips had unusually high average speeds (due to ping-ponging) or very short trip durations. Therefore, Trips with an average speed over 120 kmh\textsuperscript{-1} or less than 1 minute duration were removed. The invalid trips made up 9\% of the dataset. The remaining trips show a nice average speed profile (\ref{fig:avg_speeds}).
 
 \createfigure%
 	{Histogram of average speeds of trip legs after step 1 (filtering)}
@@ -58,7 +58,7 @@ Each GPS point $p_{l,i}$ is projected onto link l, to mark the distance traveled
 A helper function $time\_between(a,b)$ returns the time needed to travel between projected points and verticies of a link. From $p'_{l,e}$ to the end of a link; or the start of a link to the first projected point on a link $p'_{l,s}$. 
 $tt(l)$ gives the time needed to travel a link under free flow conditions, and $time_between(p_{l,e}, p_{l',s}$) gives the time difference between the last and first points on two links respectively.
 
-In MATSim the assumptions hold that an agent starts and ends somewhere on a link. Hence, for the first link, only the exit time needs to be calculated, and respectively the entry time for the last link. As such, the algorithm can be separated into two cases:
+In MATSim the assumptions hold that an agent starts and ends somewhere on a link. Hence, for the first link, only the exit time needs to be calculated, and respectively the entry time for the last link. Additionally, $entry\_time(l_{j}) = exit\_time(l_{j-1}),  \forall j = 1..n$. As such, the algorithm can be separated into two cases:
 \begin{itemize}
 	\item \textbf{First Link} For the first link $l_1$, $exit\_time(l_1) = time(p'_{l_1,e}) + time\_between(p'_{l_1,e}, l_1)$
 %%%	\item \textbf{Last Link} For the last link $l_n$, $entry\_time(l_n) = exit\_time(l_{n-1}) + time\_between(l_{n-1}, p'_{l_n,s})$
