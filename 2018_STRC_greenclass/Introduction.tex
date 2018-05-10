@@ -120,7 +120,11 @@ In total, for the 139 participants, there were 163,417 trips recorded, with an a
 Figure \ref{figure:waypoint_dist} presents the distribution of the number of gps points per trip. 
 A large number of GPS points is important for accurate route detection and identification of the link entry and exit timings.
 
-\begin{table}
+\createtable%
+{Green Class Trips and Waypoints}%
+{Green Class Trips and Waypoints}%
+{\label{tab:green_class_gps_summary}}%
+{%
 \begin{tabular}{ l | r r | r r r}
                     & \multicolumn{2}{c|}{Full Dataset}  & \multicolumn{3}{c}{Within Switzerland}  \\ 
  
@@ -133,7 +137,8 @@ A large number of GPS points is important for accurate route detection and ident
  GPS Points / Trip Leg &  935.11   &    302.30    &  224.51     &   193.5   &  278.56  \\  
  Trips/person/day & 4.97          & 3.05      & 2.94      & 2.94      & 2.94 \\  
 \end{tabular}
-\end{table}
+}
+{}
 
 For this analysis, the dataset was filtered to include only trips with a start and finish within Switzerland using either the electric car or personal automobile. 
 
