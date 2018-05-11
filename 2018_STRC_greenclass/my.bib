@@ -628,51 +628,103 @@ url="https://doi.org/10.1007/978-3-540-36728-4_32"
   number={14}
 }
 
-@techreport{are2016externalcosts,
-  title={External Costs and Benefits of Transport in Switzerland. Road, rail, air and waterborne transport from 2010 to 2013},
-  author={Federal Office of Spatial Development ARE},
-  year={2016}
+@RESEARCHREPORT{are2016externalcosts,
+  AUTHOR =      {{Federal Office of Spatial Development ARE}},
+  TITLE =       {{External Costs and Benefits of Transport in Switzerland. Road, rail, air and waterborne transport from 2010 to 2013}},
+  INSTITUTION = org-are,
+  YEAR =        {2016},
+  TYPE =        rep-techrep,
+  address =     {Bern},
+  url =         {https://www.are.admin.ch/dam/are/en/dokumente/verkehr/publikationen/externe_kosten_undnutzendesverkehrsinderschweiz.pdf.download.pdf/external_costs_andbenefitsoftransportinswitzerland.pdf},
 }
 
-@techreport{ecoplaninfras2014externeeffekte,
-  title={Externe Effekte des Verkehrs 2010. Monetarisierung von Umwelt-, Unfall- und Gesundheitseffekten},
-  author={Ecoplan / Infras},
-  year={2014}
+@RESEARCHREPORT{ecoplaninfras2014externeeffekte,
+  AUTHOR =      {{Ecoplan / Infras}},
+  TITLE =       {{External Effects of Transport 2010. Monetising Environmental, Accident and Health-Related Effects}},
+  CLIENT =      org-are,
+  INSTITUTION = org-ecoplan # and # org-infras,
+  YEAR =        {2014},
+  TYPE =        rep-techrep,
+  address =     {Bern} # comma # zurich # comma # {Altdorf},
+  url =         {http://www.ecoplan.ch/download/ekv10_sb_de.pdf},
 }
 
-@incollection{foen2010pollutants,
-  title={Pollutant Emissions from Road Transport, 1990 to 2035. Updated in 2010.},
-  author={FOEN},
-  booktitle={Environmental studies},
-  number={1021},
-  pages={129},
-  year={2010},
-  publisher={Federal Office for the Environment},
-  address={Bern}
+@RESEARCHREPORT{foen2010pollutants,
+  author=       {{FOEN}},
+  title=        {{Pollutant Emissions from Road Transport, 1990 to 2035. Updated in 2010}},
+  TYPE =        rep-techrep,
+  resprogram =  {Environmental studies},
+  number=       {1021},
+  year=         {2010},
+  pages=        {129},
+  INSTITUTION=  org-bafu,
+  address=      {Bern}
 }
 
-@incollection{autoschweiz2010,
-  title={Reporting in the framework of the Energy Ordinance on the reduction of the specific fuel standard consumption of passenger cars in 2010},
-  author={auto-schweiz},
-  pages={33},
-  year={2011},
-  publisher={auto-schweiz},
-  address={Bern}
+@RESEARCHREPORT{mkinfras2016staukosten,
+  author=       {Mario Keller} # and # {Philipp W\"uthrich},
+  title=        {{Neuberechnung Staukosten Schweiz 2010-2014}},
+  CLIENT =      org-are # comma # org-astra,
+  INSTITUTION = {MK Consulting} # and # org-infras,
+  YEAR =        {2016},
+  TYPE =        rep-techrep,
 }
 
-@incollection{autoschweiz2012,
-  title={Reporting in the framework of the Energy Ordinance on the reduction of the specific fuel standard consumption of passenger cars in 2012},
-  author={auto-schweiz},
-  pages={32},
-  year={2013},
-  publisher={auto-schweiz},
-  address={Bern}
+@RESEARCHREPORT{autoschweiz2010,
+  AUTHOR =      Blessing # and # Burgener,
+  TITLE =       {{13. Berichterstattung im Rahmen der Energieverordnung \"uber die Absenkung des spezifischen Treibstoff-Normverbrauchs von Personenwagen 2008}},
+  CLIENT =      org-uvek,
+  INSTITUTION = org-autoschweiz,
+  YEAR =        {2009},
+  address =     {Bern},
 }
 
-@incollection{mkinfras2016staukosten,
-  title={Neuberechnung Staukosten Schweiz 2010-2014},
-  author={MK~Consulting/Infras},
-  publisher={Federal Office of Spatial Development ARE},
-  address={Bern},
-  year={2016}
+@RESEARCHREPORT{autoschweiz2012,
+  AUTHOR =      Blessing # and # Burgener,
+  TITLE =       {{17. Berichterstattung im Rahmen der Energieverordnung \"uber die Absenkung des spezifischen Treibstoff-Normverbrauchs von Personenwagen 2012}},
+  CLIENT =      org-uvek,
+  INSTITUTION = org-autoschweiz,
+  YEAR =        {2013},
+  address =     {Bern},
+}
+
+@RESEARCHREPORT{energieVerbrauchEffizienzPersonenwagen2015,
+  AUTHOR =      {Roberto Bianchetti} # and # {Peter de Haan} # and # {Michel M\"uller} # and # {Sebastian Dickenmann},
+  TITLE =       {{Energieverbrauch und Energieeffizienz der neuen Personenwagen 2015 : 20. Berichterstattung im Rahmen der Energieverordnung}},
+  CLIENT =      org-bfe,
+  INSTITUTION = org-ebp,
+  YEAR =        {2016},
+  address =     {Bern},
+}
+
+
+
+%% --------- Templates for reports --------
+
+@TECHREPORT{TECHREPORT-AUTHOR_TechRep_InstAcronym_YEAR_INDEX,
+  AUTHOR =      {TECHREPORT-AUTHOR},
+  TITLE =       {{TITLE}},
+  INSTITUTION = {INSTITUTION},
+  YEAR =        {0000},
+  TYPE =        {TYPE},
+  number =      {number},
+  address =     {address},
+  month =       {month},
+  url =         {url},
+  comment =     {{comment}},
+}
+
+@RESEARCHREPORT{RESEARCHREPORT-AUTHOR_ResRep_ClientAcronym_YEAR_INDEX,
+  AUTHOR =      {RESEARCHREPORT-AUTHOR},
+  TITLE =       {{TITLE}},
+  CLIENT =      {{CLIENT}},
+  INSTITUTION = {INSTITUTION},
+  YEAR =        {0000},
+  TYPE =        {TYPE},
+  resprogram =  {resprogram},
+  number =      {number},
+  address =     {address},
+  month =       {month},
+  url =         {url},
+  comment =     {{comment}},
 }

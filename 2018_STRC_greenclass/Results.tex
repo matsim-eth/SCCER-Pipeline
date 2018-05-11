@@ -7,7 +7,7 @@ To validate the externality values estimated using MATSim, the produced outputs 
 \subsubsection{Emissions}
 Emissions values can be estimated with MATSim directly from the processed GPS traces and therefore do not explicitely require a calibrated MATSim scenario for Switzerland.
 Nevertheless, in order to validate our estimation, emission values are first calculated using a 10\% MATSim scenario for Switzerland.
-To comply with new vehicle registrations statistics according to \citet{autoschweiz2010} and \citet{autoschweiz2012} as well as the vehicle ownership predictions from \citet{foen2010pollutants}, two scenarios where 30\% and 40\% of vehicles are assigned a diesel engine were examined.
+To comply with new vehicle registrations statistics according to \citet{autoschweiz2010}, \citet{autoschweiz2012} and \citet{energieVerbrauchEffizienzPersonenwagen2015} as well as the vehicle ownership predictions from \citet{foen2010pollutants}, two scenarios where 30\% and 40\% of vehicles are assigned a diesel engine were examined.
 
 The emission values are estimated for each road link in the MATSim network for the following pollutants: CO, total CO$_2$, FC, HC, NMHC, NO$_2$, NO$_x$, PM and SO$_2$.
 The values are aggregated into hourly time bins.
@@ -103,7 +103,7 @@ Contrary to emissions, congestion and delays caused to others cannot directly be
 It is precisely for this reason that MATSim is used to estimate congestion throughout a typical workday.
 Therefore, it is crucial that the estimated aggregate congestion values are consistent with other previous estimates.
 As before, these values are calculated using a 10\% MATSim scenario for Switzerland and are aggregated into hourly time bins per road link.
-These estimates are again first analyzed temporally and spatially to assure the plausibility of the output before being compared to \citet{mkinfras2016staukosten}.
+These estimates are again first analyzed temporally and spatially to assure the plausibility of the output before being compared to the values from \citet{mkinfras2016staukosten}.
 
 The typical total caused delays pattern per hourly time bin estimated from the MATSim scenario is shown in \Cref{fig:hourlyDelays}.
 As was the case for emissions, total delays also expectedly coincide with typical commuter patterns, with fewer delays the early morning and at night, two distinct peaks corresponding to morning and evening rush-hours and midrange values at midday.
