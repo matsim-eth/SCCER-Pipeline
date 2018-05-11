@@ -13,8 +13,8 @@
 %  	- road types taken from OSM
 %  	- end result is calculation of emissions and delays for each trip leg
 In this section, the methodology for imputing externalities on GPS is presented. For the imputation, reference values for air pollutant and congestion production are required. For emissions, the HEBFA database v3.2 is used. 
-For congestion, the output of a 10\% sample form the 2015 MATSim scenario for Switzerland (see section \ref{matsim-scenario} is processed to determine average hourly values per link for both the congestion caused by a vehicle on the link, and the delay experienced. 
-This is done using the approach of \citet{kaddoura}, described in more detail in section \cite{section:kaddoura_congestion_approach}.
+For congestion, the output of a 10\% sample form the 2015 MATSim scenario for Switzerland (see section \ref{section:matsim-scenario} is processed to determine average hourly values per link for both the congestion caused by a vehicle on the link, and the delay experienced. 
+This is done using the approach of \citet{kaddoura2015marginal}, described in more detail in section \ref{section:kaddoura_congestion_approach}.
 
 \subsection{GPS processing pipeline}
 
@@ -48,7 +48,8 @@ It is worth noting that Graphhopper also performs some additoinal filtering, rem
 	{}
 
 \paragraph{Map matching}
-Using the MATSim compatible verison of Graphhopper, the GPS points are then matched to the MATSim road network. A measurement sigma of 50m is used to find candidate road segments, and an unlimited distance between consecutive points is allowed. Once the GPS points are matched to road segments, the segment entry and exit times are calculated. This is not performed by Graphhopper. \red{In fact, while relatively state of the art, the Hidden Markov Model approach used by Graphhopper (\cite{vertrbi} doesn't consider speed limits and the respective possible travel times when identifying candidate links for matching.} 
+Using the MATSim compatible verison of Graphhopper, the GPS points are then matched to the MATSim road network. A measurement sigma of 50m is used to find candidate road segments, and an unlimited distance between consecutive points is allowed. Once the GPS points are matched to road segments, the segment entry and exit times are calculated. 
+This is not performed by Graphhopper, as the state of the art Hidden Markov Model approach used \citep{newson2009hidden} doesn't consider speed limits and the respective possible travel times when identifying candidate links for matching.
 
 \paragraph{Link entry and exit time calculation}
 The map matching module returns a list of $n$ links and the set of GPS points $P(l)$ matched to each link. The recorded time and location of the first and last GPS point $p_{l}$ - ($p_{l,s}$ and $p_{l,e}$ respectively) on each link $l$ are used to estimate the entry and exit times to the link. 
@@ -65,7 +66,8 @@ In MATSim the assumptions hold that an agent starts and ends somewhere on a link
 	\item \textbf{Other Links} \\
 		$entry\_time(l_{j}) = exit\_time(l_{j-1}) $ \\
 		\textbf{if} $P(l_j) = \emptyset$ \textbf{then} $exit\_time(l_j) = entry\_time(l_j) + 
-										\frac{length(l_j) \cdot time\_between(p'_{l_{j-1},e}, p'_{l_{j+1},s})}{distance(p'_{l_{j-1},e}, p'_{l_{j+1},s})} $ \\
+										\frac{length(l_j) \cdot time\_between(p'_{l_{j-1},e}, p'_{l_{j+k},s})}{distance(p'_{l_{j-1},e}, p'_{l_{j+k},s})} $ \\
+										\t where $l_{j+k}$ is the next successive link with $P(l_j+k) \neq \emptyset$  \\
 		\textbf{else}  $exit\_time(l_j) = entry\_time(l_j) + time\_between(l_{j}, p'_{l_j,e}) + \frac{time\_between(p'_{l_j,e}, l_{j}) \cdot time\_between(p'_{l_j,e}, p'_{l_{j+1},s})} 
 					{time\_between(p'_{l_j,e}, l_{j}) + time\_between(l_{j+1},p'_{l_{j+1},s})}   $ \\
 \end{itemize}
@@ -74,6 +76,6 @@ In MATSim the assumptions hold that an agent starts and ends somewhere on a link
 The sequence of links with entry and exit times are then converted to valid MATSim events and grouped by person and date.
 
 \paragraph{Imputation of externalities on MATSim events}
-To impute the externalities of each trip leg, The events are processed using a MATSim framework set up with two additional modules. The first, developed by \citet{kaddoura} calculates the pollutant amounts inccured on each link, based on the observed travel speed. Values and emissions factors are taken from the HBEFA database, version 3.2. Average speeds on each link are capped at the link freespeed. The road types for assigning emissions factors are taken from OSM. Each driver is assigned a medium sized vehicle with a 4 cylinder EURO-4 compliant petrol engine. It was not possible at this stage to represent the actual owned vehicles of the study participants.
+To impute the externalities of each trip leg, The events are processed using a MATSim framework set up with two additional modules. The first, developed by \citet{kaddoura2017simulation} calculates the pollutant amounts inccured on each link, based on the observed travel speed. Values and emissions factors are taken from the HBEFA database, version 3.2. Average speeds on each link are capped at the link freespeed. The road types for assigning emissions factors are taken from OSM. Each driver is assigned a medium sized vehicle with a 4 cylinder EURO-4 compliant petrol engine. It was not possible at this stage to represent the actual owned vehicles of the study participants.
 
-For congestion, the caused delays per link are imputed from the average hourly values calculated section \ref{avgvalues}. The time lost per link is calculated from the difference between the link travel time and travel time under free flow conditions in the MATSim scenario. From here is it straight forward to determine the total generated pollution and caused and experienced delay per trip leg.
+For congestion, the caused delays per link are imputed from the average hourly values calculated from the MATSim scenario. The time lost per link is defined as the difference between the link travel time and travel time under free flow conditions. From here is it straight forward to determine the total generated pollution and caused and experienced delay per trip leg.

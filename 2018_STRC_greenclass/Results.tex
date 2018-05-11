@@ -33,7 +33,6 @@ angle=0]{figures/hourly_emissions_30pct_diesel.pdf}}%
   {40\% diesel vehicles}%
   {\includegraphics[width=0.49\textwidth,
 angle=0]{figures/hourly_emissions_40pct_diesel.pdf}}%
-  {\label{fig:hourlyEmissions-30pctDiesel}}%
   {}%
 }%
 {}
@@ -154,15 +153,35 @@ A combination of these effects could be the underlying cause of the deviation be
 
 
 \subsection{Green Class Emission Reductions}
-A core component of the Green Class pilot project was the availability of an electric car to subscribers. 
-As trip data records whether a personal vehicle or the electic vehicle was used, the emission reductions resulting from the provision of the electric vehicles can be measured. Two key assumptions must however be made and noted:
-\begin{enumerate}
-  \item The driving behaviour is independent of the drive-train type.
-  \item Participants only switched their chosen type of vehicle, and would have made the trip anyway, at the same time, even without the Green Class subscription.
-  \end{enumerate}
+A core component of the Green Class pilot project was the availability of an electric car to subscribers. These cars were covered by renewable energy certificates, negating the need to consider the energy generation makeup in calculating the emissions reductions. For the analysis, it is assumed that for trips performed with an electric vehicle, the driving style, route choice and trip timing is independent of the choice of vehicle. Additionally, the possibility that a the electric vehicle generated mode shifts away from other modes (i.e. train travel, cycling or car sharing) is excluded. 
+The effects of having an additional vehicle in multi-car households are also excluded. 
 
-In figure \cite{fig:green-class-reduction} the reduction in emissions of the course of the program due to the availability of the E-car is illustrated. 
-A clear immediate reduction in CO\textsubscript{2} is observed. Overall, from the pre-Ecar period, a reduction of 30\% can be observed. 
+\createtable%
+{Reduction in Emissions due to the availability of an electric vehicle}%
+{Reduction in Emissions due to the availability of an electric vehicle}%
+{\label{tab:reduction_summary}}%
+{%
+\begin{tabular}{rrrr}
+  \hline
+ & Car & Ecar & Reduction (\%) \\ 
+  \hline
+CO (kg) & 45.51 & 37.26 & 45.02 \\ 
+  CO\textsubscript{2} (T) & 11.32 & 8.97 & 44.20 \\ 
+  FC (T) & 3.60 & 2.85 & 44.20 \\ 
+  HC (kg) & 4.53 & 3.68 & 44.80 \\ 
+  NMHC (kg) & 4.27 & 3.46 & 44.80 \\ 
+  NO\textsubscript{x} (kg) & 24.18 & 19.34 & 44.43 \\ 
+  NO\textsubscript{2} (kg) & 4.12 & 3.28 & 44.37 \\ 
+  PM (kg) & 1.22 & 0.97 & 44.29 \\ 
+  SO\textsubscript{2} (kg) & 0.06 & 0.05 & 44.20 \\ 
+   \hline
+\end{tabular}
+}%
+{}
+
+Table \ref{tab:reduction_summary} preesnts the reduction in various emissions over the course of the program due to the availability of the E-car. 
+A clear immediate reduction in daily CO\textsubscript{2} emissions is observed in figure \ref{fig:green-class-reduction}. 
+Overall, from the pre-Ecar period, a reduction of 30\% can be observed. 
 There are some noticable outliers, particularly April 1\textsuperscript{st}, 2017. 
 In the pilot program, subscribers had unrestricted access to both thier personal vehicle and the provided electric vehicle. 
 As such, on days where many subscribers choose to use thier personal vehicles, emissions will naturally be nearer to the pre-program levels. 
@@ -174,5 +193,8 @@ A particular reason for this would be public holidays where many subscribers are
 {\label{fig:green-class-reduction}}%
 {\includegraphics[width=1.0\textwidth, angle=0]{figures/green_class_pollutant_reductions_daily}}%
 {}
+
+The 139 subscribers were not representative of the general population, due to the high cost (12,200 CHF) and selective nature of the pilot program.
+None the less, these results demonstrate the environmental benefit of having an electric vehicle, and that persons with access to both will significantly reduce their emissions by using the electric vehicle.
 
 %%%%%%TODO: add a comparison of congestion experienced vs congsetion caused for green class drivers

@@ -18,6 +18,7 @@ Microsimulated models allow for the representation of non-homogenous driver beha
 In particular, the importance of value of time heterogenity among individuals in road pricing models has been recognised by numerous researchers \citet{small2001value, verhoef2004product}.
 Modern traffic microsimulation frameworks such as MATSim \cite{balmer2009matsim} are to capture range of externalities.
 
+\label{section:kaddoura_congestion_approach}
 \citet{kaddoura2015marginal} developed an agent based marginal cost-pricing approaches for congestion, emissions and noise exteralities, and applied numerous models successfully to a large scale scenario of Greater Berlin.
 When considering the internalisation of congestion costs, a particular contribution of his work, was to assign the external congestion costs to the causing agents.
 In particular, \citet{kaddoura2015marginal} notes that it is simple to calculate the incurred congestion for each agent, but much more challenging to map it back to the causing agent.
@@ -28,10 +29,11 @@ This is clearly unrealistic. Instead, this work presents an approach to impute e
 
 \subsection{Swiss MATSim Scenario}
 %%Chris or Joe
-The IVT 2015 Baseline Scenario \cite{boesch2015ivt} represents a typical working day in Switzerland for the year 2015.
+\label{section:matsim-scenario}
+The IVT 2015 Baseline Scenario \cite{bosch2016ivt} represents a typical working day in Switzerland for the year 2015.
 As a MATSim scenario, the population consists of individual agents, each with daily travel plans (preferences) and social-demographic characteristics.
-These agents represent the entire population of Switzerland on the network from \cite{boesch2015network}.
-The 2015 scenario extends the work of \cite{Balmer2007switzerland} to add households and household incomes and model elements. The scenario is available in 1\%, 10\% and 100\% samples with respectively increasing runtimes. 
+These agents represent the entire population of Switzerland on the network from \cite{bosch2015multi}.
+The 2015 scenario extends the work of \cite{balmer2006agent} to add households and household incomes and model elements. The scenario is available in 1\%, 10\% and 100\% samples with respectively increasing runtimes. 
 
 \subsection{Analysis of road transport externalities in Switzerland}  %%%Swiss norms, ARE report, HBEFA}
 
@@ -39,7 +41,7 @@ Numerous sources are available for the analysis of external costs in Switzerland
 It presents the most recent external cost-benefit analysis for the Swiss transport system, primarily focusing on external environmental, health and accident-related costs.
 Specifically, external costs for 12 different cost categories are computed, differentiated according to three different perspectives: transport mode (road/rail/air/water, passenger/freight, vehicle type), transport type (particulary heavy vehicles) and transport user. 
 
-For the modeling of road transport pollutant emissions in Switzerland (and other European countries), emission factors are generally taken from the Handbook for Emission Factor Analysis (HBEFA) \cite{maibach2008emissions}.
+For the modeling of road transport pollutant emissions in Switzerland (and other European countries), emission factors are generally taken from the Handbook for Emission Factor Analysis (HBEFA) \cite{maibach2008handbook}.
 The HBEFA database contains emission factors for a range vehicle categories and traffic situations, differentiated by emission type, pollutant and year. The HBEFA is the standard for road pollutant analysis in Germany, Switzerland and Austria, and is supported by the European Comission. 
 
 \citet{foen2010pollutants} use the HBEFA to provide an detailed analysis of past and predicted future pollutant emissions, covering road transport in Switzerland from 1990 to 2035.
@@ -55,7 +57,7 @@ For 2013, this was achieved by combining and aligning INRIX traffic flow data an
 The time lost per road section was calculated by subtracting the free-flow travel time from actual travel time, where traffic jams are considered to occur only when the actual speed is less than 65\% of the free-flow speed.
 For the other years, online data from the Federal Roads Office (FEDRO) counting stations was used.
 A summary of their results is provided in \Cref{tab:vehHoursDelayMkInfras}.
-The values provide a useful estimate of delay costs in Switzerland, however, the use of an "at-least" approach will tend to underestimate the lost time and resulting associated delay costs \cite{2016staukosten}.
+The values provide a useful estimate of delay costs in Switzerland, however, the use of an "at-least" approach will tend to underestimate the lost time and resulting associated delay costs \cite{mkinfras2016staukosten}.
 %This is particularly the case for non-motorways road segments, where long road lengths, flawed speed data and lack of zero mean speed cases play a significant role.
 
 \createtable%
@@ -92,9 +94,7 @@ For example, they provide standard values for time costs and willingness to pay 
 \subsection{Green Class Data}
 %%Joe
 In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA), an electric BMW i3, park+ride subscription, car and bike sharing subscriptions.
-The 139 participants were tracked for the duration of the project using a mobile app enabled with GPS.
-
-\red{how much detail on the work from geoINFK?} These GPS traces were processed to identify individual trips and modes of travel \cite{rabaul2016greenclassprocessing}.
+The 139 participants were tracked for the duration of the project using the ''SBB DailyTracks" app enabled with GPS. The collection process recorded the individual trips and mode of travel.  
 
 The trip records contain the following information:
 \begin{itemize}
@@ -102,7 +102,7 @@ The trip records contain the following information:
   \item trip id
   \item start timestamp
   \item end timestamp
-  \item identified mode of travel
+  \item Mode of travel
 \end{itemize}
 
 Each GPS waypoint records contains: 
@@ -114,11 +114,9 @@ Each GPS waypoint records contains:
   \item user id
 \end{itemize}
 
-\red {summary of trips, waypoints in table}
+In total, for the 139 participants, there were 163,417 trips recorded, with an an average of 4.5 trip legs per person per day (see Table \ref{tab:green_class_gps_summary}). For this research, the dataset was filtered to only include those trip legs with either a personal car or the provided electric vehicle. For this analysis, only trips with a start and finish within Switzerland using either the electric car or personal automobile were selected. 
 
-In total, for the 139 participants, there were 163,417 trips recorded, with an an average of 4 trips per person per day (see Table \ref{Table:green_class}). For this research, the dataset was filtered to only include those trips with either a personal car or the provided electric vehicle. This left  
-Figure \ref{figure:waypoint_dist} presents the distribution of the number of gps points per trip. 
-A large number of GPS points is important for accurate route detection and identification of the link entry and exit timings.
+%TODO: Figure \ref{figure:waypoint_dist} presents the mean number of gps points per trip before and after filtering. 
 
 \createtable%
 {Green Class Trips and Waypoints}%
@@ -132,14 +130,13 @@ A large number of GPS points is important for accurate route detection and ident
 \hline
  Users            & \multicolumn{2}{c|}{139} & \multicolumn{3}{c}{139} \\  
  Trips            & 163,417       & 90,568    & 81,365    & 51,843    & 31,219\\  
- Trip Legs        & 163,417       & 100,865   & 90,040    & 57,426    & 32,614\\  
- GPS Points       &  152,813,375  &   30,285,999     &    19,931,558    & 10,915,620 & 9,015,938 \\ 
+ Trip Legs        & 301,270     & 100,865   & 90,040    & 57,426    & 32,614\\  
+ GPS Points (millions)      &  152.81  &   30.28    &    19.93    & 10.91 & 9.01 \\ 
  GPS Points / Trip Leg &  935.11   &    302.30    &  224.51     &   193.5   &  278.56  \\  
  Trips/person/day & 4.97          & 3.05      & 2.94      & 2.94      & 2.94 \\  
 \end{tabular}
 }
 {}
 
-For this analysis, the dataset was filtered to include only trips with a start and finish within Switzerland using either the electric car or personal automobile. 
 
 
