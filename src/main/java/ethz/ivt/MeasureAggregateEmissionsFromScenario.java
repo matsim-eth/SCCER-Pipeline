@@ -52,12 +52,6 @@ public class MeasureAggregateEmissionsFromScenario {
         config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
-        for (Link l : scenario.getNetwork().getLinks().values()) {
-            String type = (String) l.getAttributes().getAttribute("osm:way:highway");
-            if (type == null) type = "unclassified";
-            NetworkUtils.setType(l, type);
-        }
-
         setUpVehicles(scenario);
 
         eventsManager = new EventsManagerImpl();
@@ -75,11 +69,15 @@ public class MeasureAggregateEmissionsFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save emissions data to csv files
-        emissionsAggregator.aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/40pcdiesel/");
-        emissionsAggregator.aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/40pcdiesel/");
+        emissionsAggregator.aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/30pcdiesel/");
+        emissionsAggregator.aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/30pcdiesel/");
         log.info("Emissions aggregation completed for MATSim scenario " + CONFIG_FILE + ".");
 
         eventsManager.finishProcessing();
+    }
+
+    public void reset() {
+        eventsManager.resetHandlers(0);
     }
 
     private void setUpVehicles(Scenario scenario) {
@@ -102,7 +100,7 @@ public class MeasureAggregateEmissionsFromScenario {
 
         // percentage of diesel vehicles
         Random randomGenerator = new Random();
-        double percentDiesel = 0.4;
+        double percentDiesel = 0.3;
 
         for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
             Id<Vehicle> vid = Id.createVehicleId(pid);
