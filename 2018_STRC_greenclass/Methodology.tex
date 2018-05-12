@@ -74,8 +74,7 @@ Hence, trip legs are divided into sets of consecutive links  $L'$, beginning at 
 The GPS recorded travel time over the links in $L'$ is then proportionally allocated based on the freespeed travel time of each link $L'$, where $l_{k+1}$ is the next non-empty link.
 
 Let the projection of GPS point $p_{l,i}$ onto link $l$ be $p'_{l,i}$.
-A helper function $time\_between(a,b)$ returns the time needed to travel between projected points and verticies of a link.
-From $p'_{l,e}$ to the end of a link; or the start of a link to the first projected point on a link $p'_{l,s}$.
+A helper function $time\_between(a,b)$ returns the time needed to travel between projected points and the verticies of a link $l$, i.e. from $p'_{l,e}$ to the end of the link; or the start of the link to the first projected point on that link $p'_{l,s}$.
 $tt(l)$ gives the time needed to travel a link under free flow conditions, and $time_between(p_{l,e}, p_{l',s}$) gives the time difference between the last and first points on two links respectively.
 
 In MATSim, the assumptions hold that an agent always starts and ends somewhere on a link.
