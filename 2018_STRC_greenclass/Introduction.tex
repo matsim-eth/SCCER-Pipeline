@@ -1,21 +1,21 @@
 \section{Introduction}
 
-It is increasingly recognized that both the environmental and social costs of travel need to be internalized to meet the demand on already strained transport networks by encouraging shifts in travel patterns. 
+It is increasingly recognized that both the environmental and social costs of travel need to be internalized to meet the demand on already strained transport networks by encouraging shifts in travel patterns.
 In this direction, there is a growing body of evidence that informal feedback on energy use can encourage more efficient behavior, both regarding home energy use \citep{faruqui2010impact} and travel behavior \citep{taniguchi2003psychological, fujii2006determinants}.
 However, providing feedback on external costs in transport is particularly challenging, due to the heterogeneous nature of the users and privacy constraints.
 
 %%Start here on externalities - Joe, already written
-The main externalities of transportation can be divided into two groups: Those that affect other road users, namely congestion, and those that affect non-road users such as noise and emissions \citep{button2004rationale}.
-The impact of congestion is primarily the loss of time spent waiting in traffic, where as emissions and noise have both environmental and health consequences.
-When a person chooses to drive on a road, they only have to pay for the private time and car usage costs.
+The main externalities of transportation can be divided into two groups: those that affect other road users, namely congestion, and those that affect non-road users such as noise and emissions \citep{button2004rationale}.
+The impact of congestion is primarily the loss of time spent waiting in traffic, whereas emissions and noise have both environmental and health consequences.
+When people choose to drive on a road, they only have to pay for their private time and car usage costs.
 However, they do not have to pay the \textit{marginal social cost} (MSC) of their trip, that is, the additional costs the driver imposes on other drivers by increasing demand on the route.
-From economic theory, internalizing this MSC in the form of a tax would reduce congestion and provide an overall social benefit \citep{arnott1994economics, pigou2013economics}. 
+From economic theory, internalizing this MSC in the form of a tax would reduce congestion and provide an overall social benefit \citep{arnott1994economics, pigou2013economics}.
 
 Microsimulation provides advantages from both the supply (network representation) and demand (individual agents) side when modeling road pricing.
 \citet{arnott2001economic} notes that traditional macroscopic models focus on link congestion, while ignoring or simplifying other elements of congestion such as nodal congestion, parking and interactions with pedestrians and spillback.
 Microsimulated models allow for the representation of non-homogenous driver behaviour and preferences.
 In particular, the importance of value of time heterogenity among individuals in road pricing models has been recognized by numerous researchers \citep{small2001value, verhoef2004product}.
-Modern traffic microsimulation frameworks such as MATSim \citep{balmer2009matsim} are to capture range of externalities.
+\red{Modern traffic microsimulation frameworks such as MATSim \citep{balmer2009matsim} are to capture range of externalities.}
 
 \label{section:kaddoura_congestion_approach}
 \citet{kaddoura2015marginal} developed an agent-based marginal-cost pricing approach for congestion, emissions and noise externalities, and applied numerous models successfully to a large-scale scenario of Greater Berlin.
@@ -24,7 +24,7 @@ In particular, \citet{kaddoura2015marginal} notes that it is simple to calculate
 The approach calculates each agent's contribution to the delays on traveled links using a queue-based node-link model including spillback.
 
 In real networks, such an approach requires knowing the location and VTTS of every driver connected to a particular incident of congestion.
-This is clearly unrealistic. 
+This is clearly unrealistic.
 Instead, this work presents an approach to impute externalities only using the GPS trace of the trip, a representation of the road network and aggregated congestion values generated from an agent-based MATSim simulation for Switzerland.
 
 \subsection{Swiss MATSim Scenario}
@@ -33,20 +33,20 @@ Instead, this work presents an approach to impute externalities only using the G
 The IVT 2015 Baseline Scenario \citep{bosch2016ivt} represents a typical working day in Switzerland for the year 2015.
 As a MATSim scenario, the population consists of individual agents, each with daily travel plans (preferences) and social-demographic characteristics.
 These agents represent the entire population of Switzerland on the network from \citet{bosch2015multi}.
-The 2015 scenario extends the work of \citet{balmer2006agent} to add households and household incomes and model elements. 
-The scenario is available in 1\%, 10\% and 100\% samples with respectively increasing runtimes. 
+The 2015 scenario extends the work of \citet{balmer2006agent} to add households and household incomes and model elements.
+The scenario is available in 1\%, 10\% and 100\% samples with respectively increasing runtimes.
 
-\subsection{Analysis of road transport externalities in Switzerland}  %%%Swiss norms, ARE report, HBEFA}
+\subsection{Analysis of road transport externalities in Switzerland} %%%Swiss norms, ARE report, HBEFA}
 
-Numerous sources are available for the analysis of external costs in Switzerland, including standards, government reports and databases. 
-These sources guide and inform the evaluation of new and existing infrastructure projects. 
+Numerous sources are available for the analysis of external costs in Switzerland, including standards, government reports and databases.
+These sources guide and inform the evaluation of new and existing infrastructure projects.
 A report on the external costs and benefits analysis of transport in Switzerland is available from the \citet{are2016externalcosts}, built on the methodology developed in \citet{ecoplaninfras2014externeeffekte}.
 It presents the most recent external cost-benefit analysis for the Swiss transport system, primarily focusing on external environmental, health and accident-related costs.
-Specifically, external costs for 12 different cost categories are computed, differentiated according to three different perspectives: transport mode (road/rail/air/water, passenger/freight, vehicle type), transport type (particulary heavy vehicles) and transport user. 
+Specifically, external costs for 12 different cost categories are computed, differentiated according to three different perspectives: transport mode (road/rail/air/water, passenger/freight, vehicle type), transport type (particulary heavy vehicles) and transport user.
 
 For the modeling of road transport pollutant emissions in Switzerland (and other European countries), emission factors are generally taken from the Handbook for Emission Factor Analysis (HBEFA) \citep{maibach2008handbook}.
-The HBEFA database contains emission factors for a range of vehicle categories and traffic situations, differentiated by emission type, pollutant and year. 
-The HBEFA is the standard for road pollutant analysis in Germany, Switzerland and Austria, and is supported by the European Commission. 
+The HBEFA database contains emission factors for a range of vehicle categories and traffic situations, differentiated by emission type, pollutant and year.
+The HBEFA is the standard for road pollutant analysis in Germany, Switzerland and Austria, and is supported by the European Commission.
 
 \citet{foen2010pollutants} use the HBEFA to provide a detailed analysis of past and predicted future pollutant emissions, covering road transport in Switzerland from 1990 to 2035.
 Emissions values are calculated for three emissions types: emissions when the engine is in hot operating condition, cold-start emissions and evaporation emissions.
@@ -88,8 +88,7 @@ This is particularly the case for non-motorways road segments, where long road l
 }%
 {\citet{mkinfras2016staukosten}, p.141, Annexe A4}
 
-The Swiss Association of Road and Transportation Experts (VSS) has published a series of norms (SN 641 82* : Cost Benefit Analysis
-for Road Traffic) aimed at guiding the accessment of monetary effects and the cost benefit analysis of transport projects, policies and regulations.
+With respect to monetizing externalities, the Swiss Association of Road and Transportation Experts (VSS) has published a series of norms (SN 641 82* : Cost Benefit Analysis for Road Traffic) aimed at guiding the accessment of monetary effects and the cost benefit analysis of transport projects, policies and regulations.
 Norms SN 641 820 (Basic Standard), SN 641 822a (Travel Time Costs for Passenger Traffic) and SN 641 828 (External Costs) can be of particular interest in the context of external cost evaluation.
 For example, they provide standard values for time costs and willingness to pay per vehicle type and trip purposes as well as standard methods for evaluating the monetary impacts of air pollution and climate impacts.
  
@@ -98,7 +97,7 @@ For example, they provide standard values for time costs and willingness to pay 
 %%Joe
 In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA) travelcard, an electric BMW i3, a park+ride subscription, and car and bike sharing subscriptions.
 The 139 participants were tracked for the duration of the project using the "SBB DailyTracks" app enabled with GPS.
-The collection process recorded the individual trips and mode of travel.  
+The collection process recorded their individual trips and mode of travel.
 
 The trip records contain the following information:
 \begin{itemize}
@@ -120,9 +119,9 @@ Each GPS waypoint record contains:
 
 For the 139 participants, a total of 163,417 trips were recorded, with an average of 4.5 trip legs per person per day (see \Cref{tab:green_class_gps_summary}).
 For this research, the dataset was filtered to only include those trip legs performed either with a personal car or the provided electric vehicle.
-For this analysis, only trips starting and ending within Switzerland using either the electric car or personal automobile were selected. 
+For this analysis, only trips starting and ending within Switzerland using either the electric car or personal automobile were selected.
 
-%TODO: \Cref{figure:waypoint_dist} presents the mean number of gps points per trip before and after filtering. 
+%TODO: \Cref{figure:waypoint_dist} presents the mean number of gps points per trip before and after filtering.
 
 \createtable%
 {Green Class Trips and Waypoints}%

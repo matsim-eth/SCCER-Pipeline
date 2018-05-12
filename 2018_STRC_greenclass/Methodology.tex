@@ -14,15 +14,15 @@
 %  	- end result is calculation of emissions and delays for each trip leg
 In this section, the methodology for imputing externalities on GPS data is presented.
 For the imputation, reference values for both emitted air pollutants and caused congestion are required.
-For emissions, the HEBFA database v3.2 is used. 
-For congestion, the output of a 10\% sample from the 2015 MATSim scenario for Switzerland (see \Cref{section:matsim-scenario}) is processed to determine average hourly values per link for both the delay caused and experienced by a vehicle present on that link. 
+For emissions, the HEBFA database (version 3.2) is used \citep{hbefaVersion3.2}.
+For congestion, the output of a 10\% sample from the 2015 MATSim scenario for Switzerland (see \Cref{section:matsim-scenario}) is processed to determine average hourly values per link for both the delay caused and experienced by a vehicle present on that link.
 This is done using the approach of \citet{kaddoura2015marginal}, previously described in more detail in \Cref{section:kaddoura_congestion_approach}.
 
 \subsection{GPS processing pipeline}
 
 
-A multistage pipeline has been developed for imputing externalities on GPS traces using the MATSim framework. 
-The pipeline consists of the following steps, further described in more detail below. 
+A multistage pipeline has been developed for imputing externalities on GPS traces using the MATSim framework.
+The pipeline consists of the following steps, further described in more detail below.
 
 \begin{enumerate}
  	\item Cleaning of GPS data
@@ -35,12 +35,12 @@ The pipeline consists of the following steps, further described in more detail b
 The pipeline can essentially be delineated into two parts: the first creates a series of MATSim events representing the map-matched path of the GPS traces, whereas the second processes those events using the previously mentioned reference values to impute the generated emissions and delays.
 
 \paragraph{Data cleaning}
-GPS data accuracy can vary considerably depending on the sensor used, the surrounding environment and even geographical location. 
-The data collected as part of the Green Class project included not only longitude, latitude and time, but also an accuracy indicator, in meters. 
-The filtering was performed only using the latter metric, with any points having an accuracy worse than 200 meters excluded from the dataset. 
+GPS data accuracy can vary considerably depending on the sensor used, the surrounding environment and even geographical location.
+The data collected as part of the Green Class project included not only longitude, latitude and time, but also an accuracy indicator, in meters.
+The filtering was performed only using the latter metric, with any point having an accuracy greater than 200 meters excluded from the dataset.
 This proved sufficient for effective map matching.
-Other possible filtering techniques include exluding points based on the speed between consecutive points. 
-It is worth noting that Graphhopper also performs some additoinal filtering, removing points within a measurement error of the previous point, in order to speed up the map-matching computation.
+Other possible filtering techniques include exluding points based on the speed between consecutive points.
+It is worth noting that Graphhopper also performs some additional filtering, removing points within a measurement error of the previous point, in order to speed up the map-matching computation.
 Inconsistencies in the provided GPS data meant that some trips had unusually high average speeds (due to ping-ponging) or very short trip durations.
 Therefore, trips with an average speed over 120 kmh\textsuperscript{-1} or a duration of less than one minute were removed.
 The invalid trips made up 9\% of the dataset.
@@ -56,17 +56,17 @@ The remaining trips show a nice average speed profile (\Cref{fig:avg_speeds}).
 \paragraph{Map matching}
 Using the MATSim compatible version of Graphhopper, the GPS points are then matched to the MATSim road network.
 A measurement sigma of 50 meters is used to find candidate road segments, and an unlimited distance between consecutive points is allowed.
-Once the GPS points are matched to road segments, the segment entry and exit times are calculated. 
+Once the GPS points are matched to road segments, the segment entry and exit times are calculated.
 This is not performed by Graphhopper, as the state of the art Hidden Markov Model approach used by \citet{newson2009hidden} does not consider speed limits and the respective possible travel times when identifying candidate links for matching.
 
 \paragraph{Link entry and exit time calculation}
 The map-matching module returns a list of $n$ links and the set of GPS points $P(l)$ matched to each link.
-The recorded time and location of the first and last GPS point $p_{l}$ - ($p_{l,s}$ and $p_{l,e}$ respectively) on each link $l$ are used to estimate the entry and exit times of the link. 
-Start and end links must have at least one GPS point associated with them, while intermediate links may have several or no GPS points. 
+The recorded time and location of the first and last GPS point $p_{l}$ - ($p_{l,s}$ and $p_{l,e}$ respectively) on each link $l$ are used to estimate the entry and exit times of the link.
+Start and end links must have at least one GPS point associated with them, while intermediate links may have several or no GPS points.
 Each GPS point $p_{l,i}$ is projected onto link $l$, marking the distance traveled along the link at certain times as $p'_{l,i}$.
 
 \red{A helper function $time\_between(a,b)$ returns the time needed to travel between projected points and verticies of a link.
-From $p'_{l,e}$ to the end of a link; or the start of a link to the first projected point on a link $p'_{l,s}$. 
+From $p'_{l,e}$ to the end of a link; or the start of a link to the first projected point on a link $p'_{l,s}$.
 $tt(l)$ gives the time needed to travel a link under free flow conditions, and $time\_between(p_{l,e}, p_{l',s}$) gives the time difference between the last and first points on two links respectively.}
 
 In MATSim, the assumptions hold that an agent always starts and ends somewhere on a link.
@@ -91,10 +91,10 @@ The sequence of links with entry and exit times are then converted to valid MATS
 \paragraph{Imputation of externalities on MATSim events}
 To impute the externalities of each trip leg, the events are processed using a MATSim framework set up with two additional modules.
 The first, developed by \citet{kaddoura2017simulation} calculates the emitted pollutant amounts inccured on each link, based on the observed travel speed.
-Values and emissions factors are taken from the HBEFA database, version 3.2.
+Values and emissions factors are taken from the HBEFA database (version 3.2).
 Average speeds on each link are capped at the link freespeed.
 The road types for assigning emissions factors are taken from OSM.
-Each driver is assigned a medium sized vehicle with a 4 cylinder EURO-4 compliant petrol engine.
+Each driver is assigned a medium sized vehicle with a 4-cylinder EURO-4 compliant petrol engine.
 It was not possible at this stage to represent the actual owned vehicles of the study participants.
 
 For congestion, the caused delays per link are imputed from the average hourly values calculated from the MATSim scenario.

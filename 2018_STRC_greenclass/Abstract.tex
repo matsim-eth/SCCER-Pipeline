@@ -1,8 +1,10 @@
-\createabstract{Providing people with information on the external costs of their mobility, including generated emissions, contribution to congestion, and noise pollution, has been shown to influence their travel behavior.
+\createabstract{
+Providing people with information on the external costs of their mobility, including generated emissions, contribution to congestion, and noise pollution, has been shown to influence their travel behavior.
 However, directly measuring these externalities at the source is unfeasible.
-We have therefore developed a pipeline for estimating the generated externalities of recorded trips using the multi-agent simulation software MATSim. First, collected GPS traces are matched to the MATSim network and converted to MATSim events.
+We have therefore developed a pipeline for estimating the generated externalities of recorded trips using the multi-agent simulation software MATSim.
+First, collected GPS traces are matched to the MATSim network and converted to MATSim events.
 These events are then processed to impute externalities for each individual.
-Emission values for various pollutants are calculated for each link using  the HBEFA database, accounting for vehicle type, road category and traffic conditions.
+Emission values for various pollutants are calculated for each link using the HBEFA database, accounting for vehicle type, road category and traffic conditions.
 For congestion, we leverage MATSim modules developed by Kaddoura to compute average link delays for each hour of the day using the MATSim scenario of Switzerland, which are then assigned to links traveled by the participants.
 We adapt this pipeline to further account for the Swiss valuation of externalities.
 To validate our approach, the externalities generated for the Swiss MATSim scenario will be compared to ARE estimates and the swiss norm values.
