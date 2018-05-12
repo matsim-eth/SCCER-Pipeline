@@ -53,7 +53,7 @@ The remaining trips show a nice average speed profile (\Cref{fig:avg_speeds}).
 	{}
 
 \paragraph{Map matching}
-Using the MATSim compatible version of Graphhopper, the trip legs are matched to the MATSim road network. A Hidden Markov Model \citep{newson2009hidden} identifies canditate links for each GPS point, with a measurement sigma of 50m. An unlimited distance between consecutive points is allowed. The Graphhopper routing engine then identifies the best route from the set of candidate links. A minimum of two matched GPS points are required. The map matching module returns a list of links thier matched GPS points.
+Using a MATSim adapted version of Graphhopper, the trip legs are matched to the MATSim road network. A Hidden Markov Model \citep{newson2009hidden} identifies canditate links for each GPS point, with a measurement sigma of 50m. An unlimited distance between consecutive points is allowed. The Graphhopper routing engine then identifies the best route from the set of candidate links. A minimum of two matched GPS points are required. The map matching module returns a list of links thier matched GPS points.
 
 \paragraph{Link entry and exit time calculation}
 To convert the GPS traces to MATSim events and calculate externalities, the travel time for each link is required.

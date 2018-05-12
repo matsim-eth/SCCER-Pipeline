@@ -98,18 +98,19 @@ For example, they provide standard values for time costs and willingness to pay 
 %%Joe
 In the Green Class 2016 pilot project, the SBB created a new mobility offering for subscribers which consisted of a General Abonnenment (GA) travelcard, an electric BMW i3, a park+ride subscription, and car and bike sharing subscriptions.
 The 139 participants were tracked for the duration of the project using the "SBB DailyTracks" app enabled with GPS.
-The collection process recorded the individual trips and mode of travel.  
+The collection process recorded the individual trips and mode of travel.  The fields available for trips and GPS points are repsectively:
 
-The trip records contain the following information:
+\begin{multicols}{2}
+\textbf{Trip leg records}
 \begin{itemize}
   \item user id
-  \item trip id
+  \item trip leg id
   \item start timestamp
   \item end timestamp
   \item mode of travel
 \end{itemize}
 
-Each GPS waypoint record contains: 
+\textbf{GPS waypoints:} 
 \begin{itemize}
   \item longitude
   \item latitude
@@ -117,6 +118,8 @@ Each GPS waypoint record contains:
   \item accuracy (meters)
   \item user id
 \end{itemize}
+
+\end{multicols}
 
 For the 139 participants, a total of 163,417 trips were recorded, with an average of 4.5 trip legs per person per day (see \Cref{tab:green_class_gps_summary}).
 For this research, the dataset was filtered to only include those trip legs performed either with a personal car or the provided electric vehicle.
