@@ -7,7 +7,7 @@ import java.util.stream.Collectors
 import java.util.{LinkedList, List}
 
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
-import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionPerLinkField}
+import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionField}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.network.Link
 import org.matsim.contrib.emissions.{WarmEmissionAnalysisModule, WarmEmissionHandler}
@@ -43,12 +43,11 @@ object ProcessEvents {
 
     // load precomputed aggregate data
     val attributes: util.List[String] = new util.LinkedList[String]
-    attributes.add(CongestionPerLinkField.COUNT.getText)
-    attributes.add(CongestionPerLinkField.DELAY.getText)
+    attributes.add(CongestionField.COUNT.getText)
+    attributes.add(CongestionField.DELAY_EXPERIENCED.getText)
     val aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl[Link](bin_size_s, scenario.getNetwork.getLinks.keySet, attributes, null)
     logger.info("load aggregate congestion data")
     aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
-
 
     import scala.collection.JavaConverters._
 

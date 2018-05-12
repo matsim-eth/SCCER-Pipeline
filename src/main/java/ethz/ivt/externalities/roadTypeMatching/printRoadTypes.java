@@ -69,7 +69,7 @@ public class printRoadTypes {
                 if (osmType == null)
                     osmType = "unclassified";
                 String type = getHEBFAtype(osmType, l.getFreespeed());
-                pw.println(l.getId().toString() + ","  +  osmType +  ","  +  type);
+                pw.println(l.getId().toString() + ","  +  ","+ l.getFreespeed() + ","+ osmType +  ","  +  type);
             });
             pw.close();
 
@@ -87,17 +87,18 @@ public class printRoadTypes {
         String type = ss[0];
 
         //TODO: could make distinction between national and city, based on shapefile, or regions.
+        double freeVelocity_kmh = freeVelocity * 3.6;
 
         if (type.equals("unclassified") || type.equals("road")) {
-            if (freeVelocity <= 50) type = "living";
-            else if (freeVelocity == 60) type = "tertiary";
-            else if (freeVelocity == 70) type = "secondary";
-            else if (freeVelocity <= 90) type = "primary";
+            if (freeVelocity_kmh <= 50) type = "living";
+            else if (freeVelocity_kmh == 60) type = "tertiary";
+            else if (freeVelocity_kmh == 70) type = "secondary";
+            else if (freeVelocity_kmh <= 90) type = "primary";
             else type = "motorway";
         }
 
         //specify that if speed > 90 and primary or motorway, then Nat.
-        if (type.equals("motorway") || type.equals("primary") && freeVelocity >= 90) {
+        if (type.equals("motorway") || type.equals("primary") && freeVelocity_kmh >= 90) {
             type += "-Nat.";
         }
         return type;
