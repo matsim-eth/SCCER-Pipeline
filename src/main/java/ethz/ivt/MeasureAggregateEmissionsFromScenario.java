@@ -5,21 +5,15 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
-import org.matsim.core.controler.Injector;
 import org.matsim.core.events.EventsManagerImpl;
-import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
-import org.matsim.core.events.algorithms.EventWriterXML;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
-import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
@@ -69,8 +63,8 @@ public class MeasureAggregateEmissionsFromScenario {
         reader.readFile(RUN_FOLDER + EVENTS_FILE);
 
         // save emissions data to csv files
-        emissionsAggregator.aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/30pcdiesel/");
-        emissionsAggregator.aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/30pcdiesel/");
+        emissionsAggregator.aggregateEmissionsDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/40pcdiesel/");
+        emissionsAggregator.aggregateEmissionsDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "emissions/40pcdiesel/");
         log.info("Emissions aggregation completed for MATSim scenario " + CONFIG_FILE + ".");
 
         eventsManager.finishProcessing();
@@ -100,7 +94,7 @@ public class MeasureAggregateEmissionsFromScenario {
 
         // percentage of diesel vehicles
         Random randomGenerator = new Random();
-        double percentDiesel = 0.3;
+        double percentDiesel = 0.4;
 
         for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
             Id<Vehicle> vid = Id.createVehicleId(pid);
