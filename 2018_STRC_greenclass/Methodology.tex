@@ -54,12 +54,17 @@ The remaining trips show a nice average speed profile (\Cref{fig:avg_speeds}).
 
 \paragraph{Map matching}
 
-Using a MATSim adapted version of Graphhopper, the trip legs are matched to the MATSim road network. A Hidden Markov Model \citep{newson2009hidden} identifies canditate links for each GPS point, with a measurement sigma of 50m. An unlimited distance between consecutive points is allowed. The Graphhopper routing engine then identifies the best route from the set of candidate links. A minimum of two matched GPS points are required. The map matching module returns a list of links thier matched GPS points.
+Using a MATSim adapted version of Graphhopper, the trip legs are matched to the MATSim road network.
+A Hidden Markov Model \citep{newson2009hidden} identifies canditate links for each GPS point, with a measurement sigma of 50m.
+An unlimited distance between consecutive points is allowed.
+The Graphhopper routing engine then identifies the best route from the set of candidate links.
+A minimum of two matched GPS points are required.
+The map matching module returns a list of links thier matched GPS points.
 
 \paragraph{Link entry and exit time calculation}
 To convert the GPS traces to MATSim events and calculate externalities, the travel time for each link is required.
-This is not calculated by Graphhopper, as the state of the art Hidden Markov Model approach used in \citep{newson2009hidden} does not consider speed limits or feasible travel times when identifying candidate links for matching.
-In the absence of high frequency GPS measurement or additional sensor information, there may be insufficient GPS measurements to match every intersection in a trivial manner.
+This is not calculated by Graphhopper, as the state of the art Hidden Markov Model approach used \citep{newson2009hidden} does not consider speed limits or feasible travel times when identifying candidate links for matching.
+In the absence of high-frequency GPS measurements or additional sensor information, there may be insufficient GPS measurements to match every intersection in a trivial manner.
 Hence, an algorithm that also handles links where few or no GPS measurements are available has been developed for determining this.
 
 A trip leg contains a sequence of links $L$ with the set of GPS points $P(l)$ matched to each link $l$.
@@ -74,7 +79,7 @@ From $p'_{l,e}$ to the end of a link; or the start of a link to the first projec
 $tt(l)$ gives the time needed to travel a link under free flow conditions, and $time_between(p_{l,e}, p_{l',s}$) gives the time difference between the last and first points on two links respectively.
 
 In MATSim, the assumptions hold that an agent always starts and ends somewhere on a link.
-Hence, for the first link, only the exit time needs to be calculated, and respectively the entry time for the last link.
+Hence, only the exit time for the first link and the entry time for the last link need to be calculated.
 Additionally, $entry\_time(l_{j}) = exit\_time(l_{j-1}),  \forall j = 1..n$.
 As such, the algorithm can be separated into two cases:
 \begin{itemize}
