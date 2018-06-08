@@ -25,11 +25,11 @@ public class JITvehicleCreator implements PersonDepartureEventHandler {
     public void handleEvent(PersonDepartureEvent event) {
         Id<Person> pid = event.getPersonId();
 
-        Id<VehicleType>  vt = Id.create(TransportMode.car, VehicleType.class);
+        Id<VehicleType>  vt = Id.create("Benzin", VehicleType.class);
         Id<Vehicle> vid = Id.createVehicleId(pid);
-        VehicleType car = scenario.getVehicles().getVehicleTypes().get(vt);
         //easy option: add
         if (!scenario.getVehicles().getVehicles().containsKey(vid)) {
+            VehicleType car = scenario.getVehicles().getVehicleTypes().get(vt);
             Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
             scenario.getVehicles().addVehicle(v);
 

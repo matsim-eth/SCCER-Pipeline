@@ -58,7 +58,7 @@ public class MeasureExternalitiesFromTraceEvents {
         reader = new MatsimEventsReader(eventsManager);
         log.info("add vehicles");
 
-        eventsManager.addHandler(new JITvehicleCreator(scenario));
+         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
 
         congestionCounter = new CongestionCounter(scenario, date, aggregateCongestionDataPerLinkPerTime);
@@ -72,7 +72,7 @@ public class MeasureExternalitiesFromTraceEvents {
         log.info("load emissions module");
         // setup externality counters
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
-        ecg.setUsingDetailedEmissionCalculation(false);
+    //    ecg.setUsingDetailedEmissionCalculation(false);
 
         emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
         emissionsCounter = new EmissionsCounter(scenario, date);
@@ -118,11 +118,19 @@ public class MeasureExternalitiesFromTraceEvents {
         //householdid, #autos, auto1, auto2, auto3
         //get household id of person. Assign next vehicle from household.
 
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
-        car.setMaximumVelocity(60.0 / 3.6);
+        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
+        car.setMaximumVelocity(100.0 / 3.6);
         car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-4END_EMISSIONS");
+        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
         scenario.getVehicles().addVehicleType(car);
+
+        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
+        car_diesel.setMaximumVelocity(100.0 / 3.6);
+        car_diesel.setPcuEquivalents(1.0);
+        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(car_diesel);
+
+        //hybrids are only coming in hbefa vresion 4.
 
     }
 
