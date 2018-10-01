@@ -24,7 +24,7 @@ import org.matsim.api.core.v01.population.Leg;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.api.core.v01.population.Plan;
 import org.matsim.contrib.locationchoice.BestReplyDestinationChoice;
-import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceBestResponseContext;
+import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceContext;
 import org.matsim.contrib.locationchoice.bestresponse.scoring.DestinationScoring;
 import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.scoring.SumScoringFunction.ActivityScoring;
@@ -40,7 +40,7 @@ import org.matsim.deprecated.scoring.ScoringFunctionAccumulator;
  */
 public class DestinationEspilonScoring implements ActivityScoring, LegScoring,
 	   ScoringFunctionAccumulator.ActivityScoring, ScoringFunctionAccumulator.LegScoring {
-	private final DestinationChoiceBestResponseContext context;
+	private final DestinationChoiceContext context;
 	private final DestinationScoring scoring;
 
 	private double score = 0;
@@ -49,7 +49,7 @@ public class DestinationEspilonScoring implements ActivityScoring, LegScoring,
 
 	public DestinationEspilonScoring(
 			final Person person,
-			final DestinationChoiceBestResponseContext context ) {
+			final DestinationChoiceContext context ) {
 		this.context = context;
 		this.scoring = new DestinationScoring( context );
 		this.currentPlan = PopulationUtils.createPlan(person);

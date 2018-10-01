@@ -27,7 +27,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.population.Activity;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceBestResponseContext;
+import org.matsim.contrib.locationchoice.bestresponse.DestinationChoiceContext;
 import org.matsim.core.config.groups.PlanCalcScoreConfigGroup;
 import org.matsim.core.config.groups.ScenarioConfigGroup;
 import org.matsim.core.router.StageActivityTypes;
@@ -90,8 +90,8 @@ public class IVTBaselineScoringFunctionFactory implements ScoringFunctionFactory
 		scoringFunctionAccumulator.addScoringFunction(new CharyparNagelLegScoring(params, scenario.getNetwork()));
 
 		// location choice
-		final DestinationChoiceBestResponseContext locationChoiceContext = (DestinationChoiceBestResponseContext)
-				scenario.getScenarioElement(DestinationChoiceBestResponseContext.ELEMENT_NAME);
+		final DestinationChoiceContext locationChoiceContext = (DestinationChoiceContext)
+				scenario.getScenarioElement(DestinationChoiceContext.ELEMENT_NAME);
 		if ( locationChoiceContext != null) {
 			scoringFunctionAccumulator.addScoringFunction(
 					new DestinationEspilonScoring(person, locationChoiceContext));

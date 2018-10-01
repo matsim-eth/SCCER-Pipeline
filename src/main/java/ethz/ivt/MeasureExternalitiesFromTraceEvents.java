@@ -10,7 +10,9 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 
 import org.matsim.contrib.emissions.EmissionModule;
+import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
+import org.matsim.contrib.emissions.roadTypeMapping.VisumHbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
@@ -23,6 +25,7 @@ import org.matsim.vehicles.VehicleUtils;
 import ethz.ivt.externalities.counters.EmissionsCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 
+import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -74,7 +77,11 @@ public class MeasureExternalitiesFromTraceEvents {
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
     //    ecg.setUsingDetailedEmissionCalculation(false);
 
-        emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
+        //add Hbefa mappings to the network
+        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
+        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
+
+        emissionModule = new EmissionModule(scenario, eventsManager);
         emissionsCounter = new EmissionsCounter(scenario, date);
         eventsManager.addHandler(emissionsCounter);
 

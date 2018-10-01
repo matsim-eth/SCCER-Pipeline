@@ -46,6 +46,9 @@ public class MeasureAggregateEmissionsFromScenario {
         config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
+        //add mappings to network
+        OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork());
+
         setUpVehicles(scenario);
 
         eventsManager = new EventsManagerImpl();
@@ -54,7 +57,7 @@ public class MeasureAggregateEmissionsFromScenario {
         eventsManager.addHandler(v2deh);
 
         // setup aggregators
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager, OsmHbefaMapping.build());
+        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
         EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, v2deh);
         emissionModule.getEmissionEventsManager().addHandler(emissionsAggregator);
         
