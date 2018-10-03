@@ -71,12 +71,12 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double causingAgentEnterTime = event.getEmergenceTime(); // time when causing agent entered the link in the past
         double affectedAgentLeaveTime = event.getTime(); // time when the affected agent experiences the delay
 
-        Id<Link> causingAgentLinkId = person2linkinfo.get(causingAgentId).getSetLinkId();
+        Id<Link> causingAgentLinkId = event.getLinkId();
         Id<Link> affectedAgentLinkId = event.getLinkId(); // event triggered when affected agent leaves link with delay
 
-        if (!affectedAgentLinkId.equals(person2linkinfo.get(affectedAgentId).getSetLinkId())) {
-            log.warn("Affected agent do not links match! This should be understood!");
-        }
+//        if (!affectedAgentLinkId.equals(person2linkinfo.get(affectedAgentId).getSetLinkId())) {
+//            log.warn("Affected agent do not links match! This should be understood!");
+//        }
 
         double delay = event.getDelay();
 
@@ -97,7 +97,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
-        updateAgentOnLinkInfo(enterTime, personId, linkId);
+        //updateAgentOnLinkInfo(enterTime, personId, linkId);
     }
 
     @Override
@@ -116,18 +116,18 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = event.getPersonId();
         Id<Link> linkId = event.getLinkId();
-        updateAgentOnLinkInfo(enterTime, personId, linkId);
+        //updateAgentOnLinkInfo(enterTime, personId, linkId);
         //TODO : Think what should happen for counts if arrival then departure occur within same timebin
     }
 
-    public void updateAgentOnLinkInfo(double enterTime, Id<Person> personId, Id<Link> linkId) {
-        Link link = this.scenario.getNetwork().getLinks().get(linkId);
-        double length = link.getLength();
-        double freeSpeed = link.getFreespeed();
-        double freeSpeedLeaveTime = enterTime + length / freeSpeed;
-        this.person2linkinfo.replace(personId, new AgentOnLinkInfo(personId, linkId, enterTime, freeSpeedLeaveTime));
-        //TODO : Think what should happen for counts if arrival then departure occur within same timebin
-    }
+//    public void updateAgentOnLinkInfo(double enterTime, Id<Person> personId, Id<Link> linkId) {
+//        Link link = this.scenario.getNetwork().getLinks().get(linkId);
+//        double length = link.getLength();
+//        double freeSpeed = link.getFreespeed();
+//        double freeSpeedLeaveTime = enterTime + length / freeSpeed;
+//        this.person2linkinfo.replace(personId, new AgentOnLinkInfo(personId, linkId, enterTime, freeSpeedLeaveTime));
+//        //TODO : Think what should happen for counts if arrival then departure occur within same timebin
+//    }
 
     public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
 
