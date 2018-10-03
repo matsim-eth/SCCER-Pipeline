@@ -4,6 +4,8 @@ import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.CongestionField;
 import ethz.ivt.vsp.AgentOnLinkInfo;
+import ethz.ivt.vsp.CongestionEvent;
+import ethz.ivt.vsp.handlers.CongestionEventHandler;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -16,11 +18,11 @@ import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
-import ethz.ivt.vsp.CongestionEvent;
-import ethz.ivt.vsp.handlers.CongestionEventHandler;
-import org.matsim.vehicles.Vehicle;
 
-import java.util.*;
+import java.util.HashMap;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
 
 /**
  * Created by molloyj on 18.07.2017.
@@ -74,10 +76,6 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         Id<Link> causingAgentLinkId = event.getLinkId();
         Id<Link> affectedAgentLinkId = event.getLinkId(); // event triggered when affected agent leaves link with delay
 
-//        if (!affectedAgentLinkId.equals(person2linkinfo.get(affectedAgentId).getSetLinkId())) {
-//            log.warn("Affected agent do not links match! This should be understood!");
-//        }
-
         double delay = event.getDelay();
 
         // compute timebin
@@ -97,7 +95,6 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
-        //updateAgentOnLinkInfo(enterTime, personId, linkId);
     }
 
     @Override
@@ -116,18 +113,8 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = event.getPersonId();
         Id<Link> linkId = event.getLinkId();
-        //updateAgentOnLinkInfo(enterTime, personId, linkId);
         //TODO : Think what should happen for counts if arrival then departure occur within same timebin
     }
-
-//    public void updateAgentOnLinkInfo(double enterTime, Id<Person> personId, Id<Link> linkId) {
-//        Link link = this.scenario.getNetwork().getLinks().get(linkId);
-//        double length = link.getLength();
-//        double freeSpeed = link.getFreespeed();
-//        double freeSpeedLeaveTime = enterTime + length / freeSpeed;
-//        this.person2linkinfo.replace(personId, new AgentOnLinkInfo(personId, linkId, enterTime, freeSpeedLeaveTime));
-//        //TODO : Think what should happen for counts if arrival then departure occur within same timebin
-//    }
 
     public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
 
@@ -149,7 +136,6 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             aggregateCongestionDataPerLinkPerTime.addValue(linkId,
                     leaveTimeBin, CongestionField.COUNT.getText(), 1.0);
         }
-
         //TODO : Think what should happen for counts if arrival then departure occur within same timebin
     }
 }
