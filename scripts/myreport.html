@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html>
+<head lang="en">
+    <meta charset="UTF-8">
+    <title> ${title} </title>
+</head>
+<body>
+<div class="container">
+    <h2>Study Report </h2>
+##     {{ national_pivot_table }}
+##    {% include "summary.html" %}
+</div>
+<table>
+    <tr>
+        % for heading in "Mode,Date,Time,Length,CO2,Delay Experienced, Delay Caused".split(","):
+            <th>${heading}</th>
+        % endfor
+    </tr>
+
+    % for row in df.itertuples():
+        ${makerow(row)} \
+    % endfor
+
+</table>
+
+<%def name="makerow(row)">
+    <tr>
+        <td>${mode(row.Mode)}</td>
+        <td>${row.Date}</td>
+        <td>${row.matsim_delay}</td>
+    </tr> \
+</%def>
+
+<%def name="mode(mode_value)"> \
+    ${mode_value} \
+</%def>
+
+
+</body>
+</html>

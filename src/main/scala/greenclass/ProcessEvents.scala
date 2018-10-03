@@ -1,11 +1,13 @@
 package greenclass
 
-import java.io.{File, PrintWriter}
+import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.{Files, Path, Paths}
 import java.util
 import java.util.stream.Collectors
 import java.util.{LinkedList, List}
 
+import com.esotericsoftware.kryo.Kryo
+import com.esotericsoftware.kryo.io.{Input, Output}
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
 import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionField}
 import org.apache.log4j.{Level, Logger}
@@ -68,6 +70,15 @@ class ProcessEvents {
     logger.info("load aggregate congestion data")
     aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
 
+  //  val kryo = new Kryo()
+ /*   import java.io.FileOutputStream
+    val output = new Output(new FileOutputStream(congestion_file.stripSuffix(".csv") + ".data"))
+    kryo.writeObject(output, aggregateCongestionDataPerLinkPerTime)
+    System.exit(1)
+ */
+ //   val input = new Input(new FileInputStream(congestion_file.stripSuffix(".csv") + ".data"))
+    congestion_file.stripSuffix(".csv") + ".data"
+//    val aggregateCongestionDataPerLinkPerTime = kryo.readObject(input, classOf[AggregateDataPerTimeImpl[Link]])
 
     //read list of already processed files, in case of failure
     new File(outputFolder).mkdir()
