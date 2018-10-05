@@ -1,0 +1,45 @@
+<%inherit file="Email-Framework/boilerplate.html"/>
+
+<%block name="content">
+
+<div class="container">
+    <h2>Study Report - ${_('Francois Pinard')} </h2>
+##     {{ national_pivot_table }}
+##    {% include "summary.html" %}
+</div>
+<table>
+    <tr>
+            <th>${_("Mode")}</th>
+            <th>${_("Date")}</th>
+            <th>${_("Duration")}</th>
+            <th>${_("Distance")}</th>
+            <th>${_("Emissions")}</th>
+            <th>${_("Delay Ex.")}</th>
+            <th>${_("Delay Caused")}</th>
+    </tr>
+
+    % for row in df.itertuples():
+        ${makerow(row)} \
+    % endfor
+
+</table>
+
+</%block>
+
+
+<%def name="makerow(row)">
+    <tr>
+        <td> ${mode(row.Mode)}</td>
+        <td>${row.short_date}</td>
+        <td>${row.display_time}</td>
+        <td>${row.display_distance}</td>
+        <td>${row.emissions_string}</td>
+        <td>${row.display_exp_delay}</td>
+        <td>${row.display_matsim_delay}</td>
+    </tr> \
+</%def>
+
+<%def name="mode(mode_value)"> \
+    ${mode_value} \
+</%def>
+

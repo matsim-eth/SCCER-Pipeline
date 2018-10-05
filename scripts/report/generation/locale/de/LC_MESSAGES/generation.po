@@ -1,0 +1,57 @@
+# German translations for Emissions Feedback Generator.
+# Copyright (C) 2018 ORGANIZATION
+# This file is distributed under the same license as the Emissions Feedback
+# Generator project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2018.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Emissions Feedback Generator 0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2018-10-03 11:53+0200\n"
+"PO-Revision-Date: 2018-10-02 14:02+0200\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: de\n"
+"Language-Team: de <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.3.4\n"
+
+#: generation/generate_report.py:72
+msgid "report_title"
+msgstr "Das Title"
+
+#: generation/templates/myreport_template.html:6
+msgid "Francois Pinard"
+msgstr "Franky Deutsch"
+
+#: generation/templates/myreport_template.html:12
+msgid "Mode"
+msgstr ""
+
+#: generation/templates/myreport_template.html:13
+msgid "Date"
+msgstr ""
+
+#: generation/templates/myreport_template.html:14
+msgid "Duration"
+msgstr ""
+
+#: generation/templates/myreport_template.html:15
+msgid "Distance"
+msgstr ""
+
+#: generation/templates/myreport_template.html:16
+msgid "Emissions"
+msgstr ""
+
+#: generation/templates/myreport_template.html:17
+msgid "Delay Ex."
+msgstr ""
+
+#: generation/templates/myreport_template.html:18
+msgid "Delay Caused"
+msgstr ""
+
