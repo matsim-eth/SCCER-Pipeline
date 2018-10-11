@@ -1,10 +1,10 @@
 package ethz.ivt;
 
+import ethz.ivt.externalities.counters.*;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 
 import org.matsim.api.core.v01.network.Network;
@@ -12,7 +12,6 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
-import org.matsim.contrib.emissions.roadTypeMapping.VisumHbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.contrib.noise.data.NoiseContext;
 import org.matsim.contrib.noise.handler.NoiseTimeTracker;
@@ -22,10 +21,7 @@ import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
-import ethz.ivt.externalities.counters.EmissionsCounter;
-import ethz.ivt.externalities.counters.CongestionCounter;
 
-import java.net.URL;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -46,6 +42,7 @@ public class MeasureExternalitiesFromTraceEvents {
     private NoiseContext noiseContext;
     private NoiseTimeTracker noiseTimeTracker;
     private EventsManagerImpl eventsManager;
+    private final ExternalityCounter externalityCounter;
     private final CongestionCounter congestionCounter;
     private final EmissionsCounter emissionsCounter;
     private final EmissionModule emissionModule;
@@ -61,12 +58,11 @@ public class MeasureExternalitiesFromTraceEvents {
         reader = new MatsimEventsReader(eventsManager);
         log.info("add vehicles");
 
-         eventsManager.addHandler(new JITvehicleCreator(scenario));
+        eventsManager.addHandler(new JITvehicleCreator(scenario));
 
+        GpsLinkLeaveEventHandler gpsLinkLeaveEventHandler = new GpsLinkLeaveEventHandlerImpl(eventsManager);
+        eventsManager.addHandler(gpsLinkLeaveEventHandler);
 
-        congestionCounter = new CongestionCounter(scenario, date, aggregateCongestionDataPerLinkPerTime);
-
-        eventsManager.addHandler(congestionCounter);
 
         //AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
         //aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
@@ -82,9 +78,14 @@ public class MeasureExternalitiesFromTraceEvents {
         hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
         emissionModule = new EmissionModule(scenario, eventsManager);
-        emissionsCounter = new EmissionsCounter(scenario, date);
-        eventsManager.addHandler(emissionsCounter);
 
+        externalityCounter = new ExternalityCounter(scenario, date);
+        emissionsCounter = new EmissionsCounter(scenario, externalityCounter);
+        congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
+
+        eventsManager.addHandler(externalityCounter);
+        eventsManager.addHandler(emissionsCounter);
+        eventsManager.addHandler(congestionCounter);
     }
 
     public void reset() {
@@ -92,8 +93,7 @@ public class MeasureExternalitiesFromTraceEvents {
     }
 
     public void process(String eventsFile, String date, String personId) {
-        congestionCounter.setDate(date);
-        emissionsCounter.setDate(date);
+        externalityCounter.setDate(date);
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
 
@@ -111,8 +111,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
     public void write(String folder, String date, String person) {
         Path outputFolder = Paths.get(folder, date);
-        congestionCounter.writeCsvFile(outputFolder, person);
-        emissionsCounter.writeCsvFile(outputFolder, person);
+        externalityCounter.writeCsvFile(outputFolder, person);
     }
 
     public static void setUpRoadTypes(Network network) {

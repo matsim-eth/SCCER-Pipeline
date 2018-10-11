@@ -23,15 +23,15 @@ import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.events.handler.EventHandler;
 import org.matsim.vehicles.Vehicle;
 
-public abstract class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler, EventHandler {
+public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler, EventHandler {
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
     private static final double ECAR = 1;
     private static final double CAR = 0;
     protected final Scenario scenario;
 	private String date;
-    Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
-    Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
-    List<String> keys = new ArrayList<>(); //list of all leg data fields
+    private Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
+    private Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
+    private List<String> keys = new ArrayList<>(); //list of all leg data fields
     
     public ExternalityCounter(Scenario scenario, String date) {
     	this.scenario = scenario;
@@ -98,8 +98,9 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
         	tempValues.get(pid).putIfAbsent(key, 0.0);
         }
     }
-    
-    public void writeCsvFile(Path outputFileName) {
+
+    public void writeCsvFile(Path outputPath, String filename) {
+		Path outputFileName = outputPath.resolve(filename + "_externalities.csv");
     	
 		File file = outputFileName.toFile();
 		file.getParentFile().mkdirs();
@@ -155,4 +156,23 @@ public abstract class ExternalityCounter implements PersonArrivalEventHandler, P
 	public void setDate(String date) {
 		this.date = date;
 	}
+
+	public void addKey(String key) {
+		keys.add(key);
+	}
+
+	public double getTempValue(Id<Person> personId, String key) {
+		return this.tempValues.get(personId).get(key);
+	}
+
+	public void putTempValue(Id<Person> personId, String key, double value) {
+		this.tempValues.get(personId).put(key, value);
+	}
+
+	public void incrementTempValueBy(Id<Person> personId, String key, Double value) {
+    	double oldValue = getTempValue(personId, key);
+		putTempValue(personId, key, oldValue + value);
+
+	}
+
 }
