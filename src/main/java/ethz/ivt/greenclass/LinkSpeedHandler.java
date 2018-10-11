@@ -1,5 +1,7 @@
 package ethz.ivt.greenclass;
 
+import ethz.ivt.externalities.counters.GpsLinkLeaveEventHandler;
+import ethz.ivt.graphhopperMM.GpsLinkLeaveEvent;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
@@ -12,7 +14,7 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class LinkSpeedHandler implements LinkLeaveEventHandler, LinkEnterEventHandler {
+public class LinkSpeedHandler implements GpsLinkLeaveEventHandler, LinkEnterEventHandler {
 
     private Map<Id<Link>, List<LinkTimingStruct>> link_timings = new HashMap<>();
     private Map<Id<Link>, Double> current_link_entrytime = new HashMap<>();
@@ -21,11 +23,13 @@ public class LinkSpeedHandler implements LinkLeaveEventHandler, LinkEnterEventHa
         public final Id<Link> link_id;
         public final double entry_time;
         public final double exit_time;
+        public final int    num_gps_points;
 
-        public LinkTimingStruct(Id<Link> l, double entryTime, double exitTime) {
+        public LinkTimingStruct(Id<Link> l, double entryTime, double exitTime, int numGpsPoints) {
             this.link_id = l;
             this.entry_time = entryTime;
             this.exit_time = exitTime;
+            this.num_gps_points = numGpsPoints;
         }
 
         public double getTravelTime() {
@@ -35,7 +39,7 @@ public class LinkSpeedHandler implements LinkLeaveEventHandler, LinkEnterEventHa
     }
 
     @Override
-    public void handleEvent(LinkLeaveEvent event) {
+    public void handleEvent(GpsLinkLeaveEvent event) {
         Id<Link>  link_id = event.getLinkId();
 
         if (current_link_entrytime.containsKey(link_id)) {
@@ -44,7 +48,7 @@ public class LinkSpeedHandler implements LinkLeaveEventHandler, LinkEnterEventHa
             double exitTime = event.getTime();
             link_timings.putIfAbsent(link_id, new ArrayList<>());
 
-            LinkTimingStruct lts = new LinkTimingStruct(event.getLinkId(), entryTime, exitTime);
+            LinkTimingStruct lts = new LinkTimingStruct(event.getLinkId(), entryTime, exitTime, event.getNumGpsPoints() );
 
             link_timings.get(link_id).add(lts);
         }
