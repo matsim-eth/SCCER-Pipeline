@@ -40,7 +40,7 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
         	}
         }
         keys.add("CO2-eq");
-        keys.add("Climate Cost");
+        keys.add("climate_cost");
     }
     
     @Override
@@ -102,7 +102,7 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
         double cost = CO2_equivalent / 1e6 * costPerTonCO2eq;
 
         tempValues.get(personId).put("CO2-eq", tempValues.get(personId).get("CO2-eq") + CO2_equivalent);
-        tempValues.get(personId).put("Climate Cost", tempValues.get(personId).get("Climate Cost") + cost);
+        tempValues.get(personId).put("climate_cost", tempValues.get(personId).get("climate_cost") + cost);
     }
 
     public void writeCsvFile(Path outputPath, String filename) {
