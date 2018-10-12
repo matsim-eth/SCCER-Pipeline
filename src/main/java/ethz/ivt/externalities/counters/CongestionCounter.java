@@ -25,6 +25,8 @@ public class CongestionCounter extends ExternalityCounter implements LinkLeaveEv
 	private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
 	private Map<Id<Person>, Double> personLinkEntryTime = new HashMap<>();
 
+	private final double costPerVehicleHourCar = 42.4;
+
 	public CongestionCounter(Scenario scenario, String date, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
     	super(scenario, date);
     	this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
@@ -39,7 +41,7 @@ public class CongestionCounter extends ExternalityCounter implements LinkLeaveEv
 		keys.add("clock_time"); //time lost on gps trace
 		keys.add("matsim_time"); //time lost on gps trace
 		keys.add("matsim_delay"); //time lost on gps trace
-
+		keys.add("delay_cost_caused");
     }
 
 	@Override
@@ -96,6 +98,11 @@ public class CongestionCounter extends ExternalityCounter implements LinkLeaveEv
 			this.tempValues.get(personId).put(field.getText(), previous + value);
 		}
 
+		// Compute caused delay costs
+		double previous = this.tempValues.get(personId).get("delay_cost_caused");
+		double cost = this.tempValues.get(personId).get(CongestionField.DELAY_CAUSED) * costPerVehicleHourCar;
+		this.tempValues.get(personId).put("delay_cost_caused", previous + cost);
+		
 		//Now store the event for the person
 		this.personLinkEntryTime.put(personId, event.getTime());
 
