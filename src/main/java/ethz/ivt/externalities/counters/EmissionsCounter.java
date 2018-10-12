@@ -18,6 +18,10 @@ import java.util.Map;
  */
 public class EmissionsCounter extends ExternalityCounter implements WarmEmissionEventHandler, ColdEmissionEventHandler {
 
+    private final int globalWarmingPotential_CH4 = 23;
+    private final int globalWarmingPotential_N2O = 296;
+    private final double costPerTonCO2eq = 121.5;
+
     public EmissionsCounter(Scenario scenario, String date) {
     	super(scenario, date);
     }
@@ -35,18 +39,37 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
         		keys.add(cp.getText());
         	}
         }
+        keys.add("CO2-eq");
+        keys.add("Climate Cost");
     }
     
     @Override
     public void handleEvent(ColdEmissionEvent e) {
         Id<Person> personId = getDriverOfVehicle(e.getVehicleId());
 
-        // add emissions
+        // add emissions and CO2-equivalent
         Map<ColdPollutant, Double> pollutants = e.getColdEmissions();
+        double CO2_equivalent = 0.0;
         for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
             tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
+
+            if (pollutant.equals("CO2(total)")) {
+                CO2_equivalent += p.getValue();
+            }
+            else if (pollutant.equals("CH4")) {
+                CO2_equivalent += p.getValue() * globalWarmingPotential_CH4;
+            }
+            else if (pollutant.equals("N2O")) {
+                CO2_equivalent += p.getValue() * globalWarmingPotential_N2O;
+            }
         }
+
+        double cost = CO2_equivalent / 1e6 * costPerTonCO2eq;
+
+        tempValues.get(personId).put("CO2-eq", tempValues.get(personId).get("CO2-eq") + CO2_equivalent);
+        tempValues.get(personId).put("Climate Cost", tempValues.get(personId).get("Climate Cost") + cost);
+
     }
 
 
@@ -59,10 +82,27 @@ public class EmissionsCounter extends ExternalityCounter implements WarmEmission
 
         // add emissions
         Map<WarmPollutant, Double> pollutants = e.getWarmEmissions();
+        double CO2_equivalent = 0.0;
         for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey().getText();
-            tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());       
+            tempValues.get(personId).put(pollutant, tempValues.get(personId).get(pollutant) + p.getValue());
+
+            switch(pollutant) {
+                case "CO2(total)":
+                    CO2_equivalent += p.getValue();
+
+                case "CH4":
+                    CO2_equivalent += p.getValue() * globalWarmingPotential_CH4;
+
+                case "N2O":
+                    CO2_equivalent += p.getValue() * globalWarmingPotential_N2O;
+            }
         }
+
+        double cost = CO2_equivalent / 1e6 * costPerTonCO2eq;
+
+        tempValues.get(personId).put("CO2-eq", tempValues.get(personId).get("CO2-eq") + CO2_equivalent);
+        tempValues.get(personId).put("Climate Cost", tempValues.get(personId).get("Climate Cost") + cost);
     }
 
     public void writeCsvFile(Path outputPath, String filename) {
