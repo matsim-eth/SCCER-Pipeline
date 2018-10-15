@@ -106,5 +106,10 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
 
 	}
 
+	private static double congestionScalingFactor(Link link, int queueLength, double gpsTravelTime, double scenarioTravelTime) {
+		double freeFlowTravelTime = link.getLength() / link.getFreespeed();
+		return (gpsTravelTime - freeFlowTravelTime) / (scenarioTravelTime - freeFlowTravelTime);
+	}
+
 
 }
