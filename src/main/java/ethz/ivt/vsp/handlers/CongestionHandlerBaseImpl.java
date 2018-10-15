@@ -61,6 +61,8 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 	private double delayNotInternalized_roundingErrors = 0.;
 	private double totalInternalizedDelay = 0.;
 
+	private static String PREFIX_GPS = "gps";
+
 	private Vehicle2DriverEventHandler Veh2DriverDelegate = new Vehicle2DriverEventHandler();
 
 	CongestionHandlerBaseImpl(EventsManager events, Scenario scenario) {
@@ -120,6 +122,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent(PersonDepartureEvent event) {
+		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
 		if (event.getLegMode().toString().equals(TransportMode.car.toString())){ // car!
 			LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario ) ;
 
@@ -131,6 +134,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent(LinkEnterEvent event) {
+		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
 		if (this.ptVehicleIDs.contains(event.getVehicleId())){
 			log.warn("Public transport mode. Mixed traffic is not tested.");
 		} else { // car! 
@@ -145,6 +149,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent(LinkLeaveEvent event) {
+		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
 		// yy My preference would be if we found a solution where the basic bookkeeping (e.g. update flow and
 		// delay queues) is done here.  However, delegation does not allow to have custom code in between 
 		// standard code (as was the case before with calculateCongestion).  We need to consider if it is possible to 
@@ -184,6 +189,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent( PersonArrivalEvent event ) {
+		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
 		LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario) ;
 		linkInfo.getAgentsOnLink().remove( event.getPersonId() ) ;
 	}

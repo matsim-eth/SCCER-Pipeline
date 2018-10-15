@@ -61,6 +61,8 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 	private final Map<Id<Person>, Double> agentId2storageDelay = new HashMap<>();
 	private double delayNotInternalized_spillbackNoCausingAgent = 0.;
 
+	private static String PREFIX_GPS = "gps";
+
 	public CongestionHandlerImplV3(EventsManager events, Scenario scenario) {
 		this.delegate = new CongestionHandlerBaseImpl(events, scenario);
 	}
@@ -140,6 +142,8 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 
 	@Override
 	public void handleEvent(ActivityEndEvent event) {
+		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
+
 		// I read the following as: remove non-allocated delays from agents once they are no longer on a leg. kai, sep'15
 
 		if (this.agentId2storageDelay.get(event.getPersonId()) == null) {
@@ -156,6 +160,7 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 
 	@Override
 	public final void handleEvent(LinkLeaveEvent event) {
+		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
 		// yy see my note under CongestionHandlerBaseImpl.handleEvent( LinkLeaveEvent ... ) . kai, sep'15
 		
 		// coming here ...
