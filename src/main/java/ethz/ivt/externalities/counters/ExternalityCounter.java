@@ -59,6 +59,9 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
         return Id.createPersonId(vehicleId.toString().substring(0,4)); //TODO: better handling of IDs -> this wil only work for 4 digit ids
     }
 
+	public Map<Id<Person>, List<Map<String, Double>>> getPersonId2Leg2Values() {
+		return personId2Leg2Values;
+	}
 
 	// Check if leg is traveled by car and get start time
 	@Override
