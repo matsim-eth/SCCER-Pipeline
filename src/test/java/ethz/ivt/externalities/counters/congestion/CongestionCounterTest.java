@@ -26,9 +26,226 @@ import org.matsim.vehicles.VehicleUtils;
 import java.util.LinkedList;
 import java.util.List;
 
-import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.*;
 
 public class CongestionCounterTest {
+
+
+
+    @Test
+    public void congestionCounterMatchesGpsAgentCorrectly() {
+        // set up config
+        Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+
+        // create simple network with one link
+        double length = 100.0; // m
+        double freespeed = 14.0; // m/s
+        Network network = scenario.getNetwork();
+        Node node0 = NetworkUtils.createNode(Id.createNodeId("0"), new Coord(0.0, 0 * length));
+        Node node1 = NetworkUtils.createNode(Id.createNodeId("1"), new Coord(0.0, 1 * length));
+        network.addNode(node0);
+        network.addNode(node1);
+        Link link01 = NetworkUtils.createLink(Id.createLinkId("0-1"), node0, node1, network, length, freespeed, 1, 1);
+        network.addLink(link01);
+
+        // create some people
+        Person matsim1 = PopulationUtils.getFactory().createPerson(Id.createPersonId("mat1"));
+        scenario.getPopulation().addPerson(matsim1);
+        Person gps1 = PopulationUtils.getFactory().createPerson(Id.createPersonId("gps1"));
+        scenario.getPopulation().addPerson(gps1);
+
+        // set up event manager and handlers
+        EventsManager eventsManager = new EventsManagerImpl();
+        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
+        eventsManager.addHandler(v2deh);
+
+        String date = "2018-07-27";
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+
+        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+        eventsManager.addHandler(congestionHandler);
+        eventsManager.addHandler(externalityCounter);
+        eventsManager.addHandler(congestionCounter);
+
+        // create some events
+        List<Event> eventList = new LinkedList<>();
+        // matsim1 enters
+        eventList.add(new PersonDepartureEvent(0.0, matsim1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, matsim1.getId(), link01.getId(), Id.createVehicleId(matsim1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(matsim1.getId().toString()), link01.getId()));
+        // gps1 enters
+        eventList.add(new PersonDepartureEvent(0.0, gps1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, gps1.getId(), link01.getId(), Id.createVehicleId(gps1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(gps1.getId().toString()), link01.getId()));
+
+        // process events
+        eventsManager.initProcessing();
+        for (Event event : eventList) {
+            eventsManager.processEvent(event);
+        }
+        eventsManager.finishProcessing();
+
+        // assertions
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().containsKey(link01.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().containsKey(link01.getId()));
+        assertEquals(1, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).size());
+        assertEquals(1, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).size());
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).containsKey(gps1.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).containsKey(matsim1.getId()));
+        assertEquals(matsim1.getId(), congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimAgent());
+        assertEquals(gps1.getId(), congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsAgent());
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getMatsimEnterTime(), 0.0);
+
+        congestionCounter.reset(0);
+
+        // invert order of who enters first
+        eventList.clear();
+        // gps1 enters
+        eventList.add(new PersonDepartureEvent(0.0, gps1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, gps1.getId(), link01.getId(), Id.createVehicleId(gps1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(gps1.getId().toString()), link01.getId()));
+        // matsim1 enters
+        eventList.add(new PersonDepartureEvent(0.0, matsim1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, matsim1.getId(), link01.getId(), Id.createVehicleId(matsim1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(matsim1.getId().toString()), link01.getId()));
+
+        // process events
+        eventsManager.initProcessing();
+        for (Event event : eventList) {
+            eventsManager.processEvent(event);
+        }
+        eventsManager.finishProcessing();
+
+        // assertions
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().containsKey(link01.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().containsKey(link01.getId()));
+        assertEquals(1, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).size());
+        assertEquals(1, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).size());
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).containsKey(gps1.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).containsKey(matsim1.getId()));
+        assertEquals(matsim1.getId(), congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimAgent());
+        assertEquals(gps1.getId(), congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsAgent());
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getMatsimEnterTime(), 0.0);
+
+        congestionCounter.reset(0);
+
+        // add a second matsim agent, gps agent should be matched to last one who entered before
+        Person matsim2 = PopulationUtils.getFactory().createPerson(Id.createPersonId("mat2"));
+        scenario.getPopulation().addPerson(matsim2);
+
+        eventList.clear();
+        // matsim1 enters
+        eventList.add(new PersonDepartureEvent(0.0, matsim1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, matsim1.getId(), link01.getId(), Id.createVehicleId(matsim1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(matsim1.getId().toString()), link01.getId()));
+        // gps1 enters
+        eventList.add(new PersonDepartureEvent(0.0, gps1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, gps1.getId(), link01.getId(), Id.createVehicleId(gps1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(gps1.getId().toString()), link01.getId()));
+        // matsim2 enters
+        eventList.add(new PersonDepartureEvent(0.0, matsim2.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, matsim2.getId(), link01.getId(), Id.createVehicleId(matsim2.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(matsim2.getId().toString()), link01.getId()));
+
+
+        // process events
+        eventsManager.initProcessing();
+        for (Event event : eventList) {
+            eventsManager.processEvent(event);
+        }
+        eventsManager.finishProcessing();
+
+        // assertions
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().containsKey(link01.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().containsKey(link01.getId()));
+        assertEquals(1, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).size());
+        assertEquals(1, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).size());
+        assertTrue(congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).containsKey(gps1.getId()));
+        assertTrue(congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).containsKey(matsim1.getId()));
+        assertEquals(matsim1.getId(), congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimAgent());
+        assertEquals(gps1.getId(), congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsAgent());
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsEnterTime(), 0.0);
+        assertEquals(0.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getMatsimEnterTime(), 0.0);
+
+        congestionCounter.reset(0);
+    }
+
+    @Test
+    public void congestionCounterRecordsLinkExitTimesCorrectly() {
+        // set up config
+        Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+
+        // create simple network with one link
+        double length = 100.0; // m
+        double freespeed = 14.0; // m/s
+        Network network = scenario.getNetwork();
+        Node node0 = NetworkUtils.createNode(Id.createNodeId("0"), new Coord(0.0, 0 * length));
+        Node node1 = NetworkUtils.createNode(Id.createNodeId("1"), new Coord(0.0, 1 * length));
+        network.addNode(node0);
+        network.addNode(node1);
+        Link link01 = NetworkUtils.createLink(Id.createLinkId("0-1"), node0, node1, network, length, freespeed, 1, 1);
+        network.addLink(link01);
+
+        // create some people
+        Person matsim1 = PopulationUtils.getFactory().createPerson(Id.createPersonId("mat1"));
+        scenario.getPopulation().addPerson(matsim1);
+        Person gps1 = PopulationUtils.getFactory().createPerson(Id.createPersonId("gps1"));
+        scenario.getPopulation().addPerson(gps1);
+
+        // set up event manager and handlers
+        EventsManager eventsManager = new EventsManagerImpl();
+        Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
+        eventsManager.addHandler(v2deh);
+
+        String date = "2018-07-27";
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+
+        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+        eventsManager.addHandler(congestionHandler);
+        eventsManager.addHandler(externalityCounter);
+        eventsManager.addHandler(congestionCounter);
+
+        // create some events
+        List<Event> eventList = new LinkedList<>();
+        // matsim1 enters
+        eventList.add(new PersonDepartureEvent(0.0, matsim1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, matsim1.getId(), link01.getId(), Id.createVehicleId(matsim1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(matsim1.getId().toString()), link01.getId()));
+        // gps1 enters
+        eventList.add(new PersonDepartureEvent(0.0, gps1.getId(), link01.getId(), TransportMode.car));
+        eventList.add(new VehicleEntersTrafficEvent(0.0, gps1.getId(), link01.getId(), Id.createVehicleId(gps1.getId().toString()), TransportMode.car, 0.0));
+        eventList.add(new LinkEnterEvent(0.0, Id.createVehicleId(gps1.getId().toString()), link01.getId()));
+
+        // they all leave, some with delays
+        double delay = 1.0;
+        eventList.add(new LinkLeaveEvent(20.0, Id.createVehicleId(matsim1.getId().toString()), link01.getId()));
+        eventList.add(new LinkLeaveEvent(30.0, Id.createVehicleId(gps1.getId().toString()), link01.getId()));
+
+        // process events
+        eventsManager.initProcessing();
+        for (Event event : eventList) {
+            eventsManager.processEvent(event);
+        }
+        eventsManager.finishProcessing();
+
+        // assertions
+        assertEquals(20.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getMatsimExitTime(), 0.0);
+        assertEquals(30.0, congestionCounter.getGpsAgent2ScenarioAgentMap().get(link01.getId()).get(gps1.getId()).getGpsExitTime(), 0.0);
+        assertEquals(20.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getMatsimExitTime(), 0.0);
+        assertEquals(30.0, congestionCounter.getMatsimAgent2GpsAgentMap().get(link01.getId()).get(matsim1.getId()).getGpsExitTime(), 0.0);
+
+        congestionCounter.reset(0);
+    }
 
     @Test
     public void gpsAgentEntersAndLeavesBetweenTwoMatsimAgents() {
