@@ -78,11 +78,23 @@ public class CongestionMatchingInfo {
         this.matsimCausedDelay = matsimCausedDelay;
     }
 
-    public double computeScaledGPSDelay() {
+    public double computeCausedDelay() {
         if (hasAllValuesSet()) {
             double gpsTravelTime = this.gpsExitTime.get() - this.gpsEnterTime;
             double matsimTravelTime = this.matsimExitTime.get() - this.matsimEnterTime.get();
             return this.matsimCausedDelay.get() * delayScalingFactor(this.link, gpsTravelTime, matsimTravelTime);
+        }
+        return 0.0;
+    }
+
+    public double computeExperiencedDelay() {
+        if (hasAllValuesSet()) {
+            double gpsTravelTime = this.gpsExitTime.get() - this.gpsEnterTime;
+            double freeflowTravelTime = Math.floor(this.link.getLength() / this.link.getFreespeed()) + 1.0;
+            if (gpsTravelTime > freeflowTravelTime) {
+                return gpsTravelTime - freeflowTravelTime;
+            }
+            return 0.0;
         }
         return 0.0;
     }

@@ -160,23 +160,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -184,10 +167,13 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = 1.0;
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = 1.0;
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
 
+        double expectedExperiencedDelay = 0.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
     }
 
     @Test
@@ -252,23 +238,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -276,9 +245,13 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = 1.0;
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = 1.0;
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
+
+        double expectedExperiencedDelay = 0.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
 
     }
 
@@ -344,23 +317,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -368,10 +324,13 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = 2.0 * (9.0) / (10.0);
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = 2.0 * (9.0) / (10.0);
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
 
+        double expectedExperiencedDelay = 1.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
     }
 
     @Test
@@ -436,23 +395,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -460,9 +402,13 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = 2.0 * (10.0 / 9.0);
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = 2.0 * (10.0 / 9.0);
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
+
+        double expectedExperiencedDelay = 2.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
 
     }
 
@@ -528,23 +474,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -552,9 +481,13 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = 0.0;
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = 0.0;
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
+
+        double expectedExperiencedDelay = 2.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
     }
 
     @Test
@@ -634,23 +567,6 @@ public class CongestionCounterTest {
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
         // process events
         eventsManager.initProcessing();
         for (Event event : eventList) {
@@ -658,9 +574,14 @@ public class CongestionCounterTest {
         }
         eventsManager.finishProcessing();
 
-        double expectedDelay = delay * (freeflowTravelTime + delay) / freeflowTravelTime;
-        double actualDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
-        assertEquals("Wrong delay caused!", expectedDelay, actualDelay, 0.0);
+        double expectedCausedDelay = delay * (freeflowTravelTime + delay) / freeflowTravelTime;
+        double actualCausedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_CAUSED.getText());
+        assertEquals("Wrong delay caused!", expectedCausedDelay, actualCausedDelay, 0.0);
+
+        double expectedExperiencedDelay = 2.0;
+        double actualExperiencedDelay = externalityCounter.getTempValue(gps1.getId(), CongestionField.DELAY_EXPERIENCED.getText());
+        assertEquals("Wrong delay experienced!", expectedExperiencedDelay, actualExperiencedDelay, 0.0);
+
     }
 
 
