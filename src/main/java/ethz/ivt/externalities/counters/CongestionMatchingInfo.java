@@ -3,77 +3,88 @@ package ethz.ivt.externalities.counters;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.core.api.experimental.events.EventsManager;
+
+import java.util.Optional;
 
 public class CongestionMatchingInfo {
 
     private final Link link;
-    private final Id<Person> gpsAgent;
-    private final Id<Person> matsimAgent;
+    private final Id<Person> gpsAgentId;
     private final double gpsEnterTime;
-    private final double matsimEnterTime;
-    private double gpsExitTime;
-    private double matsimExitTime;
-    private double matsimCausedDelay;
-    private boolean isGpsExitTimeSet = false;
-    private boolean isMatsimExitTime = false;
-    private boolean isMatsimCausedDelaySet = false;
+    private Optional<Double> gpsExitTime = Optional.empty();
 
-    public CongestionMatchingInfo(Link link, Id<Person> gpsAgent, Id<Person> matsimAgent, double gpsEnterTime, double matsimEnterTime) {
+    private Optional<Id<Person>> matsimAgentId = Optional.empty();
+    private Optional<Double> matsimEnterTime = Optional.empty();
+    private Optional<Double> matsimExitTime = Optional.empty();
+
+    private Optional<Double> matsimCausedDelay = Optional.empty();
+
+
+    public CongestionMatchingInfo(Link link, Id<Person> gpsAgentId, double gpsEnterTime) {
         this.link = link;
-        this.gpsAgent = gpsAgent;
-        this.matsimAgent = matsimAgent;
+        this.gpsAgentId = gpsAgentId;
         this.gpsEnterTime = gpsEnterTime;
-        this.matsimEnterTime = matsimEnterTime;
     }
 
     public Link getLink() {
         return link;
     }
 
-    public Id<Person> getGpsAgent() {
-        return gpsAgent;
-    }
-
-    public Id<Person> getMatsimAgent() {
-        return matsimAgent;
-    }
-
-    public void setGpsExitTime(double gpsExitTime) {
-        this.gpsExitTime = gpsExitTime;
-        this.isGpsExitTimeSet = true;
-    }
-
-    public void setMatsimExitTime(double matsimExitTime) {
-        this.matsimExitTime = matsimExitTime;
-        this.isMatsimExitTime = true;
+    public Id<Person> getGpsAgentId() {
+        return gpsAgentId;
     }
 
     public double getGpsEnterTime() {
         return gpsEnterTime;
     }
 
-    public double getGpsExitTime() {
+    public Optional<Double> getGpsExitTime() {
         return gpsExitTime;
     }
 
-    public double getMatsimEnterTime() {
+    public Optional<Id<Person>> getMatsimAgentId() {
+        return matsimAgentId;
+    }
+
+    public Optional<Double> getMatsimEnterTime() {
         return matsimEnterTime;
     }
 
-    public double getMatsimExitTime() {
+    public Optional<Double> getMatsimExitTime() {
         return matsimExitTime;
     }
 
-    public void setMatsimCausedDelay(double matsimCausedDelay) {
+    public Optional<Double> getMatsimCausedDelay() {
+        return matsimCausedDelay;
+    }
+
+    public void setGpsExitTime(Optional<Double> gpsExitTime) {
+        this.gpsExitTime = gpsExitTime;
+    }
+
+    public void setMatsimAgentId(Optional<Id<Person>> matsimAgentId) {
+        this.matsimAgentId = matsimAgentId;
+    }
+
+    public void setMatsimEnterTime(Optional<Double> matsimEnterTime) {
+        this.matsimEnterTime = matsimEnterTime;
+    }
+
+    public void setMatsimExitTime(Optional<Double> matsimExitTime) {
+        this.matsimExitTime = matsimExitTime;
+    }
+
+    public void setMatsimCausedDelay(Optional<Double> matsimCausedDelay) {
         this.matsimCausedDelay = matsimCausedDelay;
-        this.isMatsimCausedDelaySet = true;
     }
 
     public double computeScaledGPSDelay() {
-        double gpsTravelTime = this.gpsExitTime - this.gpsEnterTime;
-        double matsimTravelTime = this.matsimExitTime - this.matsimEnterTime;
-        return this.matsimCausedDelay * delayScalingFactor(this.link, gpsTravelTime, matsimTravelTime);
+        if (hasAllValuesSet()) {
+            double gpsTravelTime = this.gpsExitTime.get() - this.gpsEnterTime;
+            double matsimTravelTime = this.matsimExitTime.get() - this.matsimEnterTime.get();
+            return this.matsimCausedDelay.get() * delayScalingFactor(this.link, gpsTravelTime, matsimTravelTime);
+        }
+        return 0.0;
     }
 
     private static double delayScalingFactor(Link link, double gpsTravelTime, double scenarioTravelTime) {
@@ -81,6 +92,9 @@ public class CongestionMatchingInfo {
     }
 
     public boolean hasAllValuesSet() {
-        return (isGpsExitTimeSet && isMatsimExitTime && isMatsimCausedDelaySet);
+        return (this.matsimAgentId.isPresent()
+                && this.gpsExitTime.isPresent()
+                && this.matsimExitTime.isPresent()
+                && this.matsimCausedDelay.isPresent());
     }
 }
