@@ -29,7 +29,9 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
 
 	private Map<Id<Link>, Map<Id<Person>, CongestionMatchingInfo>> gpsAgents = new HashMap<>();
 	private Map<Id<Link>, Tuple<Id<Person>, Double>> lastMatsimAgentOnLink = new HashMap<>();
-	private Map<Id<Link>, Map<Id<Person>, CongestionMatchingInfo>> matsimAgent2GpsAgentMap = new HashMap<>();
+	private Map<Id<Link>, Map<Id<Person>, Id<Person>>> matsimAgent2GpsAgentMap = new HashMap<>();
+
+
     private Map<Id<Link>, Map<Id<Person>, CongestionMatchingInfo>> gpsAgent2ScenarioAgentMap = new HashMap<>();
 	private Map<Id<Link>, List<Tuple<Id<Person>, Double>>> gpsAgentOnLinkToBeMatched = new HashMap<>();
 
@@ -75,7 +77,7 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
         return lastMatsimAgentOnLink;
     }
 
-    public Map<Id<Link>, Map<Id<Person>, CongestionMatchingInfo>> getMatsimAgent2GpsAgentMap() {
+    public Map<Id<Link>, Map<Id<Person>, Id<Person>>> getMatsimAgent2GpsAgentMap() {
         return matsimAgent2GpsAgentMap;
     }
 
@@ -105,6 +107,13 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
                 }
             }
         } else {
+            Id<Person> matsimAgentId = personId;
+            if (this.matsimAgent2GpsAgentMap.containsKey(linkId)) {
+                if ( this.matsimAgent2GpsAgentMap.get(linkId).containsKey(matsimAgentId) ) {
+                    Id<Person> gpsAgentId = this.matsimAgent2GpsAgentMap.get(linkId).get(matsimAgentId);
+                    this.gpsAgents.get(linkId).get(gpsAgentId).setMatsimExitTime(Optional.of(event.getTime()));
+                }
+            }
             this.lastMatsimAgentOnLink.remove(linkId);
         }
 
@@ -179,6 +188,9 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
                 this.gpsAgents.get(linkId).get(personId).setMatsimAgentId(Optional.of(matsimAgentId));
                 this.gpsAgents.get(linkId).get(personId).setMatsimEnterTime(Optional.of(matsimEnterTime));
 
+                this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
+                this.matsimAgent2GpsAgentMap.get(linkId).put(matsimAgentId, personId);
+
                 this.lastMatsimAgentOnLink.remove(linkId);
             }
 
@@ -202,12 +214,16 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
                             if ( (Math.abs(matsimEnterTime - gpsEnterTime)) < (Math.abs(previousMatsimEnterTime - gpsEnterTime)) ) {
                                 congestionMatchingInfo.setMatsimAgentId(Optional.of(matsimAgentId));
                                 congestionMatchingInfo.setMatsimEnterTime(Optional.of(matsimEnterTime));
+                                this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
+                                this.matsimAgent2GpsAgentMap.get(linkId).put(matsimAgentId, congestionMatchingInfo.getGpsAgentId());
                                 lastMatsimAgentOnLink.remove(linkId);
                             }
                         }
                         else {
                             congestionMatchingInfo.setMatsimAgentId(Optional.of(matsimAgentId));
                             congestionMatchingInfo.setMatsimEnterTime(Optional.of(matsimEnterTime));
+                            this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
+                            this.matsimAgent2GpsAgentMap.get(linkId).put(matsimAgentId, congestionMatchingInfo.getGpsAgentId());
                             lastMatsimAgentOnLink.remove(linkId);
                         }
                     }
