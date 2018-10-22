@@ -16,10 +16,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.utils.collections.Tuple;
 
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 
 public class CongestionCounter implements CongestionEventHandler, LinkEnterEventHandler, LinkLeaveEventHandler, PersonDepartureEventHandler {
 	private static final Logger log = Logger.getLogger(CongestionCounter.class);
@@ -97,52 +94,58 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
             this.gpsAgents.putIfAbsent(linkId, new HashMap<>());
             this.gpsAgents.get(linkId).putIfAbsent(personId, congestionMatchingInfo);
 
-            // if the last matsim agent to enter link is still on, then match them
+            // check if last matsim agent to enter link is still unmatched
             if (lastMatsimAgentOnLink.containsKey(linkId)) {
 
                 Id<Person> matsimAgentId = lastMatsimAgentOnLink.get(linkId).getFirst();
                 double matsimEnterTime = lastMatsimAgentOnLink.get(linkId).getSecond();
+                this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
 
+                // if already matched, skip
+                if (matsimAgent2GpsAgentMap.get(linkId).containsKey(matsimAgentId)) {
+                    return;
+                }
+                // otherwise, match
                 this.gpsAgents.get(linkId).get(personId).setMatsimAgentId(Optional.of(matsimAgentId));
                 this.gpsAgents.get(linkId).get(personId).setMatsimEnterTime(Optional.of(matsimEnterTime));
-
-                this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
                 this.matsimAgent2GpsAgentMap.get(linkId).put(matsimAgentId, personId);
-
-                this.lastMatsimAgentOnLink.remove(linkId);
-
-
             }
 
         }
         else {
+            // set as last matsim agent on this link with enter time
             double matsimEnterTime = event.getTime();
             lastMatsimAgentOnLink.put(linkId, new Tuple<>(personId, matsimEnterTime));
 
+            // if there is gps agents on link which can potentially be matched
             if (this.gpsAgents.containsKey(linkId)) {
+                // loop through them
                 for (CongestionMatchingInfo congestionMatchingInfo : this.gpsAgents.get(linkId).values()) {
 
                     // check if gps agent already left link and if yes, ignore
                     if ( !congestionMatchingInfo.getGpsExitTime().isPresent() )  {
-                        // check if match has already been made
+                        // if not, check if match has already been made
                         if ( congestionMatchingInfo.getMatsimAgentId().isPresent() && congestionMatchingInfo.getMatsimEnterTime().isPresent() ) {
-                            // check if new matsim enter time is temporally closer to gps enter time
+                            // if yes, check if new matsim enter time is temporally closer to gps enter time
                             double gpsEnterTime = congestionMatchingInfo.getGpsEnterTime();
                             double previousMatsimEnterTime = congestionMatchingInfo.getMatsimEnterTime().get();
+                            // if yes, set as new match
                             if ( (Math.abs(matsimEnterTime - gpsEnterTime)) < (Math.abs(previousMatsimEnterTime - gpsEnterTime)) ) {
                                 congestionMatchingInfo.setMatsimAgentId(Optional.of(personId));
                                 congestionMatchingInfo.setMatsimEnterTime(Optional.of(matsimEnterTime));
                                 this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
                                 this.matsimAgent2GpsAgentMap.get(linkId).put(personId, congestionMatchingInfo.getGpsAgentId());
-                                lastMatsimAgentOnLink.remove(linkId);
                             }
                         }
+                        // if no match has been made
                         else {
-                            congestionMatchingInfo.setMatsimAgentId(Optional.of(personId));
-                            congestionMatchingInfo.setMatsimEnterTime(Optional.of(matsimEnterTime));
                             this.matsimAgent2GpsAgentMap.putIfAbsent(linkId, new HashMap<>());
-                            this.matsimAgent2GpsAgentMap.get(linkId).put(personId, congestionMatchingInfo.getGpsAgentId());
-                            lastMatsimAgentOnLink.remove(linkId);
+                            // if current agent has not been matched, match it
+                            if (!this.matsimAgent2GpsAgentMap.get(linkId).containsKey(personId)) {
+                                congestionMatchingInfo.setMatsimAgentId(Optional.of(personId));
+                                congestionMatchingInfo.setMatsimEnterTime(Optional.of(matsimEnterTime));
+                                this.matsimAgent2GpsAgentMap.get(linkId).put(personId, congestionMatchingInfo.getGpsAgentId());
+                            }
                         }
                     }
                 }
@@ -155,25 +158,44 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
 		Id<Link> linkId = event.getLinkId();
 	    Id<Person> personId = externalityCounterDelegate.getDriverOfVehicle(event.getVehicleId());
 
+	    // check if gps agent
         if (personId.toString().contains(PREFIX_GPS)) {
             if (this.gpsAgents.containsKey(linkId)) {
                 if ( this.gpsAgents.get(linkId).containsKey(personId) ) {
-                    this.gpsAgents.get(linkId).get(personId).setGpsExitTime(Optional.of(event.getTime()));
-                    updateValues(gpsAgents.get(linkId).get(personId));
+                    // update exit time
+                    CongestionMatchingInfo congestionMatchingInfo = this.gpsAgents.get(linkId).get(personId);
+                    congestionMatchingInfo.setGpsExitTime(Optional.of(event.getTime()));
+                    // try to update temp values
+                    if (congestionMatchingInfo.isTempValuesReadyToBeUpdated() && !congestionMatchingInfo.isTempValuesUpdated()) {
+                        updateTempValues(congestionMatchingInfo);
+                    }
                 }
             }
-        } else {
+        }
+        // if matsim agent
+        else {
             if (this.matsimAgent2GpsAgentMap.containsKey(linkId)) {
                 if ( this.matsimAgent2GpsAgentMap.get(linkId).containsKey(personId) ) {
+                    // update exit time
                     Id<Person> gpsAgentId = this.matsimAgent2GpsAgentMap.get(linkId).get(personId);
-                    this.gpsAgents.get(linkId).get(gpsAgentId).setMatsimExitTime(Optional.of(event.getTime()));
-                    if (!this.gpsAgents.get(linkId).get(gpsAgentId).getMatsimCausedDelay().isPresent()) {
-                        this.gpsAgents.get(linkId).get(gpsAgentId).setMatsimCausedDelay(Optional.of(0.0));
+                    CongestionMatchingInfo congestionMatchingInfo = this.gpsAgents.get(linkId).get(gpsAgentId);
+                    congestionMatchingInfo.setMatsimExitTime(Optional.of(event.getTime()));
+                    // check if this was the last matsim agent to enter link
+                    if (this.lastMatsimAgentOnLink.containsKey(linkId)) {
+                        // if yes, then set caused delay to zero, since no one behind in queue
+                        if (this.lastMatsimAgentOnLink.get(linkId).getFirst().equals(personId)) {
+                            congestionMatchingInfo.setMatsimCausedDelay(Optional.of(0.0));
+                        }
                     }
-                    updateValues(gpsAgents.get(linkId).get(gpsAgentId));
+                    // try to update temp values
+                    if (congestionMatchingInfo.isTempValuesReadyToBeUpdated() && !congestionMatchingInfo.isTempValuesUpdated()) {
+                        updateTempValues(congestionMatchingInfo);
+                    }
                 }
             }
-            this.lastMatsimAgentOnLink.remove(linkId);
+            if (this.lastMatsimAgentOnLink.get(linkId).getFirst().equals(personId)) {
+                this.lastMatsimAgentOnLink.remove(linkId);
+            }
         }
 	}
 
@@ -185,19 +207,23 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
             if (matsimAgent2GpsAgentMap.get(linkId).containsKey(causingMatsimAgentId)) {
                 double delay = event.getDelay();
                 Id<Person> causingGpsAgentId = matsimAgent2GpsAgentMap.get(linkId).get(causingMatsimAgentId);
-                gpsAgents.get(linkId).get(causingGpsAgentId).setMatsimCausedDelay(Optional.of(delay));
-                updateValues(gpsAgents.get(linkId).get(causingGpsAgentId));
+                CongestionMatchingInfo congestionMatchingInfo = gpsAgents.get(linkId).get(causingGpsAgentId);
+                congestionMatchingInfo.setMatsimCausedDelay(Optional.of(delay));
+                if (congestionMatchingInfo.isTempValuesReadyToBeUpdated() && !congestionMatchingInfo.isTempValuesUpdated()) {
+                    updateTempValues(congestionMatchingInfo);
+                }
             }
         }
     }
 
-    private void updateValues(CongestionMatchingInfo congestionMatchingInfo) {
-	    if (congestionMatchingInfo.hasAllValuesSet()) {
+    private void updateTempValues(CongestionMatchingInfo congestionMatchingInfo) {
+        if (congestionMatchingInfo.getGpsCausedDelay().isPresent() && congestionMatchingInfo.getGpsExperiencedDelay().isPresent()) {
             Id<Person> gpsAgentId = congestionMatchingInfo.getGpsAgentId();
-            double causedDelay = congestionMatchingInfo.computeCausedDelay();
-            double experiencedDelay = congestionMatchingInfo.computeExperiencedDelay();
+            double causedDelay = congestionMatchingInfo.getGpsCausedDelay().getAsDouble();
+            double experiencedDelay = congestionMatchingInfo.getGpsExperiencedDelay().getAsDouble();
             this.externalityCounterDelegate.incrementTempValueBy(gpsAgentId, CongestionField.DELAY_CAUSED.getText(), causedDelay);
             this.externalityCounterDelegate.incrementTempValueBy(gpsAgentId, CongestionField.DELAY_EXPERIENCED.getText(), experiencedDelay);
+            congestionMatchingInfo.setTempValuesUpdated(true);
         }
     }
 
