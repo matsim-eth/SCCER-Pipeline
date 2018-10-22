@@ -1,6 +1,5 @@
 package ethz.ivt.externalities.aggregation;
 
-import ethz.ivt.externalities.aggregation.CongestionAggregator;
 import ethz.ivt.externalities.data.CongestionField;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
