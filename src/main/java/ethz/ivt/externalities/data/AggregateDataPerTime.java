@@ -1,10 +1,5 @@
 package ethz.ivt.externalities.data;
 
-import org.matsim.api.core.v01.Id;
-
-import java.util.Map;
-import java.util.Set;
-
 public interface AggregateDataPerTime<T> {
 
 //    int getNumBins();

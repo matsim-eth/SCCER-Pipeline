@@ -11,8 +11,6 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
-import java.nio.file.Path;
-
 public class NoiseCounter implements LinkEnterEventHandler {
 	private static final Logger log = Logger.getLogger(CongestionCounter.class);
     private final ExternalityCounter externalityCounterDelegate;

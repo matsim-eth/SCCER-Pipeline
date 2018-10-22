@@ -10,7 +10,6 @@ import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
 import org.matsim.contrib.emissions.types.ColdPollutant;
 import org.matsim.contrib.emissions.types.WarmPollutant;
 
-import java.nio.file.Path;
 import java.util.Map;
 
 /**
