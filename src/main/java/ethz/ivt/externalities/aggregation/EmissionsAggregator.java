@@ -11,13 +11,9 @@ import org.matsim.contrib.emissions.events.ColdEmissionEvent;
 import org.matsim.contrib.emissions.events.ColdEmissionEventHandler;
 import org.matsim.contrib.emissions.events.WarmEmissionEvent;
 import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
-import org.matsim.contrib.emissions.types.ColdPollutant;
-import org.matsim.contrib.emissions.types.WarmPollutant;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 /**
  * Created by molloyj on 06.10.2017.
@@ -31,17 +27,8 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
 
     public EmissionsAggregator(Scenario scenario, Vehicle2DriverEventHandler v2deh) {
         this.drivers = v2deh;
-        List<String> attributes = new LinkedList<>();
-        for(WarmPollutant wp : WarmPollutant.values()) {
-            if(!attributes.contains(wp.getText())) {
-                attributes.add(wp.getText());
-            }
-        }
-        for(ColdPollutant cp : ColdPollutant.values()) {
-            if(!attributes.contains(cp.getText())) {
-                attributes.add(cp.getText());
-            }
-        }
+        List<String> attributes = new ArrayList<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
+
         this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributes, "aggregate_emissions_per_link_per_time.csv");
         this.aggregateEmissionsDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributes, "aggregate_emissions_per_person_per_time.csv");
     }
@@ -53,9 +40,9 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
 
-        Map<ColdPollutant, Double> pollutants = event.getColdEmissions();
-        for (Map.Entry<ColdPollutant, Double> p : pollutants.entrySet()) {
-            String pollutant = p.getKey().getText();
+        Map<String, Double> pollutants = event.getColdEmissions();
+        for (Map.Entry<String, Double> p : pollutants.entrySet()) {
+            String pollutant = p.getKey();
             aggregateEmissionsDataPerLinkPerTime.addValue(linkId, timeBin, pollutant, p.getValue());
             aggregateEmissionsDataPerPersonPerTime.addValue(personId, timeBin, pollutant, p.getValue());
         }
@@ -68,9 +55,9 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
 
-        Map<WarmPollutant, Double> pollutants = event.getWarmEmissions();
-        for (Map.Entry<WarmPollutant, Double> p : pollutants.entrySet()) {
-            String pollutant = p.getKey().getText();
+        Map<String, Double> pollutants = event.getWarmEmissions();
+        for (Map.Entry<String, Double> p : pollutants.entrySet()) {
+            String pollutant = p.getKey();
             aggregateEmissionsDataPerLinkPerTime.addValue(linkId, timeBin, pollutant, p.getValue());
             aggregateEmissionsDataPerPersonPerTime.addValue(personId, timeBin, pollutant, p.getValue());
         }

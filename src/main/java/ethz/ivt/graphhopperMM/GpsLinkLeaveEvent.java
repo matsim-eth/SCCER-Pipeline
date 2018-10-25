@@ -12,26 +12,29 @@ import org.matsim.vehicles.Vehicle;
 
 import java.util.Map;
 
-public class GpsLinkLeaveEvent extends LinkLeaveEvent {
+public class GpsLinkLeaveEvent extends Event {
     public static final String EVENT_TYPE = "left link gps";
     public static final String ATTRIBUTE_GPS_COUNT = "gps_points";
+
+    private final LinkLeaveEvent linkLeaveEvent;
     private final int gpsPointCount;
 
     public GpsLinkLeaveEvent(double time, Id<Vehicle> vehicleId, Id<Link> linkId, int gpsPointCount) {
-        super(time, vehicleId, linkId);
+        super(time);
+        linkLeaveEvent = new LinkLeaveEvent(time, vehicleId, linkId);
         this.gpsPointCount = gpsPointCount;
-        super.getAttributes().put(Event.ATTRIBUTE_TYPE, EVENT_TYPE);
     }
 
     @Override
     public Map<String, String> getAttributes() {
         Map<String, String> attr = super.getAttributes();
         attr.put(ATTRIBUTE_GPS_COUNT, Integer.toString(this.gpsPointCount));
+        attr.putAll(linkLeaveEvent.getAttributes());
         return attr;
     }
 
     public LinkLeaveEvent getNormalLinkLeaveEvent() {
-        return this;
+        return linkLeaveEvent;
     }
 
     public int getNumGpsPoints() {
@@ -45,5 +48,8 @@ public class GpsLinkLeaveEvent extends LinkLeaveEvent {
         return EVENT_TYPE;
     }
 
+    public Id<Link> getLinkId() {
+        return linkLeaveEvent.getLinkId();
+    }
 }
 

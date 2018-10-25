@@ -42,7 +42,9 @@ public class CongestionCounter implements CongestionEventHandler, LinkEnterEvent
 	public CongestionCounter(Scenario scenario, ExternalityCounter externalityCounterDelegate) {
 		this.scenario = scenario;
     	this.externalityCounterDelegate = externalityCounterDelegate;
-    	initializeFields();
+
+		initializeFields();
+
     }
     
     protected void initializeFields() {

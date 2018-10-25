@@ -3,6 +3,7 @@ package ethz.ivt.externalities.counters;
 import ethz.ivt.graphhopperMM.GpsLinkLeaveEvent;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.GenericEvent;
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
 import org.matsim.api.core.v01.events.handler.GenericEventHandler;
 import org.matsim.core.api.experimental.events.EventsManager;
 
@@ -22,8 +23,8 @@ public class GpsLinkLeaveEventHandlerImpl implements GenericEventHandler, GpsLin
         if (GpsLinkLeaveEvent.EVENT_TYPE.equals(event.getEventType())) {
             GpsLinkLeaveEvent glle = new GpsLinkLeaveEvent(
                     event.getTime(),
-                    Id.createVehicleId(event.getAttributes().get(GpsLinkLeaveEvent.ATTRIBUTE_VEHICLE)),
-                    Id.createLinkId(event.getAttributes().get(GpsLinkLeaveEvent.ATTRIBUTE_LINK)),
+                    Id.createVehicleId(event.getAttributes().get(LinkLeaveEvent.ATTRIBUTE_VEHICLE)),
+                    Id.createLinkId(event.getAttributes().get(LinkLeaveEvent.ATTRIBUTE_LINK)),
                     Integer.parseInt(event.getAttributes().get(GpsLinkLeaveEvent.ATTRIBUTE_GPS_COUNT))
             );
             eventsManager.processEvent(glle);
