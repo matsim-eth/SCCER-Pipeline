@@ -1,2 +1,0 @@
-KantMats	KantVZ	FP
-LU	3	4
