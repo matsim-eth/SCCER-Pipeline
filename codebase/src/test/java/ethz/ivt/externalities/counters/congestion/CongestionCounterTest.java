@@ -1,6 +1,7 @@
 package ethz.ivt.externalities.counters.congestion;
 
 import ethz.ivt.externalities.counters.CongestionCounter;
+import ethz.ivt.externalities.counters.DisaggregateCongestionCounter;
 import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.CongestionField;
 import ethz.ivt.vsp.handlers.CongestionHandler;
@@ -60,7 +61,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -152,7 +153,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -230,7 +231,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -309,7 +310,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -387,7 +388,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -466,7 +467,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);
@@ -559,7 +560,7 @@ public class CongestionCounterTest {
 
         String date = "2018-07-27";
         ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         eventsManager.addHandler(congestionHandler);

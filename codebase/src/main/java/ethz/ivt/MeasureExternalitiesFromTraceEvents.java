@@ -82,7 +82,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
         externalityCounter = new ExternalityCounter(scenario, date);
         emissionsCounter = new EmissionsCounter(scenario, externalityCounter);
-        congestionCounter = new CongestionCounter(scenario, externalityCounter);
+        congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
 
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(emissionsCounter);
