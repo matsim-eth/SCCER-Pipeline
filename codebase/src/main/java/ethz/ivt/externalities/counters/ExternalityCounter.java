@@ -19,10 +19,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, LinkEnterEventHandler, EventHandler {
@@ -33,7 +30,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	private String date;
     private Map<Id<Person>,List<Map<String, Double>>> personId2Leg2Values = new HashMap<>(); //summed emissions values per person per leg
     private Map<Id<Person>, Map<String, Double>> tempValues = new HashMap<>(); //summed values within leg
-    private List<String> keys = new ArrayList<>(); //list of all leg data fields
+    private Set<String> keys = new LinkedHashSet<>(); //list of all leg data fields
     
     public ExternalityCounter(Scenario scenario, String date) {
     	this.scenario = scenario;
@@ -52,9 +49,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
     protected void initializeHashMaps(Id<Person> p) {
         personId2Leg2Values.put(p, new ArrayList<>());
         tempValues.put(p, new HashMap<>());
-        for (String key : keys) {
-         	tempValues.get(p).put(key, 0.0);
-        }
+
     }
 
     protected Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
@@ -85,7 +80,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
         double linkLength = scenario.getNetwork().getLinks().get(event.getLinkId()).getLength();
-        tempValues.get(personId).put("Distance", tempValues.get(personId).get("Distance") + linkLength);
+        incrementTempValueBy(personId, "Distance", linkLength);
         tempValues.get(personId).put("Mode", carType);
 	}
 
@@ -99,9 +94,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
         }
         //reset
         tempValues.put(pid, new HashMap<>());
-        for (String key : keys) {
-        	tempValues.get(pid).putIfAbsent(key, 0.0);
-        }
+
     }
 
     public void writeCsvFile(Path outputPath, String filename) {
@@ -167,6 +160,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	}
 
 	public double getTempValue(Id<Person> personId, String key) {
+    	keys.add(key);
+    	this.tempValues.get(personId).putIfAbsent(key, 0.0);
 		return this.tempValues.get(personId).get(key);
 	}
 

@@ -24,15 +24,7 @@ public class EmissionsCounter implements WarmEmissionEventHandler, ColdEmissionE
     public EmissionsCounter(Scenario scenario, ExternalityCounter externalityCounterDelegate) {
         this.scenario = scenario;
     	this.externalityCounterDelegate = externalityCounterDelegate;
-        initializeFields();
-    }
-
-    protected void initializeFields() {
-        final Set<String> pollutants = new HashSet<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
-
-        for(String wp : pollutants) {
-            externalityCounterDelegate.addKey(wp);
-        }
+    //    initializeFields(); //JM'18 - fields are now added dynamically during operation.
     }
     
     @Override

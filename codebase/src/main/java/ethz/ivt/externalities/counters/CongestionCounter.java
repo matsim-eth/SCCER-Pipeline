@@ -35,6 +35,7 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
         this.scenario = scenario;
         this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
         this.externalityCounterDelegate = externalityCounterDelegate;
+        initializeFields();
         log.info("Number of congestion bins: " + aggregateCongestionDataPerLinkPerTime.getNumBins());
     }
 
@@ -97,8 +98,7 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
                 value = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, field.getText()) / count;
             }
 
-            double previous = externalityCounterDelegate.getTempValue(personId, field.getText());
-            externalityCounterDelegate.putTempValue(personId, field.getText(), previous + value);
+            externalityCounterDelegate.incrementTempValueBy(personId, field.getText(), value);
         }
 
         //Now store the event for the person
