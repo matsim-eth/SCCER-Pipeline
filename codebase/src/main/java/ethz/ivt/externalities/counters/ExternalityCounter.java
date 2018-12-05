@@ -104,8 +104,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
         }
     }
 
-    public void writeCsvFile(Path outputPath) {
-		Path outputFileName = outputPath.resolve(date + "_externalities.csv");
+    public void writeCsvFile(Path outputPath, String filename) {
+		Path outputFileName = outputPath.resolve(filename + "_externalities.csv");
     	
 		File file = outputFileName.toFile();
 		file.getParentFile().mkdirs();

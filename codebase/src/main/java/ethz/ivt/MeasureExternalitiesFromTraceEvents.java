@@ -93,25 +93,19 @@ public class MeasureExternalitiesFromTraceEvents {
         eventsManager.resetHandlers(0);
     }
 
-    public void process(String eventsFile) {
+    public void process(String eventsFile, String date, String personId) {
+        externalityCounter.setDate(date);
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
-
-        // write to file
-        //     emissionsCounter.writeCsvFile(config.controler().getOutputDirectory(), emissionsCounter.getDate());
-        //     congestionCounter.writeCsvFile(config.controler().getOutputDirectory(), congestionCounter.getDate());
-        //     noiseCounter.writeCsvFile(config.controler().getOutputDirectory(), noiseCounter.getDate());
 
         eventsManager.finishProcessing();
         //TODO: make sure that the handlers get reset!!!!!!!!!!
 
-        //return results here
-
     }
 
-    public void write(String folder) {
-        Path outputFolder = Paths.get(folder);
-        externalityCounter.writeCsvFile(outputFolder);
+    public void write(String folder, String date, String person) {
+        Path outputFolder = Paths.get(folder, date);
+        externalityCounter.writeCsvFile(outputFolder, person);
     }
 
     public static void setUpRoadTypes(Network network) {

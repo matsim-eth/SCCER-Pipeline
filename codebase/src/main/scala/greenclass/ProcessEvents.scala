@@ -47,10 +47,10 @@ class ProcessEvents {
   def run(args: Array[String]): Unit = {
     //TODO: validate argumentes here
     val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
-    val merged_events = Paths.get(args(1))
+    val events_folder = Paths.get(args(1))
     val congestion_file = args(2)
     val car_ownership_file = args(3)
-    val outputFile = args(4)
+    val outputFolder = args(4)
     val ncores = args.applyOrElse(5, (_: Int) => "1").toInt
 
     val scenario = ScenarioUtils.loadScenario(config)
@@ -70,14 +70,45 @@ class ProcessEvents {
     logger.info("load aggregate congestion data")
     aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
 
-    //create externality calculators
+    congestion_file.stripSuffix(".csv") + ".data"
+
+    //read list of already processed files, in case of failure
+    new File(outputFolder).mkdir()
+    val processedListFile = new File(outputFolder, "processed.txt")
+    if (!processedListFile.exists()) processedListFile.createNewFile()
+    val filesToSkip: Set[Path] = Source.fromFile(processedListFile).getLines().map { case x: String => Paths.get(x) }.toSet
+    val pw = new PrintWriter(processedListFile)
+
+
+    //get number of cores n
+    //create n externality calculators
+    logger.info(s"creating $ncores calculators")
     val externalitiyCalculator = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime)
 
-    logger.info("processing file")
+    logger.info("processing files")
+    Files.walk(events_folder).iterator().asScala.toList
+      .filterNot {
+        Files.isDirectory(_)
+      }
+      //.filter(f => f.toString.contains("2017-05-08"))
+      .filter(_.toString.endsWith(".xml"))
+      .foreach { f =>
+        if (filesToSkip.contains(f)) logger.info(s"skipping $f")
+        else {
+          val person_id = f.getFileName.toString.split("-").head
+          val date = f.getParent.getFileName.toString
+          logger.debug(s"processing $date/$person_id")
 
-    externalitiyCalculator.process(merged_events.toString)
+          externalitiyCalculator.process(f.toString, date, person_id)
 
-    externalitiyCalculator.write(outputFile)
+          externalitiyCalculator.write(outputFolder, date, person_id)
+          pw.println(f)
+          pw.flush()
+          externalitiyCalculator.reset() //reset handlers before returning
+        }
+        pw.close()
+
+      }
 
   }
 
