@@ -84,7 +84,7 @@ public class AddUrbanityToLinks {
     }
 
     private void run() {
-        network.getLinks().values().forEach(l -> {
+        network.getLinks().values().parallelStream().forEach(l -> {
             Optional<SimpleFeature> sf = getLandUse(l);
             Object landuse = sf.map(sf1 -> sf1.getAttribute("CH_BEZ_D")).orElse("Ungebaut");
             l.getAttributes().putAttribute("CH_BEZ_D", landuse);

@@ -13,9 +13,6 @@ import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.noise.data.NoiseContext;
-import org.matsim.contrib.noise.handler.NoiseTimeTracker;
-import org.matsim.core.config.Config;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
@@ -34,21 +31,20 @@ public class MeasureExternalitiesFromTraceEvents {
     private final int bin_size_s;
     private final MatsimEventsReader reader;
     private final Scenario scenario;
+    private final ExternalityCostCalculator ecc;
 
     private String CONGESTION_FILE; // = "aggregate/congestion/aggregate_delay.csv";
     private String NOISE_FILE; // = "aggregate/noise/marginal_damages_link_car_merged_xyt1t2t3etc.csv";
 
-    private Config config;
-    private NoiseContext noiseContext;
-    private NoiseTimeTracker noiseTimeTracker;
     private EventsManagerImpl eventsManager;
     private final ExternalityCounter externalityCounter;
-    private final CongestionCounter congestionCounter;
-    private final EmissionsCounter emissionsCounter;
-    private final EmissionModule emissionModule;
     private String date;
+    private String costValuesFile;
 
-    public MeasureExternalitiesFromTraceEvents(Scenario scenario, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime) {
+    public MeasureExternalitiesFromTraceEvents(
+            Scenario scenario,
+            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime, String costValuesFile) {
+        this.costValuesFile = costValuesFile;
         //NOISE_FILE = "";
         bin_size_s = 3600;
         this.scenario = scenario;
@@ -78,15 +74,18 @@ public class MeasureExternalitiesFromTraceEvents {
         HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
         hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
-        emissionModule = new EmissionModule(scenario, eventsManager);
+        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, date);
-        emissionsCounter = new EmissionsCounter(scenario, externalityCounter);
-        congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
+        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
 
         eventsManager.addHandler(externalityCounter);
-        eventsManager.addHandler(emissionsCounter);
+        eventsManager.addHandler(carExternalityCounter);
         eventsManager.addHandler(congestionCounter);
+
+        ecc = new ExternalityCostCalculator(costValuesFile);
+
     }
 
     public void reset() {
@@ -97,6 +96,8 @@ public class MeasureExternalitiesFromTraceEvents {
         externalityCounter.setDate(date);
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
+
+        ecc.addCosts(externalityCounter);
 
         eventsManager.finishProcessing();
         //TODO: make sure that the handlers get reset!!!!!!!!!!

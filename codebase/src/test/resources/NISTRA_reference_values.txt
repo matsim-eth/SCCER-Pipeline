@@ -1,0 +1,57 @@
+base.year = 2010
+scenario.year = 2018
+
+PM10.healthcare.urban = 432224
+PM10.healthcare.rural = 57630
+PM10.healthcare.regional = 325734
+
+PM10.building.urban = 106399
+PM10.building.rural = 13933
+PM10.building.regional = 26600
+
+NOX.regional = 3180
+Zinc.soil_quality.regional = 942699
+Zinc.g_per_km_pv = 0.0015
+
+CO2.climate.costs.2010 = 105.04
+CO2.costs.growth_rate = 0.03
+
+noise.building.lower_limit.dbA = 55
+noise.person.hypertension.lower_limit.dbA = 57
+noise.person.heartdisease.lower_limit.dbA = 65
+
+noise.building.cost.dbA = 103.62
+noise.person.hypertension.cost.dbA = 18.74
+noise.person.heartdisease.cost.dbA = 21.45
+
+noise.costs.growth_rate = 0.3
+
+sbb.longdistance_train.CO2 = 6.4
+sbb.regional_train.CO2 = 9.7
+sbb.sbahn_train.CO2 = 8.2
+sbb.bus.CO2 = 100.3
+sbb.tram.CO2 = 24.9
+
+sbb.longdistance_train.PM10 = 618.2
+sbb.regional_train.PM10 = 27.9
+sbb.sbahn_train.PM10 = 17.2
+sbb.bus.PM10 = 51.3
+sbb.tram.PM10 = 12.0
+
+sbb.longdistance_train.PM2.5 = 2.8
+sbb.regional_train.PM2.5 = 4.6
+sbb.sbahn_train.PM2.5 = 3.5
+sbb.bus.PM2.5 = 40.7
+sbb.tram.PM2.5 = 12.0
+
+sbb.longdistance_train.VOC = 4.7
+sbb.regional_train.VOC = 6.0
+sbb.sbahn_train.VOC = 8.3
+sbb.bus.VOC = 131.8
+sbb.tram.VOC = 20.6
+
+sbb.longdistance_train.NOX = 22.0
+sbb.regional_train.NOX = 33.4
+sbb.sbahn_train.NOX = 25.4
+sbb.bus.NOX = 1012.0
+sbb.tram.NOX = 94.4

@@ -51,7 +51,8 @@ class ProcessEvents {
     val congestion_file = args(2)
     val car_ownership_file = args(3)
     val outputFolder = args(4)
-    val ncores = args.applyOrElse(5, (_: Int) => "1").toInt
+    val costValuesFile = args(5)
+    val ncores = args.applyOrElse(6, (_: Int) => "1").toInt
 
     val scenario = ScenarioUtils.loadScenario(config)
     MeasureExternalitiesFromTraceEvents.addVehicleTypes(scenario)
@@ -83,7 +84,8 @@ class ProcessEvents {
     //get number of cores n
     //create n externality calculators
     logger.info(s"creating $ncores calculators")
-    val externalitiyCalculator = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime)
+    val externalitiyCalculator = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesFile)
+
 
     logger.info("processing files")
     Files.walk(events_folder).iterator().asScala.toList
