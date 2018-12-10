@@ -1,12 +1,10 @@
 package ethz.ivt.greenclass;
 
-import ethz.ivt.externalities.counters.GpsLinkLeaveEventHandler;
+import ethz.ivt.externalities.gpsScenarioMerging.GpsLinkLeaveEventHandler;
 import ethz.ivt.graphhopperMM.GpsLinkLeaveEvent;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
-import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
 import org.matsim.api.core.v01.network.Link;
 
 import java.util.ArrayList;

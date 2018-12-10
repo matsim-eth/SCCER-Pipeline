@@ -1,4 +1,4 @@
-package ethz.ivt.externalities.counters;
+package ethz.ivt.externalities.gpsScenarioMerging;
 
 import ethz.ivt.graphhopperMM.GpsLinkLeaveEvent;
 import org.matsim.api.core.v01.Id;

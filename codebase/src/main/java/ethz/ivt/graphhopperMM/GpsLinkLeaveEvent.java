@@ -1,13 +1,9 @@
 package ethz.ivt.graphhopperMM;
 
-import ethz.ivt.externalities.counters.GpsLinkLeaveEventHandler;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.Event;
-import org.matsim.api.core.v01.events.GenericEvent;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
-import org.matsim.api.core.v01.events.handler.GenericEventHandler;
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.vehicles.Vehicle;
 
 import java.util.Map;

@@ -1,5 +1,8 @@
-package ethz.ivt.externalities.counters;
+package ethz.ivt.externalities.gpsScenarioMerging;
 
+import ethz.ivt.externalities.counters.CongestionCounter;
+import ethz.ivt.externalities.counters.CongestionMatchingInfo;
+import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.CongestionField;
 import ethz.ivt.vsp.CongestionEvent;
 import ethz.ivt.vsp.handlers.CongestionEventHandler;

@@ -57,10 +57,6 @@ public class MeasureExternalitiesFromTraceEvents {
 
         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
-        GpsLinkLeaveEventHandler gpsLinkLeaveEventHandler = new GpsLinkLeaveEventHandlerImpl(eventsManager);
-        eventsManager.addHandler(gpsLinkLeaveEventHandler);
-
-
         //AggregateNoiseData aggregateNoiseData = new AggregateNoiseData(scenario, bin_size_s);
         //aggregateNoiseData.loadDataFromCsv(RUN_FOLDER + NOISE_FILE);
         //NoiseCounter noiseCounter = new NoiseCounter(scenario, v2deh, date, aggregateNoiseData);
