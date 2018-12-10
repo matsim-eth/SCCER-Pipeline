@@ -48,7 +48,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
     }
 
-    protected Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
+    public Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
         return Id.createPersonId(vehicleId.toString().substring(0,4)); //TODO: better handling of IDs -> this wil only work for 4 digit ids
     }
 

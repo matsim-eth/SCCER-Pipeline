@@ -33,6 +33,12 @@ public class ExternalityCostCalculator {
         rv.put("CO2.climate.costs.adj", rv.get("CO2.climate.costs.2010") + C02_cost_increase);
         log.info(String.format("Original CO2 cost was: %s in %.0f", rv.get("CO2.climate.costs.2010"), rv.get("base.year")));
         log.info(String.format("With growth rate of %f, adding %f", rv.get("CO2.costs.growth_rate"), C02_cost_increase));
+
+        double norm_scale_years = rv.get("scenario.year") - rv.get("noise.base.year");
+        double noise_cost_increase = norm_scale_years * rv.get("noise.costs.growth_rate") * rv.get("noise.average.cost");
+        rv.put("noise.average.cost.adj", rv.get("noise.average.cost") + noise_cost_increase);
+
+
     }
 
     public static void main(String[] args) {
@@ -83,6 +89,9 @@ public class ExternalityCostCalculator {
         //Zinc
         double zinc_regional = (emissions.get("Distance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
         costs.put("Zinc_costs", zinc_regional);
+
+        double noise_costs = (emissions.get("Distance")) / 1000 * rv.get("noise.average.cost.adj");
+        costs.put("Noise_costs", noise_costs);
 
         return costs;
     }

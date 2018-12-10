@@ -20,11 +20,13 @@ noise.building.lower_limit.dbA = 55
 noise.person.hypertension.lower_limit.dbA = 57
 noise.person.heartdisease.lower_limit.dbA = 65
 
+noise.average.cost = 0.0096
 noise.building.cost.dbA = 103.62
 noise.person.hypertension.cost.dbA = 18.74
 noise.person.heartdisease.cost.dbA = 21.45
 
-noise.costs.growth_rate = 0.3
+noise.base.year = 2005
+noise.costs.growth_rate = 0.003
 
 sbb.longdistance_train.CO2 = 6.4
 sbb.regional_train.CO2 = 9.7
