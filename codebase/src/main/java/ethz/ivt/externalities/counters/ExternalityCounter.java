@@ -41,15 +41,9 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
         keys.add("Distance");
 
     }
-    
-    protected void initializeHashMaps(Id<Person> p) {
-		personId2Leg.put(p, new ArrayList<>());
-        tempValues.put(p, new LegValues());
-
-    }
 
     public Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
-        return Id.createPersonId(vehicleId.toString().substring(0,4)); //TODO: better handling of IDs -> this wil only work for 4 digit ids
+        return Id.createPersonId(vehicleId.toString());
     }
 
 	public Map<Id<Person>, List<LegValues>> getPersonId2Leg() {
@@ -61,9 +55,9 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	public void handleEvent(PersonDepartureEvent e) {
 		Id<Person> pid = e.getPersonId();
 		//check if person in map, assume that first event is always departure event
-		if (!personId2Leg.containsKey(pid)) initializeHashMaps(pid);
 
-        tempValues.get(pid).put("StartTime", e.getTime());
+		this.tempValues.putIfAbsent(pid, new LegValues());
+		tempValues.get(pid).put("StartTime", e.getTime());
         tempValues.get(pid).setMode(e.getLegMode());
 
 	}
@@ -72,8 +66,10 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
-        tempValues.get(pid).put("EndTime", e.getTime());
-        personId2Leg.get(pid).add(tempValues.get(pid)); //add new leg
+		this.tempValues.putIfAbsent(pid, new LegValues());
+		tempValues.get(pid).put("EndTime", e.getTime());
+		personId2Leg.putIfAbsent(pid, new ArrayList<>());
+		personId2Leg.get(pid).add(tempValues.get(pid)); //add new leg
 
         //reset
         tempValues.put(pid, new LegValues());
@@ -95,10 +91,12 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	    		int legCount = 0;
 	    		for (LegValues leg : person.getValue()) {
 	    			legCount++;
+
 	    			String record = person.getKey() + ";" + this.date + ";" + legCount + ";";
 					record += leg.getMode() + ";";
 	    			record += keys.stream ().map(key -> String.format("%.4f", leg.get(key)))
 							.collect(Collectors.joining(";"));
+
 	    	        if (!headerWritten) {
                         String header = "PersonId;Date;Leg;Mode;";
                         bw.write(header + String.join(";", keys));
@@ -137,12 +135,14 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	}
 
 	public double getTempValue(Id<Person> personId, String key) {
+    	this.tempValues.putIfAbsent(personId, new LegValues());
     	keys.add(key);
     	this.tempValues.get(personId).putIfAbsent(key, 0.0);
 		return this.tempValues.get(personId).get(key);
 	}
 
 	public void putTempValue(Id<Person> personId, String key, double value) {
+		this.tempValues.putIfAbsent(personId, new LegValues());
 		this.tempValues.get(personId).put(key, value);
 	}
 

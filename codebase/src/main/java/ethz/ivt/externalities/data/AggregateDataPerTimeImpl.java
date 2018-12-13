@@ -43,7 +43,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     public double getValue(Id<T> id, int timeBin, String attribute) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
-            return 0.0;
+            return this.numBins - 1;
         }
         if (aggregateDataPerLinkPerTime.containsKey(id)) {
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
