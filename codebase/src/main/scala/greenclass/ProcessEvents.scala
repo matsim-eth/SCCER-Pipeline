@@ -71,8 +71,6 @@ class ProcessEvents {
     logger.info("load aggregate congestion data")
     aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
 
-    congestion_file.stripSuffix(".csv") + ".data"
-
     //read list of already processed files, in case of failure
     new File(outputFolder).mkdir()
     val processedListFile = new File(outputFolder, "processed.txt")
@@ -93,7 +91,7 @@ class ProcessEvents {
         Files.isDirectory(_)
       }
       //.filter(f => f.toString.contains("2017-05-08"))
-      .filter(_.toString.endsWith(".xml"))
+      .filter(f => f.toString.endsWith(".xml") || f.toString.endsWith(".xml.gz"))
       .foreach { f =>
         if (filesToSkip.contains(f)) logger.info(s"skipping $f")
         else {

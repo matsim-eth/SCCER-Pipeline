@@ -56,9 +56,6 @@ public class CarExternalityCounter implements WarmEmissionEventHandler, ColdEmis
             String pollutant = p.getKey();
 
             if (pollutant.equals("PM")) {
-                externalityCounterDelegate.putTempValue(personId, "PM_rural", 0);
-                externalityCounterDelegate.putTempValue(personId, "PM_urban", 0);
-
                 pollutant = addLandUseToEmissionKey(pollutant, e.getLinkId());
             }
 
