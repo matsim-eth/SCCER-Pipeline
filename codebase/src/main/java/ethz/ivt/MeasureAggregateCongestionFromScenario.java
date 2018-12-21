@@ -35,6 +35,11 @@ public class MeasureAggregateCongestionFromScenario {
         RUN_FOLDER = args[0];
         CONFIG_FILE = args[1];
         EVENTS_FILE = args[2];
+
+//        RUN_FOLDER = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/";
+//        CONFIG_FILE = "defaultIVTConfig_w_emissions.xml";
+//        EVENTS_FILE = "800.events.xml.gz";
+
         new MeasureAggregateCongestionFromScenario().run();
     }
     
@@ -77,7 +82,7 @@ public class MeasureAggregateCongestionFromScenario {
         //get household id of person. Assign next vehicle from household.
 
         VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
-        car.setMaximumVelocity(60.0 / 3.6);
+        car.setMaximumVelocity(100.0 / 3.6);
         car.setPcuEquivalents(1.0);
         car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-3END_EMISSIONS");
         scenario.getVehicles().addVehicleType(car);

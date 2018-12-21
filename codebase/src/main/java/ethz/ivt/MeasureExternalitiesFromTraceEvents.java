@@ -1,26 +1,37 @@
 package ethz.ivt;
 
-import ethz.ivt.externalities.counters.*;
+import ethz.ivt.externalities.counters.CarExternalityCounter;
+import ethz.ivt.externalities.counters.CongestionCounter;
+import ethz.ivt.externalities.counters.ExternalityCostCalculator;
+import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.CongestionField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
-
 import org.matsim.api.core.v01.network.Network;
-
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.core.config.Config;
+import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
+import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Random;
 
 
 /**
@@ -41,9 +52,48 @@ public class MeasureExternalitiesFromTraceEvents {
     private String date;
     private String costValuesFile;
 
+    public static void main(String[] args) {
+//        String configPath = args[0];
+//        String eventPath = args[1];
+//        String congestionPath = args[2];
+//        String costValuesPath = args[3];
+//        String outputPath = args[4];
+
+        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
+        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
+        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
+        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
+        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
+
+        // load config file
+        Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
+
+        // preliminary scenario setup
+        Scenario scenario = ScenarioUtils.loadScenario(config);
+        MeasureExternalitiesFromTraceEvents.setUpVehicles(scenario, 0.4);
+        MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
+
+        // load precalculated aggregate congestion data per link per time
+        List<String> attributes = new LinkedList<>();
+        attributes.add(CongestionField.COUNT.getText());
+        attributes.add(CongestionField.DELAY_CAUSED.getText());
+        attributes.add(CongestionField.DELAY_EXPERIENCED.getText());
+        AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600,
+                scenario.getNetwork().getLinks().keySet(),
+                attributes,
+                null);
+        aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestionPath);
+
+        MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
+        runner.process(eventPath, "xxxx", null);
+        runner.write(outputPath, "xxxx", "Switzerland");
+    }
+
     public MeasureExternalitiesFromTraceEvents(
             Scenario scenario,
-            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime, String costValuesFile) {
+            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
+            String costValuesFile) {
+
         this.costValuesFile = costValuesFile;
         //NOISE_FILE = "";
         bin_size_s = 3600;
@@ -128,6 +178,42 @@ public class MeasureExternalitiesFromTraceEvents {
         scenario.getVehicles().addVehicleType(car_diesel);
 
         //hybrids are only coming in hbefa vresion 4.
+
+    }
+
+    public static void setUpVehicles(Scenario scenario, double shareDiesel) {
+        //householdid, #autos, auto1, auto2, auto3
+        //get household id of person. Assign next vehicle from household.
+
+        Id<VehicleType> carIdBenzin = Id.create("Benzin", VehicleType.class);
+        Id<VehicleType> carIdDiesel = Id.create("Diesel", VehicleType.class);
+
+        if (!scenario.getVehicles().getVehicleTypes().containsKey(carIdBenzin) || !scenario.getVehicles().getVehicleTypes().containsKey(carIdDiesel)) {
+            addVehicleTypes(scenario);
+        }
+
+        VehicleType carBenzin = scenario.getVehicles().getVehicleTypes().get(carIdBenzin);
+        VehicleType carDiesel = scenario.getVehicles().getVehicleTypes().get(carIdDiesel);
+
+        // generate share of diesel cars
+        Random randomGenerator = new Random();
+
+        for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
+            Id<Vehicle> vid = Id.createVehicleId(pid);
+
+            //add petrol or diesel vehicles according to share
+            double percent = randomGenerator.nextDouble();
+            if (percent < shareDiesel) {
+                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, carDiesel);
+                scenario.getVehicles().addVehicle(v);
+            } else {
+                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, carBenzin);
+                scenario.getVehicles().addVehicle(v);
+            }
+
+            //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
+        }
+
 
     }
 

@@ -150,7 +150,7 @@ public class MeasureAggregateNoiseFromScenario {
         //get household id of person. Assign next vehicle from household.
 
         VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create(TransportMode.car, VehicleType.class));
-        car.setMaximumVelocity(60.0 / 3.6);
+        car.setMaximumVelocity(100.0 / 3.6);
         car.setPcuEquivalents(1.0);
         car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);>=2L;PC-P-Euro-3END_EMISSIONS");
         scenario.getVehicles().addVehicleType(car);
