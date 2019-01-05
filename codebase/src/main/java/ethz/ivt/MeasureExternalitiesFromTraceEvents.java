@@ -9,7 +9,6 @@ import ethz.ivt.externalities.data.CongestionField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
@@ -53,17 +52,24 @@ public class MeasureExternalitiesFromTraceEvents {
     private String costValuesFile;
 
     public static void main(String[] args) {
-//        String configPath = args[0];
-//        String eventPath = args[1];
-//        String congestionPath = args[2];
-//        String costValuesPath = args[3];
-//        String outputPath = args[4];
+        String configPath = args[0];
+        String eventPath = args[1];
+        String congestionPath = args[2];
+        String costValuesPath = args[3];
+        String outputPath = args[4];
 
-        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
-        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
-        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
+//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
+//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
+//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
+//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
+//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
+
+//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/switzerland_config_w_emissions.xml";
+//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/20.events.xml.gz";
+//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
+//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
+//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/output/";
+
 
         // load config file
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
@@ -168,7 +174,7 @@ public class MeasureExternalitiesFromTraceEvents {
         VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
         car.setMaximumVelocity(100.0 / 3.6);
         car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC-P-Euro-4END_EMISSIONS");
+        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC P Euro-4END_EMISSIONS");
         scenario.getVehicles().addVehicleType(car);
 
         VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
