@@ -26,6 +26,7 @@ import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
@@ -51,17 +52,19 @@ public class MeasureExternalitiesFromTraceEvents {
     private String date;
     private String costValuesFile;
 
-    public static void main(String[] args) {
+    public static void main(String[] args) throws IOException {
         String configPath = args[0];
         String eventPath = args[1];
         String congestionPath = args[2];
         String costValuesPath = args[3];
-        String outputPath = args[4];
+        String vehicleCompositionPath = args[4];
+        String outputPath = args[5];
 
 //        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
 //        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
 //        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
 //        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
+//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
 //        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
 
 //        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/switzerland_config_w_emissions.xml";
@@ -76,7 +79,12 @@ public class MeasureExternalitiesFromTraceEvents {
 
         // preliminary scenario setup
         Scenario scenario = ScenarioUtils.loadScenario(config);
-        MeasureExternalitiesFromTraceEvents.setUpVehicles(scenario, 0.4);
+//        MeasureExternalitiesFromTraceEvents.setUpVehicles(scenario, 0.4);
+
+        VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
+        vehicleGenerator.read(vehicleCompositionPath, 2015);
+        vehicleGenerator.setUpVehicles();
+
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
         // load precalculated aggregate congestion data per link per time
