@@ -111,7 +111,7 @@ object SplitWaypoints {
           val updatedLegs = tr.legs.map { leg =>
             leg.copy(waypoints = getWaypoints(statement, tr.user_id, leg))
           }
-          val new_tr = tr.copy(legs = updatedLegs)
+          val new_tr = List(tr.copy(legs = updatedLegs))
           val tripsJSON = Serialization.writePretty(new_tr)
 
           Files.createDirectories(date_dir)

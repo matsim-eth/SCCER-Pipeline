@@ -31,9 +31,15 @@ object ProcessWaypointsJson {
     parse(json).extract[List[TripRecord]]
   }
 
+  import java.nio.file.FileSystems
+  import java.nio.file.PathMatcher
+
+  val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")
+
   def loadJsonTrips(triplegs_folder: Path): List[TripRecord] = {
     Files.walk(triplegs_folder).iterator().asScala
-      .filter(p => p.endsWith(".json"))
+      .filter(json_matcher.matches(_))
+          .take(5)
       .flatMap(p => readJson(p))
       .toList
   }
@@ -46,7 +52,7 @@ object ProcessWaypointsJson {
     val logger = Logger.getLogger(this.getClass)
 
     val config = ConfigUtils.loadConfig(args(0), new EmissionsConfigGroup)
-    val triplegs_folder = Paths.get(args(1))
+    val trips_folder = Paths.get(args(1))
     val OUTPUT_DIR = args(2)
     val overwrite: Boolean = args.applyOrElse(3, (_: Int) => "False").toBoolean
 
@@ -56,7 +62,7 @@ object ProcessWaypointsJson {
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
     val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
 
-    val personday_triplegs: List[TripRecord] = loadJsonTrips(triplegs_folder)
+    val personday_triplegs: List[TripRecord] = loadJsonTrips(trips_folder)
 
     personday_triplegs
       .par.foreach {
