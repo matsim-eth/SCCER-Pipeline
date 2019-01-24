@@ -24,7 +24,7 @@ import scala.collection.MapLike
 
 
 
-object ProcessWaypoints {
+object ProcessWaypointsDatabase {
   val logger = Logger.getLogger(this.getClass)
 
   case class TripRecord(user_id: Int, date: Date)
@@ -97,9 +97,13 @@ object ProcessWaypoints {
       // Configure to be Read Only
       val statement = conn.createStatement(ResultSet.TYPE_FORWARD_ONLY, ResultSet.CONCUR_READ_ONLY)
 
+      statement.execute("SET search_path = version_20181213_switzerland;");
+
       //read in user / date / mode / trip leg ids
       val tripleg_query = """select user_id, started_at::date, mode_validated, id as tripleg_id
                             from swiss_car_triplegs
+                            id not in (SELECT id FROM triplegs_anomalies)
+                            and mode_validated ilike '%car'
                             --where user_id = 1595
                           """
 
