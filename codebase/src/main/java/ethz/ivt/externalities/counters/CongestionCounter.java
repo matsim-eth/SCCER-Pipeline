@@ -27,6 +27,7 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     private Map<Id<Person>, Double> personLinkEntryTime = new HashMap<>();
     private ExternalityCounter externalityCounterDelegate;
     private Scenario scenario;
+    private double freeSpeedFraction = 0.65;
 
     public CongestionCounter(Scenario scenario,
                              AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
@@ -62,17 +63,23 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             double linkTravelTime = event.getTime() - linkEntryTime;
             Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
             double matsim_traveltime = l.getLength() / l.getFreespeed();
-            //double time_lost = Math.max(0, linkTravelTime - matsim_traveltime);
-            double time_lost = linkTravelTime;
 
             double previousClockTime = externalityCounterDelegate.getTempValue(personId, "clock_time");
-            externalityCounterDelegate.putTempValue(personId, "clock_time", previousClockTime + time_lost);
+            externalityCounterDelegate.putTempValue(personId, "clock_time", previousClockTime + linkTravelTime);
 
             double previous_matsimTime = externalityCounterDelegate.getTempValue(personId,"matsim_time");
             externalityCounterDelegate.putTempValue(personId,"matsim_time", previous_matsimTime + matsim_traveltime);
 
             double previous_delay = externalityCounterDelegate.getTempValue(personId,"matsim_delay");
-            double delay_on_link = Math.max(0, matsim_traveltime - time_lost); // the delay can't be negative
+
+            // linkTravelTime should be larger than the matsim_traveltime (freespeed travel time)
+            double delay_on_link = Math.max(0, linkTravelTime - matsim_traveltime); // the delay can't be negative
+
+            // delay must be larger than certain threshold to be considered as congestion
+            if ( delay_on_link < (matsim_traveltime * (1 / freeSpeedFraction - 1))) {
+                delay_on_link = 0;
+            }
+
             externalityCounterDelegate.putTempValue(personId,"matsim_delay", previous_delay + delay_on_link);
 
             this.personLinkEntryTime.put(personId, null);
