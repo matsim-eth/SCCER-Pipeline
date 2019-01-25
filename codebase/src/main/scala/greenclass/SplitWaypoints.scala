@@ -97,6 +97,8 @@ object SplitWaypoints {
     def parseDate(d: String): LocalDateTime = LocalDateTime.parse(d.replace(" ", "T"))
     //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
 
+    logger.info("Loading trip legs from database")
+
     //val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SS]")
     //read in user / date / mode / trip leg ids
     val triplegs_rs = conn.createStatement().executeQuery(triplegs_sql)
@@ -108,10 +110,14 @@ object SplitWaypoints {
       )
     }
 
-    val personday_triplegs = triplegs.toStream.groupBy(tr => (tr.user_id, tr.tripLeg.started_at.toLocalDate))
+    val personday_triplegs = triplegs.toStream
+      .groupBy(tr => (tr.user_id, tr.tripLeg.started_at.toLocalDate))
       .map { case ((user_id, date), trs: Stream[TripRow]) =>
         TripRecord(user_id, 0, date, trs.map(_.tripLeg).toList)
-      }.toList
+      }
+      .map( tr => tr.copy(legs = tr.legs.filter(tl => tl.mode == "Car" || tl.mode == "Ecar" )) )
+      .filterNot(_.legs.isEmpty)
+      .toList
 
     logger.info(s"${personday_triplegs.size} trips loaded")
     logger.info(s"${personday_triplegs.map(_.legs.size).sum} triplegs loaded")

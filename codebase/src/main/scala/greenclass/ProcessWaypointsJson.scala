@@ -2,8 +2,8 @@ package greenclass
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-import java.sql.{DriverManager, ResultSet}
-import java.time.LocalDate
+import java.nio.file.FileSystems
+import java.nio.file.PathMatcher
 import java.time.format.DateTimeFormatter
 
 import com.graphhopper.util.GPXEntry
@@ -31,26 +31,33 @@ object ProcessWaypointsJson {
   val logger = Logger.getLogger(this.getClass)
 
   def readJson(p: Path): List[TripRecord] = {
+    logger.info(s"parsing $p")
     val json = Source.fromFile(p.toFile).getLines mkString "\n"
     parse(json).extract[List[TripRecord]]
   }
 
-  import java.nio.file.FileSystems
-  import java.nio.file.PathMatcher
-
   val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")
 
-  def loadJsonTrips(triplegs_folder: Path): List[TripRecord] = {
+  def loadJsonTrips(triplegs_folder: Path): List[Path] = {
     Files.walk(triplegs_folder).iterator().asScala
       .filter(json_matcher.matches(_))
           .take(5)
-      .flatMap(p => readJson(p))
       .toList
   }
 
-  def mapMode(mode: String) : String = TransportMode.car
+  def mapMode(mode: String) : String = mode.toLowerCase match {
+    case "ecar" | "car" => TransportMode.car
+    case "bus" => TransportMode.pt
+    case "tram" => TransportMode.pt
+    case "train" => TransportMode.train
+    case "walk"  => TransportMode.walk
+    case "bicycle" => TransportMode.bike
+    case _ => TransportMode.other
 
-  def processNonCarTrip(gh : GHtoEvents, tl: TripLeg, personId:Id[Person]) : List[Event] = {
+
+  }
+
+  def processNonCarTrip(gh : GHtoEvents, tl: TripLeg, personId:Id[Person], mappedMode : String) : List[Event] = {
     val departureLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
     val arrivalLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
 
@@ -61,8 +68,8 @@ object ProcessWaypointsJson {
       logger.error(s"the trip end for $tl could not be matched to the matsim network")
     }
 
-    val departureEvent = new PersonDepartureEvent(tl.getStartedMillis, personId, departureLink.getId, tl.mode)
-    val arrivalEvent = new PersonArrivalEvent(tl.getFinishedMillis, personId, arrivalLink.getId, tl.mode)
+    val departureEvent = new PersonDepartureEvent(tl.getStartedMillis, personId, departureLink.getId, mappedMode)
+    val arrivalEvent = new PersonArrivalEvent(tl.getFinishedMillis, personId, arrivalLink.getId, mappedMode)
     List(departureEvent, arrivalEvent)
   }
 
@@ -84,48 +91,49 @@ object ProcessWaypointsJson {
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
     val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
 
-    val personday_triplegs: List[TripRecord] = loadJsonTrips(trips_folder)
+    val personday_files: List[Path] = loadJsonTrips(trips_folder)
 
-    personday_triplegs
-      .par.foreach {
-      case (tr: TripRecord) =>
-        logger.info(s"processing ${tr.user_id}, ${tr.date}")
+    personday_files
+      .foreach {p : Path =>
+        val trs = readJson(p)
+        trs.foreach(tr => {
+          logger.info(s"\tprocessing ${tr.user_id}, ${tr.date}")
 
-        new File(getDateFolder(tr)).mkdirs
+          new File(getDateFolder(tr)).mkdirs
 
-        def getDateFolder(tr: TripRecord) = s"$OUTPUT_DIR/${tr.date.format(dateFormatter)}/"
+          def getDateFolder(tr: TripRecord) = s"$OUTPUT_DIR/${tr.date.format(dateFormatter)}/"
 
-        def getEventFileName(tr: TripRecord) = s"${getDateFolder(tr)}/${tr.user_id}-events.xml"
+          def getEventFileName(tr: TripRecord) = s"${getDateFolder(tr)}/${tr.user_id}-events.xml"
 
-        val eventLocation = new File(getEventFileName(tr))
-        if (!eventLocation.exists() || overwrite) {
+          val eventLocation = new File(getEventFileName(tr))
+          if (!eventLocation.exists() || overwrite) {
 
-          val events = tr.legs
-              .filterNot(tl => "activity".equals(tl.mode) )
-              .map { case tl : TripLeg =>
+            val events = tr.legs
+              .filterNot(tl => "activity".equals(tl.mode))
+              .map { tl =>
                 val matsim_mode = mapMode(tl.mode)
                 val personId = Id.createPersonId(tr.user_id)
-              val vehicleId = determineVehicleType(tr.user_id, tl.mode)
-              val eventList = if (matsim_mode == TransportMode.car) {
-                gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, personId, vehicleId, matsim_mode).asScala
-              } else {
-                processNonCarTrip(gh, tl, personId)
+                val vehicleId = determineVehicleType(tr.user_id, tl.mode)
+                val eventList = if (matsim_mode == TransportMode.car) {
+                  gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, personId, vehicleId, matsim_mode).asScala
+                } else {
+                  processNonCarTrip(gh, tl, personId, matsim_mode)
+                }
+                eventList
+
               }
-              eventList
+              .filterNot(_.isEmpty) //remove empty triplegs
+              .sortBy(_.head.getTime) //sort by the first event
+              .flatten
 
-            }
-            .filterNot(_.isEmpty) //remove empty triplegs
-            .sortBy(_.head.getTime) //sort by the first event
-            .flatten
-
-          val eventWriter = new EventWriterXML(eventLocation.getAbsolutePath)
-          events.foreach(eventWriter.handleEvent)
-          eventWriter.closeFile()
-        } else {
-          logger.info(s"${eventLocation.getCanonicalPath} already exists, skipping")
+            val eventWriter = new EventWriterXML(eventLocation.getAbsolutePath)
+            events.foreach(eventWriter.handleEvent)
+            eventWriter.closeFile()
+          } else {
+            logger.info(s"${eventLocation.getCanonicalPath} already exists, skipping")
+          }
         }
-
-
+        )
     }
 
     def determineVehicleType(user_id: String, mode: String) = {
