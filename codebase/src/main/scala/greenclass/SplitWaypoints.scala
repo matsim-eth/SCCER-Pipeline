@@ -31,11 +31,11 @@ object SplitWaypoints {
 
   // Setup the connection
 
-  def getWaypoints(query: PreparedStatement, user_id: Long, leg: TripLeg): List[WaypointRecord] = {
+  def getWaypoints(query: PreparedStatement, user_id: String, leg: TripLeg): List[WaypointRecord] = {
     val date1 = java.sql.Timestamp.valueOf(leg.started_at)
     val date2 = java.sql.Timestamp.valueOf(leg.finished_at)
 
-    query.setLong(1, user_id)
+    query.setString(1, user_id)
     query.setTimestamp(2, date1)
     query.setTimestamp(3, date2)
 
@@ -71,7 +71,7 @@ object SplitWaypoints {
     new File(OUTPUT_DIR).mkdirs
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    case class TripRow(user_id: Int, leg_id: Long, trip_id: Int, started_at: LocalDateTime, finished_at: LocalDateTime, mode: String)
+    case class TripRow(user_id: String, leg_id: Long, trip_id: Int, started_at: LocalDateTime, finished_at: LocalDateTime, mode: String)
     def parseDate(d: String): LocalDateTime = LocalDateTime.parse(d.replace(" ", "T"))
     //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
 
@@ -81,7 +81,7 @@ object SplitWaypoints {
       .map { case Array(user_id, leg_id, trip_id, started_at, finished_at, mode) =>
         val tripLegs = null
 
-        val tr = TripRow(user_id.toInt, leg_id.toInt, 0, parseDate(started_at), parseDate(finished_at), mode)
+        val tr = TripRow(user_id, leg_id.toInt, 0, parseDate(started_at), parseDate(finished_at), mode)
         tr
       }
       .toStream

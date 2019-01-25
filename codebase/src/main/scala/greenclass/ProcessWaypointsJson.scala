@@ -97,7 +97,7 @@ object ProcessWaypointsJson {
 
     }
 
-    def determineVehicleType(user_id: Int, mode: String) = {
+    def determineVehicleType(user_id: String, mode: String) = {
       Id.createVehicleId(user_id.toString + mode)
     }
   }
