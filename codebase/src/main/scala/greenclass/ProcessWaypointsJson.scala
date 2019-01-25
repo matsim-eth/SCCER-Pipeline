@@ -20,11 +20,15 @@ import scala.collection.JavaConverters._
 import scala.io.{BufferedSource, Source}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
+import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
+import org.matsim.api.core.v01.population.Person
 
 object ProcessWaypointsJson {
 
   Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
+
+  val logger = Logger.getLogger(this.getClass)
 
   def readJson(p: Path): List[TripRecord] = {
     val json = Source.fromFile(p.toFile).getLines mkString "\n"
@@ -42,6 +46,24 @@ object ProcessWaypointsJson {
           .take(5)
       .flatMap(p => readJson(p))
       .toList
+  }
+
+  def mapMode(mode: String) : String = TransportMode.car
+
+  def processNonCarTrip(gh : GHtoEvents, tl: TripLeg, personId:Id[Person]) : List[Event] = {
+    val departureLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
+    val arrivalLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
+
+    if (departureLink == null) {
+      logger.error(s"the trip start for $tl could not be matched to the matsim network")
+    }
+    if (arrivalLink == null) {
+      logger.error(s"the trip end for $tl could not be matched to the matsim network")
+    }
+
+    val departureEvent = new PersonDepartureEvent(tl.getStartedMillis, personId, departureLink.getId, tl.mode)
+    val arrivalEvent = new PersonArrivalEvent(tl.getFinishedMillis, personId, arrivalLink.getId, tl.mode)
+    List(departureEvent, arrivalEvent)
   }
 
   def main(args: Array[String]) {
@@ -79,9 +101,18 @@ object ProcessWaypointsJson {
         if (!eventLocation.exists() || overwrite) {
 
           val events = tr.legs
-            .map { case TripLeg(tl, start, end, mode, waypoints) =>
-              val vehicleId = determineVehicleType(tr.user_id, mode)
-              gh.gpsToEvents(waypoints.map(_.toGPX).asJava, Id.createPersonId(tr.user_id), vehicleId, TransportMode.car).asScala
+              .filterNot(tl => "activity".equals(tl.mode) )
+              .map { case tl : TripLeg =>
+                val matsim_mode = mapMode(tl.mode)
+                val personId = Id.createPersonId(tr.user_id)
+              val vehicleId = determineVehicleType(tr.user_id, tl.mode)
+              val eventList = if (matsim_mode == TransportMode.car) {
+                gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, personId, vehicleId, matsim_mode).asScala
+              } else {
+                processNonCarTrip(gh, tl, personId)
+              }
+              eventList
+
             }
             .filterNot(_.isEmpty) //remove empty triplegs
             .sortBy(_.head.getTime) //sort by the first event

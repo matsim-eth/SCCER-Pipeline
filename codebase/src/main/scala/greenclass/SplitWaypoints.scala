@@ -6,7 +6,10 @@ import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
 import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 
+import com.vividsolutions.jts.geom.GeometryFactory
+import com.vividsolutions.jts.io.WKTReader
 import org.apache.log4j.{Level, Logger}
+import org.geotools.geometry.text.WKTParser
 
 import scala.io.Source
 import org.json4s.jackson.Serialization
@@ -35,7 +38,7 @@ object SplitWaypoints {
     val date1 = java.sql.Timestamp.valueOf(leg.started_at)
     val date2 = java.sql.Timestamp.valueOf(leg.finished_at)
 
-    query.setString(1, user_id)
+    query.setInt(1, user_id.toInt)
     query.setTimestamp(2, date1)
     query.setTimestamp(3, date2)
 
@@ -46,11 +49,26 @@ object SplitWaypoints {
     results.toList
   }
 
-
   def main(args: Array[String]) {
 
     val conn = DriverManager.getConnection(conn_str, properties)
-    val s =
+
+    val triplegs_sql =
+      """
+        |SELECT user_id, id, trip_id, started_at, finished_at,
+        |	ST_X(ST_StartPoint(geometry)) as start_x,
+        |	ST_Y(ST_StartPoint(geometry)) as start_y,
+        |	ST_X(ST_EndPoint(geometry)) as finish_x,
+        |	ST_Y(ST_EndPoint(geometry)) as finish_y,
+        |	trim(leading 'Mode::' from mode_validated) as mode_validated
+        |FROM version_20181213_switzerland.triplegs
+        |WHERE id not in (SELECT id FROM version_20181213_switzerland.triplegs_anomalies)
+        |order by user_id, started_at
+        |
+      """.stripMargin
+
+
+    val waypoints_sql =
       s"""
          |  select longitude, latitude,
          |       cast(extract(epoch from tracked_at::time) * 1000 as bigint) as tracked_at_millis,
@@ -60,34 +78,39 @@ object SplitWaypoints {
          |  order by tracked_at
       """.stripMargin
 
-    val statement = conn.prepareStatement(s)
+    val statement = conn.prepareStatement(waypoints_sql)
 
     val logger = Logger.getLogger(this.getClass)
 
-    val triplegs_src = Source.fromFile(args(0))
-    // val waypoints_src = Source.fromFile(args(1))
-    val OUTPUT_DIR = args(1)
+    val OUTPUT_DIR = args(0)
 
     new File(OUTPUT_DIR).mkdirs
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
-    case class TripRow(user_id: String, leg_id: Long, trip_id: Int, started_at: LocalDateTime, finished_at: LocalDateTime, mode: String)
+    case class TripRow(
+                        user_id: String,
+                        leg_id: Long,
+                        tripLeg: TripLeg) {
+
+    }
+
     def parseDate(d: String): LocalDateTime = LocalDateTime.parse(d.replace(" ", "T"))
     //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
 
     //val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SS]")
     //read in user / date / mode / trip leg ids
-    val personday_triplegs = triplegs_src.getLines().drop(1).map(_.split(",").map(_.replace("\"", "")))
-      .map { case Array(user_id, leg_id, trip_id, started_at, finished_at, mode) =>
-        val tripLegs = null
+    val triplegs_rs = conn.createStatement().executeQuery(triplegs_sql)
+    val triplegs = Iterator.continually(triplegs_rs).takeWhile(_.next()).map { rs =>
+      TripRow(rs.getLong("user_id").toString, rs.getLong("trip_id"), TripLeg(rs.getLong("id"),
+        rs.getTimestamp("started_at").toLocalDateTime, rs.getTimestamp("finished_at").toLocalDateTime,
+        LatLon(rs.getDouble("start_y"), rs.getDouble("start_x")),
+        LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")), rs.getString("mode_validated"), Nil)
+      )
+    }
 
-        val tr = TripRow(user_id, leg_id.toInt, 0, parseDate(started_at), parseDate(finished_at), mode)
-        tr
-      }
-      .toStream
-      .groupBy(tr => (tr.user_id, tr.started_at.toLocalDate))
+    val personday_triplegs = triplegs.toStream.groupBy(tr => (tr.user_id, tr.tripLeg.started_at.toLocalDate))
       .map { case ((user_id, date), trs: Stream[TripRow]) =>
-        TripRecord(user_id, 0, date, trs.map(tr => TripLeg(tr.leg_id, tr.started_at, tr.finished_at, tr.mode, List.empty)).toList)
+        TripRecord(user_id, 0, date, trs.map(_.tripLeg).toList)
       }.toList
 
     logger.info(s"${personday_triplegs.size} trips loaded")

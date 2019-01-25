@@ -78,6 +78,8 @@ public class MapMatching {
     private DistanceCalc distanceCalc = new DistancePlaneProjection();
     private final RoutingAlgorithmFactory algoFactory;
     private final AlgorithmOptions algoOptions;
+    final EdgeFilter defaultEdgeFilter;
+
     ;
 
     public MapMatching(GraphHopper hopper, AlgorithmOptions algoOptions) {
@@ -145,6 +147,7 @@ public class MapMatching {
         this.graph = hopper.getGraphHopperStorage();
         this.algoOptions = AlgorithmOptions.start(algoOptions).weighting(weighting).build();
         this.nodeCount = routingGraph.getNodes();
+        this.defaultEdgeFilter = new DefaultEdgeFilter(algoOptions.getWeighting().getFlagEncoder());
     }
 
     public void setDistanceCalc(DistanceCalc distanceCalc) {
@@ -733,6 +736,15 @@ public class MapMatching {
             }
 
             prevStep = ts;
+        }
+    }
+
+    public Optional<EdgeIteratorState> getNearestLink(GPXEntry point) {
+        List<QueryResult> qr = locationIndex.findNClosest(point.lat, point.lon, defaultEdgeFilter, measurementErrorSigma);
+        if (!qr.isEmpty()) {
+            return Optional.of(qr.get(0).getClosestEdge());
+           } else {
+            return Optional.empty();
         }
     }
 

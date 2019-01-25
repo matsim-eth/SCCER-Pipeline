@@ -5,6 +5,7 @@ import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.matching.MatchResult;
+import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
 import com.vividsolutions.jts.geom.Coordinate;
 import com.vividsolutions.jts.geom.GeometryFactory;
@@ -37,7 +38,10 @@ public class GHtoEvents {
         this.hopper = hopper;
     }
 
-
+    public Optional<Link> getNearestLink(GPXEntry point) {
+        Optional<EdgeIteratorState> es = matcher.getNearestLink(point);
+        return es.map(e -> getNetwork().getLinks().get(Id.createLinkId(e.getName())));
+    }
 
     public List<Link> reduceLinkGPX(List<LinkGPXStruct> points) {
         List<Link> links = points
