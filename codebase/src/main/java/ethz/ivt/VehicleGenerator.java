@@ -49,6 +49,10 @@ public class VehicleGenerator {
                     fuelTypeFull = "petrol (4S)";
                 } else {
                     fuelTypeFull = "diesel";
+
+                    if (emissionLevel.equals("Euro-5") || emissionLevel.equals("Euro-6")) {
+                        emissionLevel += " DPF";
+                    }
                 }
 
                 Id<VehicleType> vehicleId = Id.create("PASSENGER_CAR;"

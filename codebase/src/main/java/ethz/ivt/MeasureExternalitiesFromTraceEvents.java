@@ -53,19 +53,19 @@ public class MeasureExternalitiesFromTraceEvents {
     private String costValuesFile;
 
     public static void main(String[] args) throws IOException {
-        String configPath = args[0];
-        String eventPath = args[1];
-        String congestionPath = args[2];
-        String costValuesPath = args[3];
-        String vehicleCompositionPath = args[4];
-        String outputPath = args[5];
+//        String configPath = args[0];
+//        String eventPath = args[1];
+//        String congestionPath = args[2];
+//        String costValuesPath = args[3];
+//        String vehicleCompositionPath = args[4];
+//        String outputPath = args[5];
 
-//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
-//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
-//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
-//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
+        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
+        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
+        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
+        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
+        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
+        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
 
 //        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/switzerland_config_w_emissions.xml";
 //        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/20.events.xml.gz";
@@ -84,6 +84,9 @@ public class MeasureExternalitiesFromTraceEvents {
         VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
         vehicleGenerator.read(vehicleCompositionPath, 2015);
         vehicleGenerator.setUpVehicles();
+
+        CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
+        writer.write(outputPath + "vehicles.csv");
 
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
