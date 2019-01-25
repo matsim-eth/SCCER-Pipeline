@@ -71,7 +71,7 @@ public class TestBadTrace {
                     .collect(Collectors.toList());
 
             inputList = inputListWP.stream()
-                    .filter(wp -> wp.tl_id() == tl_id && wp.accuracy() < 200)
+                    .filter(wp -> wp.accuracy() < 200)
                     .map(WaypointRecord::toGPX)
                     .collect(Collectors.toList());
             br.close();
