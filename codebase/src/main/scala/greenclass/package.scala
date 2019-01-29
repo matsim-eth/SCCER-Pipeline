@@ -25,8 +25,8 @@ package object greenclass {
                       mode: String,
                       waypoints : List[WaypointRecord]
                     ) {
-    def getStartedMillis: Double = started_at.toLocalTime.toNanoOfDay
-    def getFinishedMillis: Double = finished_at.toLocalTime.toNanoOfDay
+    def getStartedSeconds: Double = started_at.toLocalTime.toSecondOfDay
+    def getFinishedSeconds: Double = finished_at.toLocalTime.toSecondOfDay
 
   }
 

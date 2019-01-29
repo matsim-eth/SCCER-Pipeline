@@ -141,7 +141,7 @@ object ProcessWaypointsDatabase {
             val waypoints: Stream[(TripLeg, List[GPXEntry])] =
               triplegs.flatMap {tlr => tripleg_waypoints.get(tlr.leg_id).map(tlr -> _)}
             val events = waypoints.flatMap { case (trip_id, wp2) =>
-              gh.gpsToEvents(wp2.asJava, Id.createPersonId(tr.user_id), Id.createVehicleId(tr.user_id), TransportMode.car).asScala //TODO keep vehicle type here (mode : e-car)
+              gh.gpsToEvents(wp2.asJava, Id.createVehicleId(tr.user_id)).asScala //TODO keep vehicle type here (mode : e-car)
             }
             (tr, events)
         }

@@ -20,7 +20,8 @@ import scala.collection.JavaConverters._
 import scala.io.{BufferedSource, Source}
 import org.json4s._
 import org.json4s.jackson.JsonMethods._
-import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
+import org.matsim.api.core.v01.events._
+import org.matsim.api.core.v01.network.Link
 import org.matsim.api.core.v01.population.Person
 
 object ProcessWaypointsJson {
@@ -57,21 +58,6 @@ object ProcessWaypointsJson {
 
   }
 
-  def processNonCarTrip(gh : GHtoEvents, tl: TripLeg, personId:Id[Person], mappedMode : String) : List[Event] = {
-    val departureLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
-    val arrivalLink = gh.getNearestLink(tl.start_point.toGPX).orElse(null)
-
-    if (departureLink == null) {
-      logger.error(s"the trip start for $tl could not be matched to the matsim network")
-    }
-    if (arrivalLink == null) {
-      logger.error(s"the trip end for $tl could not be matched to the matsim network")
-    }
-
-    val departureEvent = new PersonDepartureEvent(tl.getStartedMillis, personId, departureLink.getId, mappedMode)
-    val arrivalEvent = new PersonArrivalEvent(tl.getFinishedMillis, personId, arrivalLink.getId, mappedMode)
-    List(departureEvent, arrivalEvent)
-  }
 
   def main(args: Array[String]) {
 
@@ -114,13 +100,13 @@ object ProcessWaypointsJson {
                 val matsim_mode = mapMode(tl.mode)
                 val personId = Id.createPersonId(tr.user_id)
                 val vehicleId = determineVehicleType(tr.user_id, tl.mode)
-                val eventList = if (matsim_mode == TransportMode.car) {
-                  gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, personId, vehicleId, matsim_mode).asScala
-                } else {
-                  processNonCarTrip(gh, tl, personId, matsim_mode)
-                }
-                eventList
+                val linkEvents = if (matsim_mode == TransportMode.car) {
+                  gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, vehicleId).asScala.toList
+                } else List.empty
 
+                //TODO: combine this with gpsToEvents, inside gh
+                val events_full = bookendEventswithDepArr(gh, tl, personId, matsim_mode, linkEvents)
+                events_full
               }
               .filterNot(_.isEmpty) //remove empty triplegs
               .sortBy(_.head.getTime) //sort by the first event
@@ -136,9 +122,39 @@ object ProcessWaypointsJson {
         )
     }
 
-    def determineVehicleType(user_id: String, mode: String) = {
-      Id.createVehicleId(user_id.toString + mode)
+
+
+  }
+
+  def determineVehicleType(user_id: String, mode: String) = {
+    Id.createVehicleId(user_id.toString + mode)
+  }
+
+  def getEventLink(event: Event): Option[Id[Link]] = {
+    Some(event).map { case e : HasLinkId => e.getLinkId }
+  }
+
+  def bookendEventswithDepArr(gh : GHtoEvents,
+                              tl: TripLeg,
+                              personId:Id[Person],
+                              mappedMode : String,
+                              linkEvents : List[Event]) : Seq[Event] = {
+
+    val departureLink : Id[Link] = linkEvents.headOption.flatMap(getEventLink)
+      .getOrElse(gh.getNearestLinkId(tl.start_point.toGPX))
+    val arrivalLink : Id[Link] = linkEvents.lastOption.flatMap(getEventLink)
+      .getOrElse(gh.getNearestLinkId(tl.finish_point.toGPX))
+
+    if (departureLink == null) {
+      logger.error(s"the trip start for $tl could not be matched to the matsim network")
     }
+    if (arrivalLink == null) {
+      logger.error(s"the trip end for $tl could not be matched to the matsim network")
+    }
+
+    val departureEvent = new PersonDepartureEvent(tl.getStartedSeconds, personId, departureLink, mappedMode)
+    val arrivalEvent = new PersonArrivalEvent(tl.getFinishedSeconds, personId, arrivalLink, mappedMode)
+    departureEvent :: (linkEvents ::: List(arrivalEvent))
   }
 }
 

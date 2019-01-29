@@ -38,9 +38,9 @@ public class GHtoEvents {
         this.hopper = hopper;
     }
 
-    public Optional<Link> getNearestLink(GPXEntry point) {
+    public Id<Link> getNearestLinkId(GPXEntry point) {
         Optional<EdgeIteratorState> es = matcher.getNearestLink(point);
-        return es.map(e -> getNetwork().getLinks().get(Id.createLinkId(e.getName())));
+        return es.map(e -> Id.createLinkId(e.getName())).orElse(null);
     }
 
     public List<Link> reduceLinkGPX(List<LinkGPXStruct> points) {
@@ -59,8 +59,8 @@ public class GHtoEvents {
         return links;
     }
 
-    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
-        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), personId, vehicleId, mode);
+    public List<Event> gpsToEvents(List<GPXEntry> entries, Id<Vehicle> vehicleId) {
+        return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), vehicleId);
     }
 
 
@@ -149,14 +149,14 @@ public class GHtoEvents {
         return resultLinks;
     }
 
-    public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Person> personId, Id<Vehicle> vehicleId, String mode) {
+    public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Vehicle> vehicleId) {
         if (!x.hasNext()) return Collections.emptyList();
         List<Event> events = new ArrayList<>();
         LinkGPXStruct firstE = x.next();
         double entryTimeSeconds = toSeconds(firstE.entryTime);
         double exitTimeSeconds = toSeconds(firstE.exitTime);
         int numGpsPoints = firstE.getGpxExtensions().size();
-        events.add(new PersonDepartureEvent(entryTimeSeconds, personId, firstE.getLink().getId(), mode));
+
         events.add(new GpsLinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId(), numGpsPoints ));
 
         while (x.hasNext()) {
@@ -170,7 +170,7 @@ public class GHtoEvents {
                 events.add(new GpsLinkLeaveEvent(currExitTimeSeconds, vehicleId, curr.getLink().getId(), currNumGpsPoints));
             } else { //process final element
                 events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
-                events.add(new PersonArrivalEvent(currExitTimeSeconds, personId, curr.getLink().getId(), mode));
+
             }
         }
 

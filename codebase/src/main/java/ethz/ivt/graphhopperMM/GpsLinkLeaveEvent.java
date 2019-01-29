@@ -2,13 +2,14 @@ package ethz.ivt.graphhopperMM;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.Event;
+import org.matsim.api.core.v01.events.HasLinkId;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.vehicles.Vehicle;
 
 import java.util.Map;
 
-public class GpsLinkLeaveEvent extends Event {
+public class GpsLinkLeaveEvent extends Event implements HasLinkId {
     public static final String EVENT_TYPE = "left link gps";
     public static final String ATTRIBUTE_GPS_COUNT = "gps_points";
 
@@ -44,6 +45,7 @@ public class GpsLinkLeaveEvent extends Event {
         return EVENT_TYPE;
     }
 
+    @Override
     public Id<Link> getLinkId() {
         return linkLeaveEvent.getLinkId();
     }
