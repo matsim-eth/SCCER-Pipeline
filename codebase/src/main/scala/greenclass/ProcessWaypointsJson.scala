@@ -105,7 +105,7 @@ object ProcessWaypointsJson {
                 } else List.empty
 
                 //TODO: combine this with gpsToEvents, inside gh
-                val events_full = bookendEventswithDepArr(gh, tl, personId, matsim_mode, linkEvents)
+                val events_full = bookendEventswithDepArr(gh, tl, personId, tl.mode, linkEvents)
                 events_full
               }
               .filterNot(_.isEmpty) //remove empty triplegs
@@ -127,7 +127,7 @@ object ProcessWaypointsJson {
   }
 
   def determineVehicleType(user_id: String, mode: String) = {
-    Id.createVehicleId(user_id.toString + mode)
+    Id.createVehicleId(user_id.toString) // + mode)
   }
 
   def getEventLink(event: Event): Option[Id[Link]] = {

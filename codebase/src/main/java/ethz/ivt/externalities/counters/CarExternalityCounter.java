@@ -36,11 +36,7 @@ public class CarExternalityCounter implements WarmEmissionEventHandler, ColdEmis
     @Override
     public void handleEvent(LinkEnterEvent event) {
         Id<Person> personId = externalityCounterDelegate.getDriverOfVehicle(event.getVehicleId());
-        double carType = event.getVehicleId().toString().contains("Ecar") ? ECAR : CAR;
 
-        if (personId == null) { //TODO fix this, so that the person id is retrieved properly
-            personId = Id.createPersonId(event.getVehicleId().toString());
-        }
         double linkLength = scenario.getNetwork().getLinks().get(event.getLinkId()).getLength();
         externalityCounterDelegate.incrementTempValueBy(personId, "Distance", linkLength);
     }
