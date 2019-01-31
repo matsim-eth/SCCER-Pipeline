@@ -169,10 +169,10 @@ public class AddUrbanityToLinks {
         //if link has no shared edges with any in shapefile, then take closest centroid by type
 
         //TODO: check x,y order and projection
-        Envelope search = getLinkEnvelope(link);
         Coordinate[] link_coords = {toGeoCoord(link.getFromNode().getCoord()), toGeoCoord(link.getToNode().getCoord())};
-        LineString linkLineString = JTSFactoryFinder.getGeometryFactory().createLineString(link_coords);
-
+        Geometry linkBuffer = JTSFactoryFinder.getGeometryFactory().createLineString(link_coords).buffer(20);
+        Envelope search = linkBuffer.getEnvelopeInternal();
+        
         //get potential matches
         List<SimpleFeature> areas = index.query(search);
 
@@ -182,10 +182,10 @@ public class AddUrbanityToLinks {
         //TODO: improve this logic, to pick the best candidate
         for (SimpleFeature f : areas) {
             Geometry poly = (Geometry) f.getDefaultGeometry();
-            double dist = poly.intersection(linkLineString).getLength();
+            double area = poly.intersection(linkBuffer).getLength();
 
-            if (dist > maxOverlap) {
-                maxOverlap = dist;
+            if (area > maxOverlap) {
+                maxOverlap = area;
                 maxFeature = Optional.of(f);
             }
         }
