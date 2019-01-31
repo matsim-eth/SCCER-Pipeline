@@ -9,6 +9,7 @@ import ethz.ivt.externalities.data.CongestionField;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
@@ -164,6 +165,17 @@ public class MeasureExternalitiesFromTraceEvents {
 
         eventsManager.finishProcessing();
         //TODO: make sure that the handlers get reset!!!!!!!!!!
+
+    }
+
+    public void processEvents(List<Event> events, String date, String personId) {
+        externalityCounter.setDate(date);
+        eventsManager.initProcessing();
+        events.forEach(eventsManager::processEvent);
+
+        ecc.addCosts(externalityCounter);
+
+        eventsManager.finishProcessing();
 
     }
 
