@@ -36,24 +36,30 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
 
+    private double congestionThresholdRatio = 0.65;
+
     public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers) {
         this.scenario = scenario;
         this.drivers = drivers;
 
-        List<String> attributes1 = new LinkedList<>();
-        attributes1.add(CongestionField.COUNT.getText());
-        attributes1.add(CongestionField.DELAY_CAUSED.getText());
-        attributes1.add(CongestionField.DELAY_EXPERIENCED.getText());
+        List<String> attributesPerLink = new LinkedList<>();
+        attributesPerLink.add(CongestionField.COUNT.getText());
+        attributesPerLink.add(CongestionField.DELAY_CAUSED.getText());
+        attributesPerLink.add(CongestionField.DELAY_EXPERIENCED.getText());
+        attributesPerLink.add("congestion_caused");
+        attributesPerLink.add("congestion_experienced");
 
-        List<String> attributes2 = new LinkedList<>();
-        attributes2.add(CongestionField.DELAY_CAUSED.getText());
-        attributes2.add(CongestionField.DELAY_EXPERIENCED.getText());
+        List<String> attributesPerPerson = new LinkedList<>();
+        attributesPerPerson.add(CongestionField.DELAY_CAUSED.getText());
+        attributesPerPerson.add(CongestionField.DELAY_EXPERIENCED.getText());
+        attributesPerPerson.add("congestion_caused");
+        attributesPerPerson.add("congestion_experienced");
 
-        String outputFileName1 = "aggregate_delay_per_link_per_time.csv";
-        String outputFileName2 = "aggregate_delay_per_person_per_time.csv";
+        String outputFileNamePerLink = "aggregate_delay_per_link_per_time.csv";
+        String outputFileNamePerPerson = "aggregate_delay_per_person_per_time.csv";
 
-        this.aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributes1, outputFileName1);
-        this.aggregateCongestionDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributes2, outputFileName2);
+        this.aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributesPerLink, outputFileNamePerLink);
+        this.aggregateCongestionDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributesPerPerson, outputFileNamePerPerson);
 
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
@@ -65,6 +71,9 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
     @Override
     public void handleEvent(CongestionEvent event) {
+        // get relevant link information
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
 
         // get relevant causing and affected agent info
         Id<Person> causingAgentId = event.getCausingAgentId();
@@ -77,6 +86,13 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         Id<Link> affectedAgentLinkId = event.getLinkId(); // event triggered when affected agent leaves link with delay
 
         double delay = event.getDelay();
+        double congestion = delay;
+        double thresholdDelay = (freespeedTravelTime * ( (1 / congestionThresholdRatio) - 1));
+
+        //delay must be larger than threshold to be considered as congestion
+        if ( congestion < thresholdDelay) {
+            congestion = 0;
+        }
 
         // compute timebin
         int causingAgentTimeBin = ExternalityUtils.getTimeBin(causingAgentEnterTime, aggregateCongestionDataPerLinkPerTime.getBinSize());
@@ -85,9 +101,14 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         // store delay info
         aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId, causingAgentTimeBin, CongestionField.DELAY_CAUSED.getText(), delay);
         aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId, affectedAgentTimeBin, CongestionField.DELAY_EXPERIENCED.getText() , delay);
+        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId, causingAgentTimeBin, "congestion_caused", congestion);
+        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId, affectedAgentTimeBin, "congestion_experienced", congestion);
 
         aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId, causingAgentTimeBin, CongestionField.DELAY_CAUSED.getText(), delay);
         aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId, affectedAgentTimeBin, CongestionField.DELAY_EXPERIENCED.getText(), delay);
+        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId, causingAgentTimeBin, "congestion_caused", congestion);
+        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId, affectedAgentTimeBin, "congestion_experienced", congestion);
+
     }
 
     @Override
@@ -95,6 +116,13 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
+
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
+        double freespeedLeaveTime = enterTime + freespeedTravelTime;
+
+        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
+        person2linkinfo.replace(personId, agentOnLinkInfo);
     }
 
     @Override
@@ -113,7 +141,13 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double enterTime = event.getTime();
         Id<Person> personId = event.getPersonId();
         Id<Link> linkId = event.getLinkId();
-        //TODO : Think what should happen for counts if arrival then departure occur within same timebin
+
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
+        double freespeedLeaveTime = enterTime + freespeedTravelTime;
+
+        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
+        person2linkinfo.replace(personId, agentOnLinkInfo);
     }
 
     public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
