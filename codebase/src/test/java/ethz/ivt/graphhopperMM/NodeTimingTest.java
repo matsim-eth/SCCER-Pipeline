@@ -283,7 +283,7 @@ public class NodeTimingTest {
 
         GHtoEvents gHtoEvents = new GHtoEvents(graphhopper, mapMatching);
         List<LinkGPXStruct> res = gHtoEvents.calculateNodeVisitTimes(path);
-        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), personId, vehicleId, TransportMode.car);
+        List<Event> events = gHtoEvents.linkGPXToEvents(res.iterator(), vehicleId);
 
         assertEquals(events.size(),10);
 

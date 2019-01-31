@@ -118,25 +118,24 @@ class ProcessEvents {
     val car_ownership_ds = input.map(ss => ss.head -> headers.zip(ss.tail).toMap).toMap
 
     //add vehicle for id, and first car ->  car_1_engine
-    val vehicleTypes = scenario.getVehicles.getVehicleTypes
+    val vehicleTypes = scenario.getVehicles.getVehicleTypes.asScala.map{ case (k,v) => (k.toString, v)}
 
     car_ownership_ds.foreach { case (k, value_map) =>
       val vid = Id.createVehicleId(k)
-      val vid_ecar = Id.createVehicleId(vid + "Mode::Ecar")
 
-      val benzinTypeId = Id.create(value_map.getOrElse("car_1_engine", "Benzin"), classOf[VehicleType])
+      val vehicleTypeString = value_map.get("car_1_engine")
+      val defaultVehicle : VehicleType = vehicleTypes.get("Benzin").head
 
-      val engineTypeId = Id.create(value_map.getOrElse("car_1_engine", "Benzin"), classOf[VehicleType])
+      val vehicleType : VehicleType = value_map.get("car_1_engine").flatMap(vehicleTypes.get).getOrElse({
+        logger.warn(s"vehicle $vehicleTypeString not found")
+        defaultVehicle
+      })
 
-      vehicleTypes.asScala.get(engineTypeId)
-        .foreach{ engineType =>
-          val v = scenario.getVehicles.getFactory.createVehicle(vid, engineType)
-          val v_ecar = scenario.getVehicles.getFactory.createVehicle(vid_ecar, engineType)
-          scenario.getVehicles.addVehicle(v)
-          scenario.getVehicles.addVehicle(v_ecar)
-        }
-      //default back to petrol if not found.
+      val v = scenario.getVehicles.getFactory.createVehicle(vid, vehicleType)
+      scenario.getVehicles.addVehicle(v)
     }
+      //default back to petrol if not found.
+
   }
 
 }

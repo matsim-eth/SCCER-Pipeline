@@ -49,9 +49,17 @@ package greenclass
           |	      "day": 22
           |	    },
           |	    "legs": [{
-                  | "leg_id": 0,
-                  |	"started_at": "2018-03-21T19:09:19Z",
-                  |	"finished_at": "2018-03-22T09:29:35Z",
+          |           "leg_id": 0,
+          |	          "started_at": "2018-03-21T19:09:19Z",
+          |	          "finished_at": "2018-03-22T09:29:35Z",
+          |           "start_point" : {
+          |               "lat" : 47.2163,
+          |               "lon" : 7.78345
+          |           },
+          |           "finish_point" : {
+          |             "lat" : 46.94234,
+          |             "lon" : 7.3892
+          |           },
                   |	"mode": "Mode::activity",
                   |	"waypoints": [ [
                   |            8.509300802236313,

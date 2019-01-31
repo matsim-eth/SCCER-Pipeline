@@ -43,7 +43,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
     }
 
     public Id<Person> getDriverOfVehicle(Id<Vehicle> vehicleId) {
-        return Id.createPersonId(vehicleId.toString());
+    	//strip vehicle type
+        return Id.createPersonId(vehicleId);
     }
 
 	public Map<Id<Person>, List<LegValues>> getPersonId2Leg() {

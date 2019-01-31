@@ -69,7 +69,7 @@ public class PipelineEventsWriter extends PipelineWriter<Event> {
             return e.getValue().entrySet().stream().flatMap(e1 -> {
                 int leg = e1.getKey().getFirst();
                 String mode = e1.getKey().getSecond();
-                return getGhToEvents().linkGPXToEvents(e1.getValue().iterator(), pid, null, mode).stream();
+                return getGhToEvents().linkGPXToEvents(e1.getValue().iterator(), null).stream();
             });
         }).sorted(Comparator.comparingDouble(Event::getTime))
                 .collect(Collectors.toList());
