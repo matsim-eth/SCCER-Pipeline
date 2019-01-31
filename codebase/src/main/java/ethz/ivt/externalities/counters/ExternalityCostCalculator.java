@@ -61,10 +61,21 @@ public class ExternalityCostCalculator {
     private Map<String,Double> calculateCostsForCarLeg(LegValues emissions) {
         Map<String, Double> costs = new HashMap<>();
 
-        //CO2
+        //CO2.
         if (emissions.containsKey("CO2(total)")) {
             double CO2 = emissions.get("CO2(total)") * rv.get("CO2.climate.costs.adj") / 1e6;
             costs.put("CO2_costs", CO2);
+        }
+        //Non-exhaust PM
+        if (emissions.containsKey("Distance_urban") && emissions.containsKey("Distance_rural")) {
+            double PM_urban_non_exhaust = emissions.get("Distance_urban") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
+            double PM_rural_non_exhaust = emissions.get("Distance_rural") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
+
+            double PM_urban_total = emissions.get("PM_urban") + PM_urban_non_exhaust;
+            double PM_rural_total = emissions.get("PM_rural") + PM_rural_non_exhaust;
+
+            emissions.put("PM_urban", PM_urban_total);
+            emissions.put("PM_rural", PM_rural_total);
         }
         //PM urban
         if (emissions.containsKey("PM_urban") && emissions.containsKey("PM_rural")) {

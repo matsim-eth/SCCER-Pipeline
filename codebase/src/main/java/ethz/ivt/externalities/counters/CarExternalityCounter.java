@@ -39,6 +39,10 @@ public class CarExternalityCounter implements WarmEmissionEventHandler, ColdEmis
 
         double linkLength = scenario.getNetwork().getLinks().get(event.getLinkId()).getLength();
         externalityCounterDelegate.incrementTempValueBy(personId, "Distance", linkLength);
+
+        // distance in urban or rural setting
+        String distanceLandUseKey = addLandUseToEmissionKey("Distance", event.getLinkId());
+        externalityCounterDelegate.incrementTempValueBy(personId, distanceLandUseKey, linkLength);
     }
 
 

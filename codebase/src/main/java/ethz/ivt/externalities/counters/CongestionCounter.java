@@ -8,16 +8,13 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
-import org.matsim.api.core.v01.events.PersonArrivalEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
 import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
-import org.matsim.vehicles.Vehicle;
 
-import java.nio.file.Path;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -27,6 +24,7 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     private Map<Id<Person>, Double> personLinkEntryTime = new HashMap<>();
     private ExternalityCounter externalityCounterDelegate;
     private Scenario scenario;
+    private double freeSpeedFraction = 0.65;
 
     public CongestionCounter(Scenario scenario,
                              AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
@@ -42,9 +40,9 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     protected void initializeFields() {
         externalityCounterDelegate.addKey(CongestionField.DELAY_CAUSED.getText());
         externalityCounterDelegate.addKey(CongestionField.DELAY_EXPERIENCED.getText());
-        externalityCounterDelegate.addKey("clock_time"); //time lost on gps trace
-        externalityCounterDelegate.addKey("matsim_time"); //time lost on gps trace
-        externalityCounterDelegate.addKey("matsim_delay"); //time lost on gps trace
+        externalityCounterDelegate.addKey("actual_travel_time"); //actual travel time
+        externalityCounterDelegate.addKey("freespeed_travel_time"); //freespeed travel time
+        externalityCounterDelegate.addKey("actual_gps_delay"); //actual delay on gps trace
 
     }
 
@@ -59,22 +57,21 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
 
         Double linkEntryTime =  this.personLinkEntryTime.get(personId);
         if (linkEntryTime != null) {
-            double linkTravelTime = event.getTime() - linkEntryTime;
+            double actualLinkTravelTime = event.getTime() - linkEntryTime;
             Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
-            double matsim_traveltime = l.getLength() / l.getFreespeed();
-            //double time_lost = Math.max(0, linkTravelTime - matsim_traveltime);
-            double time_lost = linkTravelTime;
+            double freespeedTravelTime = l.getLength() / l.getFreespeed();
 
-            double previousClockTime = externalityCounterDelegate.getTempValue(personId, "clock_time");
-            externalityCounterDelegate.putTempValue(personId, "clock_time", previousClockTime + time_lost);
+            double previousClockTime = externalityCounterDelegate.getTempValue(personId, "actual_travel_time");
+            externalityCounterDelegate.putTempValue(personId, "actual_travel_time", previousClockTime + actualLinkTravelTime);
 
-            double previous_matsimTime = externalityCounterDelegate.getTempValue(personId,"matsim_time");
-            externalityCounterDelegate.putTempValue(personId,"matsim_time", previous_matsimTime + matsim_traveltime);
+            double previous_matsimTime = externalityCounterDelegate.getTempValue(personId,"freespeed_travel_time");
+            externalityCounterDelegate.putTempValue(personId,"freespeed_travel_time", previous_matsimTime + freespeedTravelTime);
 
-            double previous_delay = externalityCounterDelegate.getTempValue(personId,"matsim_delay");
-            double delay_on_link = Math.max(0, matsim_traveltime - time_lost); // the delay can't be negative
-            externalityCounterDelegate.putTempValue(personId,"matsim_delay", previous_delay + delay_on_link);
+            double previous_delay = externalityCounterDelegate.getTempValue(personId,"actual_gps_delay");
 
+            // actualLinkTravelTime should be larger than the freespeedTravelTime
+            double delay_on_link = Math.max(0, actualLinkTravelTime - freespeedTravelTime); // the delay can't be negative
+            externalityCounterDelegate.putTempValue(personId,"actual_gps_delay", previous_delay + delay_on_link);
             this.personLinkEntryTime.put(personId, null);
 
         }
@@ -84,6 +81,10 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     public void handleEvent(LinkEnterEvent event) {
         int bin = ExternalityUtils.getTimeBin(event.getTime(), aggregateCongestionDataPerLinkPerTime.getBinSize());
         Id<Link> lid = event.getLinkId();
+
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
+
         Id<Person> personId = externalityCounterDelegate.getDriverOfVehicle(event.getVehicleId());
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(event.getVehicleId().toString());
@@ -96,6 +97,11 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
         for (CongestionField field : congestion_fields){
             if (count > 0) {
                 value = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, field.getText()) / count;
+            }
+
+            //delay must be larger than certain threshold to be considered as congestion
+            if ( value < (freespeedTravelTime * (1 / freeSpeedFraction - 1))) {
+                value = 0;
             }
 
             externalityCounterDelegate.incrementTempValueBy(personId, field.getText(), value);
