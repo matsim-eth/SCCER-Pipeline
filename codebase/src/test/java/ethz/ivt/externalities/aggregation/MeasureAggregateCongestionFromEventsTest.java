@@ -34,6 +34,7 @@ public class MeasureAggregateCongestionFromEventsTest {
     public void TwoVehiclesTwoLinkTest() {
         // set up config
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+        double binSize = 3600.;
 
         // create simple network with two links
         double length = 100.0; // m
@@ -80,7 +81,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -109,20 +110,21 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.finishProcessing();
 
         // tests
-        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 2, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 2, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(0), 0.0);
 
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
     }
 
     @Test
     public void FourVehiclesTwoLinks() {
         // set up config
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+        double binSize = 3600.;
 
         // create simple network with two links
         double length = 100.0; // m
@@ -184,7 +186,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -213,24 +215,25 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.finishProcessing();
 
         // tests
-        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 4, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 4, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(0), 0.0);
 
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
     }
 
     @Test
     public void FourVehiclesTwoLinkWithStorageLinkTest() {
         // set up config
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+        double binSize = 3600.;
 
         // create simple network with two links + storage
         double lengthLink01 = 100.0; // 100 m
@@ -301,7 +304,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -331,22 +334,22 @@ public class MeasureAggregateCongestionFromEventsTest {
 
         //tests
         // link01
-        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",5 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0", 5 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 3, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",5 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0", 5 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 3, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(0), 0.0);
 
         // link12
-        Assert.assertEquals("Incorrect delay caused on " + link12.getId().toString() + " at time bin 0",4 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link12.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link12.getId().toString() + " at time bin 0", 4 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link12.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link12.getId().toString() + " at time bin 0", 3, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link12.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link12.getId().toString() + " at time bin 0",4 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link12.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link12.getId().toString() + " at time bin 0", 4 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link12.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link12.getId().toString() + " at time bin 0", 3, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link12.getId()).getCountAtTimeBin(0), 0.0);
 
         // per person
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person2.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person2.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
     }
 
 
@@ -354,6 +357,7 @@ public class MeasureAggregateCongestionFromEventsTest {
     public void ThreeVehiclesTwoLinksTwoTimeBins() {
         // set up config
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+        double binSize = 3600.;
 
         // create simple network with two links
         double length = 100.0; // m
@@ -415,7 +419,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -446,32 +450,32 @@ public class MeasureAggregateCongestionFromEventsTest {
         //tests
 
         //time bin 0
-        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 4, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 0",6 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 4, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(0), 0.0);
 
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 0, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 0, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 0",2 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 0",1 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 0",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayCausedAtTimeBin(0), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 0",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayExperiencedAtTimeBin(0), 0.0);
 
         //time bin 1
-        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 1, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 1",5 * delay, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 1, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 1",2, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 1, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 1",5 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 1",2, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(1), 0.0);
 
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 1, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person1.getId(), 1, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 1, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person2.getId(), 1, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 1, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 1",2 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person3.getId(), 1, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 1, CongestionField.DELAY_CAUSED.getText()), 0.0);
-        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 1",3 * delay, congestionAggregator.aggregateCongestionDataPerPersonPerTime.getValue(person4.getId(), 1, CongestionField.DELAY_EXPERIENCED.getText()), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayCausedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person2.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person2.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person3.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayCausedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person3.getId().toString() + " at time bin 1",2 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person3.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay caused by " + person4.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayCausedAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect delay experienced by " + person4.getId().toString() + " at time bin 1",3 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person4.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
 
     }
 
@@ -479,6 +483,7 @@ public class MeasureAggregateCongestionFromEventsTest {
     public void VehicleReenteringSameLinkInSameTimeBinIsCountedTwice() {
         // set up config
         Scenario scenario = ScenarioUtils.loadScenario(ConfigUtils.createConfig());
+        double binSize = 3600.;
 
         // create simple network with one link
         double length = 100.0; // m
@@ -512,7 +517,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -541,6 +546,6 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.finishProcessing();
 
         //tests
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 2, congestionAggregator.aggregateCongestionDataPerLinkPerTime.getValue(link01.getId(), 0, CongestionField.COUNT.getText()), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 0", 2, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(0), 0.0);
     }
 }

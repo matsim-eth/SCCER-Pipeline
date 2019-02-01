@@ -1,8 +1,7 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.ExternalityUtils;
-import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.CongestionField;
+import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import ethz.ivt.vsp.CongestionEvent;
 import ethz.ivt.vsp.handlers.CongestionEventHandler;
@@ -20,8 +19,6 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -31,42 +28,30 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
-    public AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
-    public AggregateDataPerTimeImpl<Person> aggregateCongestionDataPerPersonPerTime;
-
+    private double binSize;
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
+    private Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = new HashMap<>();
+    private Map<Id<Person>, CongestionPerTime> aggregateCongestionDataPerPersonPerTime = new HashMap<>();
 
     private double congestionThresholdRatio = 0.65;
 
-    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers) {
+    public CongestionAggregator(Scenario scenario, Vehicle2DriverEventHandler drivers, double binSize) {
         this.scenario = scenario;
         this.drivers = drivers;
-
-        List<String> attributesPerLink = new LinkedList<>();
-        attributesPerLink.add(CongestionField.COUNT.getText());
-        attributesPerLink.add(CongestionField.DELAY_CAUSED.getText());
-        attributesPerLink.add(CongestionField.DELAY_EXPERIENCED.getText());
-        attributesPerLink.add("congestion_caused");
-        attributesPerLink.add("congestion_experienced");
-
-        List<String> attributesPerPerson = new LinkedList<>();
-        attributesPerPerson.add(CongestionField.DELAY_CAUSED.getText());
-        attributesPerPerson.add(CongestionField.DELAY_EXPERIENCED.getText());
-        attributesPerPerson.add("congestion_caused");
-        attributesPerPerson.add("congestion_experienced");
-
-        String outputFileNamePerLink = "aggregate_delay_per_link_per_time.csv";
-        String outputFileNamePerPerson = "aggregate_delay_per_person_per_time.csv";
-
-        this.aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, scenario.getNetwork().getLinks().keySet(), attributesPerLink, outputFileNamePerLink);
-        this.aggregateCongestionDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, scenario.getPopulation().getPersons().keySet(), attributesPerPerson, outputFileNamePerPerson);
-
+        this.binSize = binSize;
+        
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
             person2linkinfo.put(personId, new AgentOnLinkInfo(personId, null, -1.0, -1.0));
         });
 
-        log.info("Number of congestion bins: " + this.aggregateCongestionDataPerLinkPerTime.getNumBins());
+        // set up aggregateCongestionData
+        for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()) {
+            aggregateCongestionDataPerLinkPerTime.putIfAbsent(linkId, new CongestionPerTime(this.binSize));
+        }
+        for (Id<Person> personId : scenario.getPopulation().getPersons().keySet()) {
+            aggregateCongestionDataPerPersonPerTime.putIfAbsent(personId, new CongestionPerTime(this.binSize));
+        }
     }
 
     @Override
@@ -95,20 +80,19 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         }
 
         // compute timebin
-        int causingAgentTimeBin = ExternalityUtils.getTimeBin(causingAgentEnterTime, aggregateCongestionDataPerLinkPerTime.getBinSize());
-        int affectedAgentTimeBin = ExternalityUtils.getTimeBin(affectedAgentLeaveTime, aggregateCongestionDataPerLinkPerTime.getBinSize());
+        int causingAgentTimeBin = ExternalityUtils.getTimeBin(causingAgentEnterTime, this.binSize);
+        int affectedAgentTimeBin = ExternalityUtils.getTimeBin(affectedAgentLeaveTime, this.binSize);
 
         // store delay info
-        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId, causingAgentTimeBin, CongestionField.DELAY_CAUSED.getText(), delay);
-        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId, affectedAgentTimeBin, CongestionField.DELAY_EXPERIENCED.getText() , delay);
-        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId, causingAgentTimeBin, "congestion_caused", congestion);
-        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId, affectedAgentTimeBin, "congestion_experienced", congestion);
+        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addDelayCausedAtTimeBin(delay, causingAgentTimeBin);
+        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addDelayExperiencedAtTimeBin(delay, affectedAgentTimeBin);
+        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addCongestionCausedAtTimeBin(congestion, causingAgentTimeBin);
+        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addCongestionExperiencedAtTimeBin(congestion, affectedAgentTimeBin);
 
-        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId, causingAgentTimeBin, CongestionField.DELAY_CAUSED.getText(), delay);
-        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId, affectedAgentTimeBin, CongestionField.DELAY_EXPERIENCED.getText(), delay);
-        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId, causingAgentTimeBin, "congestion_caused", congestion);
-        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId, affectedAgentTimeBin, "congestion_experienced", congestion);
-
+        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addDelayCausedAtTimeBin(delay, causingAgentTimeBin);
+        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addDelayExperiencedAtTimeBin(delay, affectedAgentTimeBin);
+        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addCongestionCausedAtTimeBin(congestion, causingAgentTimeBin);
+        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addCongestionExperiencedAtTimeBin(congestion, affectedAgentTimeBin);
     }
 
     @Override
@@ -152,24 +136,34 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
     public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
 
-        double binSize = aggregateCongestionDataPerLinkPerTime.getBinSize();
-
-        int enterTimeBin = ExternalityUtils.getTimeBin(enterTime, binSize);
-        int leaveTimeBin = ExternalityUtils.getTimeBin(leaveTime, binSize);
+        int enterTimeBin = ExternalityUtils.getTimeBin(enterTime, this.binSize);
+        int leaveTimeBin = ExternalityUtils.getTimeBin(leaveTime, this.binSize);
 
         // if agent on link during only one timebin, increment that timebin by 1
         if (leaveTimeBin == enterTimeBin) {
-            aggregateCongestionDataPerLinkPerTime.addValue(linkId,
-                    leaveTimeBin, CongestionField.COUNT.getText(), 1.0);
-
+            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, leaveTimeBin);
         }
         // if agent on link during two timebins, increment each one by 1
         else if (leaveTimeBin > enterTimeBin) {
-            aggregateCongestionDataPerLinkPerTime.addValue(linkId,
-                    enterTimeBin, CongestionField.COUNT.getText(), 1.0);
-            aggregateCongestionDataPerLinkPerTime.addValue(linkId,
-                    leaveTimeBin, CongestionField.COUNT.getText(), 1.0);
+            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, enterTimeBin);
+            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, leaveTimeBin);
         }
         //TODO : Think what should happen for counts if arrival then departure occur within same timebin
+    }
+
+    public double getBinSize() {
+        return binSize;
+    }
+
+    public double getCongestionThresholdRatio() {
+        return congestionThresholdRatio;
+    }
+
+    public Map<Id<Link>, CongestionPerTime> getAggregateCongestionDataPerLinkPerTime() {
+        return aggregateCongestionDataPerLinkPerTime;
+    }
+
+    public Map<Id<Person>, CongestionPerTime> getAggregateCongestionDataPerPersonPerTime() {
+        return aggregateCongestionDataPerPersonPerTime;
     }
 }

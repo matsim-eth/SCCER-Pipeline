@@ -1,12 +1,13 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
+import ethz.ivt.externalities.data.congestion.writer.CSVCongestionPerLinkPerTimeWriter;
+import ethz.ivt.externalities.data.congestion.writer.CSVCongestionPerPersonPerTimeWriter;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.contrib.noise.NoiseConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
@@ -14,30 +15,32 @@ import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
 
+import java.io.IOException;
+
 public class MeasureAggregateCongestionFromScenario {
 	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
 
-    private static String RUN_FOLDER;
-	private static String CONFIG_FILE;
-    private static String EVENTS_FILE;
+	private String configFile;
+    private String eventFile;
+    private String outputDirectory;
     
     private Config config;
     private EventsManagerImpl eventsManager;
     protected int bin_size_s = 3600;
 
-    public static void main(String[] args) {
-        RUN_FOLDER = args[0];
-        CONFIG_FILE = args[1];
-        EVENTS_FILE = args[2];
-
-        new MeasureAggregateCongestionFromScenario().run();
+    public static void main(String[] args) throws IOException {
+        new MeasureAggregateCongestionFromScenario(args[0], args[1], args[2]).run();
     }
-    
-    public void run() {
 
+    public MeasureAggregateCongestionFromScenario(String configFile, String eventFile, String outputDirectory) {
+        this.configFile = configFile;
+        this.eventFile = eventFile;
+        this.outputDirectory = outputDirectory;
+    }
+
+    public void run() throws IOException {
     	// set up config
-    	config = ConfigUtils.loadConfig(RUN_FOLDER + CONFIG_FILE, new EmissionsConfigGroup(), new NoiseConfigGroup());
-        config.controler().setOutputDirectory(RUN_FOLDER + "aggregate/");
+    	config = ConfigUtils.loadConfig(this.configFile, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
     	// set up event manager and handlers
@@ -47,17 +50,20 @@ public class MeasureAggregateCongestionFromScenario {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
         // read through MATSim events
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
-        reader.readFile(RUN_FOLDER + EVENTS_FILE);
+        reader.readFile(this.eventFile);
 
         // save congestion data to single csv file
-        congestionAggregator.aggregateCongestionDataPerLinkPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
-        congestionAggregator.aggregateCongestionDataPerPersonPerTime.writeDataToCsv(config.controler().getOutputDirectory() + "congestion/");
+        new CSVCongestionPerLinkPerTimeWriter(congestionAggregator.getAggregateCongestionDataPerLinkPerTime())
+                .write(outputDirectory + "/aggregate_delay_per_link_per_time.csv");
+        new CSVCongestionPerPersonPerTimeWriter(congestionAggregator.getAggregateCongestionDataPerPersonPerTime())
+                .write(outputDirectory + "/aggregate_delay_per_person_per_time.csv");
+
         log.info("Congestion calculation completed.");
         log.info("Total delay : " + congestionHandler.getTotalDelay());
         log.info("Total internalized delay : " + congestionHandler.getTotalInternalizedDelay());
