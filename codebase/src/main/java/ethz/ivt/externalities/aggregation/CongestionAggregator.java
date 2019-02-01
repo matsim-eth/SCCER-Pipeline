@@ -8,8 +8,12 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
+import org.matsim.api.core.v01.events.PersonArrivalEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
+import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
+import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
@@ -21,7 +25,7 @@ import java.util.Map;
 /**
  * Created by molloyj on 18.07.2017.
  */
-public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, PersonDepartureEventHandler {
+public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, PersonDepartureEventHandler, LinkLeaveEventHandler, PersonArrivalEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
@@ -95,8 +99,18 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     @Override
     public void handleEvent(LinkEnterEvent event) {
         double enterTime = event.getTime();
+        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
-        aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
+        double freespeedLeaveTime = enterTime + freespeedTravelTime;
+
+        if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
+            AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
+            person2linkinfo.replace(personId, agentOnLinkInfo);
+            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+        }
     }
 
     /*
@@ -105,8 +119,38 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     @Override
     public void handleEvent(PersonDepartureEvent event) {
         double enterTime = event.getTime();
+        Id<Person> personId = event.getPersonId();
         Id<Link> linkId = event.getLinkId();
-        aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+
+        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
+        double freespeedTravelTime = l.getLength() / l.getFreespeed();
+        double freespeedLeaveTime = enterTime + freespeedTravelTime;
+
+        if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
+            AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
+            person2linkinfo.replace(personId, agentOnLinkInfo);
+            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+        }
+    }
+
+    /*
+     * Set agent's current link to null when leaving.
+     */
+    @Override
+    public void handleEvent(LinkLeaveEvent event) {
+        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
+        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, null, -1.0, -1.0);
+        person2linkinfo.replace(personId, agentOnLinkInfo);
+    }
+
+    /*
+     * Set agent's current link to null when arriving at location.
+     */
+    @Override
+    public void handleEvent(PersonArrivalEvent event) {
+        Id<Person> personId = event.getPersonId();
+        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, null, -1.0, -1.0);
+        person2linkinfo.replace(personId, agentOnLinkInfo);
     }
 
     public double getBinSize() {

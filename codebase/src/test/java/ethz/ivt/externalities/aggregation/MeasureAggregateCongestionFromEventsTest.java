@@ -1,6 +1,5 @@
 package ethz.ivt.externalities.aggregation;
 
-import ethz.ivt.externalities.data.CongestionField;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.junit.Assert;
@@ -466,7 +465,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         //time bin 1
         Assert.assertEquals("Incorrect delay caused on " + link01.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayCausedAtTimeBin(1), 0.0);
         Assert.assertEquals("Incorrect delay experienced on " + link01.getId().toString() + " at time bin 1",5 * delay, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
-        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 1",2, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(1), 0.0);
+        Assert.assertEquals("Incorrect number of vehicles on " + link01.getId().toString() + " at time bin 1",0, congestionAggregator.getAggregateCongestionDataPerLinkPerTime().get(link01.getId()).getCountAtTimeBin(1), 0.0);
 
         Assert.assertEquals("Incorrect delay caused by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayCausedAtTimeBin(1), 0.0);
         Assert.assertEquals("Incorrect delay experienced by " + person1.getId().toString() + " at time bin 1",0 * delay, congestionAggregator.getAggregateCongestionDataPerPersonPerTime().get(person1.getId()).getDelayExperiencedAtTimeBin(1), 0.0);
