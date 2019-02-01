@@ -20,11 +20,11 @@ public class CSVCongestionPerLinkPerTimeWriter {
     public void write(String outputPath) throws IOException {
         BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath)));
 
-        writer.write(formatHeader() + "\n");
+        writer.write(formatHeader());
         writer.flush();
 
         for (Map.Entry<Id<Link>, CongestionPerTime> entry : map.entrySet()) {
-            writer.write(formatItem(entry.getKey(), entry.getValue()) + "\n");
+            writer.write(formatItem(entry.getKey(), entry.getValue()));
             writer.flush();
         }
 
@@ -48,12 +48,7 @@ public class CSVCongestionPerLinkPerTimeWriter {
 
             // only write lines where the counts are greater than zero to save space
             if (congestion.getCountAtTimeBin(bin) > 0.0) {
-                if (isFirstLine) {
-                    s = formatSingleLine(linkId, congestion, bin);
-                    isFirstLine = false;
-                } else {
-                    s = String.join("\n", new String[] {s, formatSingleLine(linkId, congestion, bin)});
-                }
+                s = String.join("\n", new String[] {s, formatSingleLine(linkId, congestion, bin)});
             }
         }
 
