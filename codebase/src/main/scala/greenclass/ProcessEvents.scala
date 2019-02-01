@@ -65,7 +65,7 @@ class ProcessEvents {
 
     // load precomputed aggregate data
     logger.info("load aggregate congestion data")
-    val aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(15).read(congestion_file);
+    val aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(scenario.getNetwork.getLinks.keySet(), bin_size_s).read(congestion_file);
 
     //read list of already processed files, in case of failure
     new File(outputFolder).mkdir()

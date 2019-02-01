@@ -1,6 +1,5 @@
 package ethz.ivt.externalities.aggregation;
 
-import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import ethz.ivt.vsp.CongestionEvent;
@@ -9,10 +8,8 @@ import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.events.LinkEnterEvent;
-import org.matsim.api.core.v01.events.LinkLeaveEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.LinkEnterEventHandler;
-import org.matsim.api.core.v01.events.handler.LinkLeaveEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
@@ -24,7 +21,7 @@ import java.util.Map;
 /**
  * Created by molloyj on 18.07.2017.
  */
-public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, LinkLeaveEventHandler, PersonDepartureEventHandler {
+public class CongestionAggregator implements CongestionEventHandler, LinkEnterEventHandler, PersonDepartureEventHandler {
     private static final Logger log = Logger.getLogger(CongestionAggregator.class);
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
@@ -79,76 +76,37 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             congestion = 0;
         }
 
-        // compute timebin
-        int causingAgentTimeBin = ExternalityUtils.getTimeBin(causingAgentEnterTime, this.binSize);
-        int affectedAgentTimeBin = ExternalityUtils.getTimeBin(affectedAgentLeaveTime, this.binSize);
-
         // store delay info
-        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addDelayCausedAtTimeBin(delay, causingAgentTimeBin);
-        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addDelayExperiencedAtTimeBin(delay, affectedAgentTimeBin);
-        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addCongestionCausedAtTimeBin(congestion, causingAgentTimeBin);
-        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addCongestionExperiencedAtTimeBin(congestion, affectedAgentTimeBin);
+        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addDelayCausedAtTime(delay, causingAgentEnterTime);
+        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addDelayExperiencedAtTime(delay, affectedAgentLeaveTime);
+        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addCongestionCausedAtTime(congestion, causingAgentEnterTime);
+        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addCongestionExperiencedAtTime(congestion, affectedAgentLeaveTime);
 
-        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addDelayCausedAtTimeBin(delay, causingAgentTimeBin);
-        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addDelayExperiencedAtTimeBin(delay, affectedAgentTimeBin);
-        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addCongestionCausedAtTimeBin(congestion, causingAgentTimeBin);
-        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addCongestionExperiencedAtTimeBin(congestion, affectedAgentTimeBin);
+        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addDelayCausedAtTime(delay, causingAgentEnterTime);
+        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addDelayExperiencedAtTime(delay, affectedAgentLeaveTime);
+        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addCongestionCausedAtTime(congestion, causingAgentEnterTime);
+        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addCongestionExperiencedAtTime(congestion, affectedAgentLeaveTime);
     }
 
+    /*
+     * We only count the agent once when it enters the link,
+     * since we also only count the delay caused once at the time of entry.
+     */
     @Override
     public void handleEvent(LinkEnterEvent event) {
         double enterTime = event.getTime();
-        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         Id<Link> linkId = event.getLinkId();
-
-        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
-        double freespeedTravelTime = l.getLength() / l.getFreespeed();
-        double freespeedLeaveTime = enterTime + freespeedTravelTime;
-
-        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
-        person2linkinfo.replace(personId, agentOnLinkInfo);
+        aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
     }
 
-    @Override
-    public void handleEvent(LinkLeaveEvent event) {
-        Id<Link> linkId = event.getLinkId();
-        Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
-
-        double leaveTime = event.getTime();
-        double enterTime = person2linkinfo.get(personId).getEnterTime();
-
-        updateVehicleCount(enterTime, leaveTime, linkId);
-    }
-
+    /*
+     * At the first link, the agent does not have a link enter event, so consider this case.
+     */
     @Override
     public void handleEvent(PersonDepartureEvent event) {
         double enterTime = event.getTime();
-        Id<Person> personId = event.getPersonId();
         Id<Link> linkId = event.getLinkId();
-
-        Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
-        double freespeedTravelTime = l.getLength() / l.getFreespeed();
-        double freespeedLeaveTime = enterTime + freespeedTravelTime;
-
-        AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
-        person2linkinfo.replace(personId, agentOnLinkInfo);
-    }
-
-    public void updateVehicleCount(double enterTime, double leaveTime, Id<Link> linkId) {
-
-        int enterTimeBin = ExternalityUtils.getTimeBin(enterTime, this.binSize);
-        int leaveTimeBin = ExternalityUtils.getTimeBin(leaveTime, this.binSize);
-
-        // if agent on link during only one timebin, increment that timebin by 1
-        if (leaveTimeBin == enterTimeBin) {
-            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, leaveTimeBin);
-        }
-        // if agent on link during two timebins, increment each one by 1
-        else if (leaveTimeBin > enterTimeBin) {
-            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, enterTimeBin);
-            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTimeBin(1.0, leaveTimeBin);
-        }
-        //TODO : Think what should happen for counts if arrival then departure occur within same timebin
+        aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
     }
 
     public double getBinSize() {

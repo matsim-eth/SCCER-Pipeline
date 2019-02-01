@@ -1,6 +1,5 @@
 package ethz.ivt.externalities.counters;
 
-import ethz.ivt.externalities.ExternalityUtils;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -25,16 +24,16 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     private Map<Id<Person>, Double> personLinkEntryTime = new HashMap<>();
 
     private ExternalityCounter externalityCounterDelegate;
-    private double binSize;
+
 
     public CongestionCounter(Scenario scenario,
                              Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
-                             ExternalityCounter externalityCounterDelegate, double binSize) {
+                             ExternalityCounter externalityCounterDelegate) {
 
         this.scenario = scenario;
         this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
         this.externalityCounterDelegate = externalityCounterDelegate;
-        this.binSize = binSize;
+
         initializeFields();
     }
 
@@ -76,13 +75,12 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             double delay_on_link = Math.max(0, actualLinkTravelTime - freespeedTravelTime); // the delay can't be negative
             externalityCounterDelegate.putTempValue(personId,"actual_gps_delay", previous_delay + delay_on_link);
             this.personLinkEntryTime.put(personId, null);
-
         }
     }
 
     @Override
     public void handleEvent(LinkEnterEvent event) {
-        int bin = ExternalityUtils.getTimeBin(event.getTime(), this.binSize);
+        double time = event.getTime();
         Id<Link> lid = event.getLinkId();
 
         Id<Person> personId = externalityCounterDelegate.getDriverOfVehicle(event.getVehicleId());
@@ -90,35 +88,19 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-        double count = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCountAtTimeBin(bin);
+        double count = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCountAtTime(time);
 
         if (count > 0) {
-            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayCausedAtTimeBin(bin) / count;
-            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayExperiencedAtTimeBin(bin) / count;
-            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionCausedAtTimeBin(bin) / count;
-            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionExperiencedAtTimeBin(bin) / count;
+            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayCausedAtTime(time) / count;
+            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayExperiencedAtTime(time) / count;
+            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionCausedAtTime(time) / count;
+            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionExperiencedAtTime(time) / count;
 
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_experienced", delayExperienced);
             externalityCounterDelegate.incrementTempValueBy(personId, "congestion_caused", congestionCaused);
             externalityCounterDelegate.incrementTempValueBy(personId, "congestion_experienced", congestionExperienced);
         }
-
-//        String [] congestion_fields = new String[]{"congestion_caused", "congestion_experienced"};
-//        double value = 0;
-//        for (String field : congestion_fields){
-//            if (count > 0) {
-//                value = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, bin, field) / count;
-//            }
-//
-////            //delay must be larger than certain threshold to be considered as congestion
-////            if ( value < (freespeedTravelTime * (1 / freeSpeedFraction - 1))) {
-////                value = 0;
-////            }
-//
-//            externalityCounterDelegate.incrementTempValueBy(personId, field, value);
-//        }
-
 
         //Now store the event for the person
         this.personLinkEntryTime.put(personId, event.getTime());

@@ -175,4 +175,75 @@ public class CongestionWriterTest {
             Assert.assertEquals("Congestion experienced does not match",expectedMap.get(linkId).getCongestionExperiencedAtTimeBin(bin), actualMap.get(linkId).getCongestionExperiencedAtTimeBin(bin), 0.0);
         }
     }
+
+    @Test
+    public void WriteAndReadMultipleLinks() throws IOException {
+        double binSize = 3600.;
+
+        Map<Id<Link>, CongestionPerTime> expectedMap = new HashMap<>();
+        Collection<Id<Link>> idCollection = new HashSet<>();
+
+        Random randomValueGenerator = new Random(0);
+        Random randomZeroGenerator = new Random(1);
+
+        for (int id = 0; id<4; id++) {
+            Id<Link> linkId = Id.createLinkId("link_" + id);
+            idCollection.add(linkId);
+            expectedMap.put(linkId, new CongestionPerTime(binSize));
+
+            for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {
+
+                double probability = randomZeroGenerator.nextDouble();
+
+                if (probability < 0.5) {
+                    expectedMap.get(linkId).setCountAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setDelayCausedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setDelayExperiencedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setCongestionCausedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setCongestionExperiencedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                }
+            }
+        }
+
+        // add one link somewhere with all zeros
+        {
+            Id<Link> linkId = Id.createLinkId("link_5");
+            idCollection.add(linkId);
+            expectedMap.put(linkId, new CongestionPerTime(binSize));
+        }
+
+        // then some more links
+        for (int id = 6; id<10; id++) {
+            Id<Link> linkId = Id.createLinkId("link_" + id);
+            idCollection.add(linkId);
+            expectedMap.put(linkId, new CongestionPerTime(binSize));
+
+            for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {
+
+                double probability = randomZeroGenerator.nextDouble();
+
+                if (probability < 0.5) {
+                    expectedMap.get(linkId).setCountAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setDelayCausedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setDelayExperiencedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setCongestionCausedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                    expectedMap.get(linkId).setCongestionExperiencedAtTimeBin(randomValueGenerator.nextDouble(), bin);
+                }
+            }
+        }
+
+        new CSVCongestionPerLinkPerTimeWriter(expectedMap).write("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+
+        Map<Id<Link>, CongestionPerTime> actualMap = new CSVCongestionPerLinkPerTimeReader(idCollection, binSize).read("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+
+        for (Id<Link> linkId : idCollection) {
+            for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {
+                Assert.assertEquals("LinkId: " + linkId.toString() + ", Counts do not match", expectedMap.get(linkId).getCountAtTimeBin(bin), actualMap.get(linkId).getCountAtTimeBin(bin), 0.0);
+                Assert.assertEquals("LinkId: " + linkId.toString() + ", Delay caused does not match", expectedMap.get(linkId).getDelayCausedAtTimeBin(bin), actualMap.get(linkId).getDelayCausedAtTimeBin(bin), 0.0);
+                Assert.assertEquals("LinkId: " + linkId.toString() + ", Delay experienced does not match",expectedMap.get(linkId).getDelayExperiencedAtTimeBin(bin), actualMap.get(linkId).getDelayExperiencedAtTimeBin(bin), 0.0);
+                Assert.assertEquals("LinkId: " + linkId.toString() + ", Congestion caused does not match",expectedMap.get(linkId).getCongestionCausedAtTimeBin(bin), actualMap.get(linkId).getCongestionCausedAtTimeBin(bin), 0.0);
+                Assert.assertEquals("LinkId: " + linkId.toString() + ", Congestion experienced does not match",expectedMap.get(linkId).getCongestionExperiencedAtTimeBin(bin), actualMap.get(linkId).getCongestionExperiencedAtTimeBin(bin), 0.0);
+            }
+        }
+    }
 }
