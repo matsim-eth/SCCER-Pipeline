@@ -1,7 +1,7 @@
 package ethz.ivt.externalities.data.congestion;
 
 public class CongestionPerTime {
-    private double binSize;
+    private double binSize = 60.;
     private int numBins;
     private double[] count;
     private double[] delayCaused;
@@ -9,8 +9,12 @@ public class CongestionPerTime {
     private double[] congestionCaused;
     private double[] congestionExperienced;
 
+    public CongestionPerTime() {
+        this(60.);
+    }
+
     public CongestionPerTime(double binSize) {
-        this.binSize = binSize; // not tested for anything other than 3600.
+        this.binSize = binSize;
         this.numBins = (int) (30 * 3600 / binSize);
         this.count = new double[this.numBins];
         this.delayCaused = new double[this.numBins];
@@ -27,7 +31,11 @@ public class CongestionPerTime {
         return numBins;
     }
 
-    public double[] getCount() {
+    /*
+     * Get all values.
+     */
+
+    public double[] getCounts() {
         return count;
     }
 
@@ -46,6 +54,34 @@ public class CongestionPerTime {
     public double[] getCongestionExperienced() {
         return congestionExperienced;
     }
+
+    /*
+     * Get values at a specified time.
+     */
+
+    public double getCountAtTime(double time) {
+        return count[this.getTimeBin(time)];
+    }
+
+    public double getDelayCausedAtTime(double time) {
+        return delayCaused[this.getTimeBin(time)];
+    }
+
+    public double getDelayExperiencedAtTime(double time) {
+        return delayExperienced[this.getTimeBin(time)];
+    }
+
+    public double getCongestionCausedAtTime(double time) {
+        return congestionCaused[this.getTimeBin(time)];
+    }
+
+    public double getCongestionExperiencedAtTime(double time) {
+        return congestionExperienced[this.getTimeBin(time)];
+    }
+
+    /*
+     * Get values at a specified time bin.
+     */
 
     public double getCountAtTimeBin(int timeBin) {
         if (timeBin < count.length) {
@@ -82,6 +118,34 @@ public class CongestionPerTime {
         return 0.0;
     }
 
+    /*
+     * Set values for a specified time.
+     */
+
+    public void setCountAtTime(double value, double time) {
+        this.count[this.getTimeBin(time)] = value;
+    }
+
+    public void setDelayCausedAtTime(double value, double time) {
+        this.delayCaused[this.getTimeBin(time)] = value;
+    }
+
+    public void setDelayExperiencedAtTime(double value, double time) {
+        this.delayExperienced[this.getTimeBin(time)] = value;
+    }
+
+    public void setCongestionCausedAtTime(double value, double time) {
+        this.congestionCaused[this.getTimeBin(time)] = value;
+    }
+
+    public void setCongestionExperiencedAtTime(double value, double time) {
+        this.congestionExperienced[this.getTimeBin(time)] = value;
+    }
+
+    /*
+     * Set values for a specified time bin.
+     */
+
     public void setCountAtTimeBin(double value, int timeBin) {
         if (timeBin < this.count.length) {
             this.count[timeBin] = value;
@@ -112,6 +176,34 @@ public class CongestionPerTime {
         }
     }
 
+    /*
+     * Add values at a specified time.
+     */
+
+    public void addCountAtTime(double value, double time) {
+        this.count[this.getTimeBin(time)] += value;
+    }
+
+    public void addDelayCausedAtTime(double value, double time) {
+        this.delayCaused[this.getTimeBin(time)] += value;
+    }
+
+    public void addDelayExperiencedAtTime(double value, double time) {
+        this.delayExperienced[this.getTimeBin(time)] += value;
+    }
+
+    public void addCongestionCausedAtTime(double value, double time) {
+        this.congestionCaused[this.getTimeBin(time)] += value;
+    }
+
+    public void addCongestionExperiencedAtTime(double value, double time) {
+        this.congestionExperienced[this.getTimeBin(time)] += value;
+    }
+
+    /*
+     * Add values at a specified time bin.
+     */
+
     public void addCountAtTimeBin(double value, int timeBin) {
         if (timeBin < this.count.length) {
             this.count[timeBin] += value;
@@ -140,5 +232,27 @@ public class CongestionPerTime {
         if (timeBin < this.congestionExperienced.length) {
             this.congestionExperienced[timeBin] += value;
         }
+    }
+
+    /*
+     * Get time bin.
+     */
+
+    private int getTimeBin(double time) {
+        /*
+         * Agents who end their first activity before the simulation has started
+         * will depart in the first time step.
+         */
+        if (time <= 0.0) return 0;
+
+        /*
+         * Calculate the bin for the given time.
+         */
+        int bin = (int) (time / this.binSize);
+
+        /*
+         * Anything larger than 30 hours gets placed in the final bin.
+         */
+        return Math.min(bin, this.numBins-1);
     }
 }

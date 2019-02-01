@@ -34,7 +34,7 @@ public class CSVCongestionPerLinkPerTimeWriter {
 
     private String formatHeader() {
         return String.join(";", new String[] {
-                "linkId", "timeBin", "count", "delay_caused", "delay_experienced", "congestion_caused", "congestion_experienced"
+                "linkId", "binSize", "timeBin", "count", "delay_caused", "delay_experienced", "congestion_caused", "congestion_experienced"
         });
     }
 
@@ -42,35 +42,34 @@ public class CSVCongestionPerLinkPerTimeWriter {
 
         String s = "";
 
-        if (congestion.getNumBins() > 0) {
-            s = String.join(";", new String[] {
-                    linkId.toString(),
-                    String.valueOf(0),
-                    String.valueOf(congestion.getCountAtTimeBin(0)),
-                    String.valueOf(congestion.getDelayCausedAtTimeBin(0)),
-                    String.valueOf(congestion.getDelayExperiencedAtTimeBin(0)),
-                    String.valueOf(congestion.getCongestionCausedAtTimeBin(0)),
-                    String.valueOf(congestion.getCongestionExperiencedAtTimeBin(0)),
-            });
+        boolean isFirstLine = true;
 
-            if (congestion.getNumBins() > 1) {
+        for (int bin=0; bin<congestion.getNumBins(); bin++) {
 
-                for (int bin=1; bin<congestion.getNumBins(); bin++) {
-                    String temp = String.join(";", new String[] {
-                            linkId.toString(),
-                            String.valueOf(bin),
-                            String.valueOf(congestion.getCountAtTimeBin(bin)),
-                            String.valueOf(congestion.getDelayCausedAtTimeBin(bin)),
-                            String.valueOf(congestion.getDelayExperiencedAtTimeBin(bin)),
-                            String.valueOf(congestion.getCongestionCausedAtTimeBin(bin)),
-                            String.valueOf(congestion.getCongestionExperiencedAtTimeBin(bin)),
-                    });
-
-                    s = String.join("\n", new String[] {s, temp});
+            // only write lines where the counts are greater than zero to save space
+            if (congestion.getCountAtTimeBin(bin) > 0.0) {
+                if (isFirstLine) {
+                    s = formatSingleLine(linkId, congestion, bin);
+                    isFirstLine = false;
+                } else {
+                    s = String.join("\n", new String[] {s, formatSingleLine(linkId, congestion, bin)});
                 }
             }
         }
 
         return s;
+    }
+
+    private String formatSingleLine(Id<Link> linkId, CongestionPerTime congestion, int bin) {
+        return String.join(";", new String[] {
+                linkId.toString(),
+                String.valueOf(congestion.getBinSize()),
+                String.valueOf(bin),
+                String.valueOf(congestion.getCountAtTimeBin(bin)),
+                String.valueOf(congestion.getDelayCausedAtTimeBin(bin)),
+                String.valueOf(congestion.getDelayExperiencedAtTimeBin(bin)),
+                String.valueOf(congestion.getCongestionCausedAtTimeBin(bin)),
+                String.valueOf(congestion.getCongestionExperiencedAtTimeBin(bin)),
+        });
     }
 }

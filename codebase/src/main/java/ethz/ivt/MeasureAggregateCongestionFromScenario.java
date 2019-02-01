@@ -19,56 +19,66 @@ import java.io.IOException;
 
 public class MeasureAggregateCongestionFromScenario {
 	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
-
-	private String configFile;
-    private String eventFile;
-    private String outputDirectory;
-    
-    private Config config;
+	private Scenario scenario;
+    private double binSize;
     private EventsManagerImpl eventsManager;
-    protected int bin_size_s = 3600;
+    private final MatsimEventsReader reader;
+    private CongestionHandler congestionHandler;
+    private CongestionAggregator congestionAggregator;
 
     public static void main(String[] args) throws IOException {
-        new MeasureAggregateCongestionFromScenario(args[0], args[1], args[2]).run();
-    }
+        String configPath = args[0];
+        double binSize = Double.parseDouble(args[1]); // aggregation time bin size in seconds
+        String eventFile = args[2];
+        String outputDirectory = args[3];
 
-    public MeasureAggregateCongestionFromScenario(String configFile, String eventFile, String outputDirectory) {
-        this.configFile = configFile;
-        this.eventFile = eventFile;
-        this.outputDirectory = outputDirectory;
-    }
-
-    public void run() throws IOException {
-    	// set up config
-    	config = ConfigUtils.loadConfig(this.configFile, new EmissionsConfigGroup());
+        // load config file
+        Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
-    	// set up event manager and handlers
-    	eventsManager = new EventsManagerImpl();
+        // process MATSim events and write congestion data to file
+        MeasureAggregateCongestionFromScenario runner = new MeasureAggregateCongestionFromScenario(scenario, binSize);
+        runner.process(eventFile);
+        runner.write(outputDirectory);
+    }
 
+    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize) {
+        this.scenario = scenario;
+        this.binSize = binSize;
+
+        // set up event manager
+        this.eventsManager = new EventsManagerImpl();
+        this.reader = new MatsimEventsReader(this.eventsManager);
+
+        // add vehicle handler
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
-        eventsManager.addHandler(v2deh);
+        this.eventsManager.addHandler(v2deh);
 
-        CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, bin_size_s);
-        eventsManager.addHandler(congestionHandler);
-        eventsManager.addHandler(congestionAggregator);
+        // add congestion handler and aggregator
+        this.congestionHandler = new CongestionHandlerImplV3(this.eventsManager, scenario);
+        this.congestionAggregator = new CongestionAggregator(scenario, v2deh, this.binSize);
+        this.eventsManager.addHandler(congestionHandler);
+        this.eventsManager.addHandler(congestionAggregator);
+    }
 
+    public void process(String eventFile) {
         // read through MATSim events
-        MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
-        reader.readFile(this.eventFile);
-
-        // save congestion data to single csv file
-        new CSVCongestionPerLinkPerTimeWriter(congestionAggregator.getAggregateCongestionDataPerLinkPerTime())
-                .write(outputDirectory + "/aggregate_delay_per_link_per_time.csv");
-        new CSVCongestionPerPersonPerTimeWriter(congestionAggregator.getAggregateCongestionDataPerPersonPerTime())
-                .write(outputDirectory + "/aggregate_delay_per_person_per_time.csv");
+        this.eventsManager.initProcessing();
+        this.reader.readFile(eventFile);
 
         log.info("Congestion calculation completed.");
-        log.info("Total delay : " + congestionHandler.getTotalDelay());
-        log.info("Total internalized delay : " + congestionHandler.getTotalInternalizedDelay());
+        log.info("Total delay : " + this.congestionHandler.getTotalDelay());
+        log.info("Total internalized delay : " + this.congestionHandler.getTotalInternalizedDelay());
 
-        eventsManager.finishProcessing();
+        this.eventsManager.finishProcessing();
+    }
+
+    public void write(String outputDirectory) throws IOException {
+        // save congestion data to csv files
+        new CSVCongestionPerLinkPerTimeWriter(this.congestionAggregator.getAggregateCongestionDataPerLinkPerTime())
+                .write(outputDirectory + "/aggregate_delay_per_link_per_time.csv");
+        new CSVCongestionPerPersonPerTimeWriter(this.congestionAggregator.getAggregateCongestionDataPerPersonPerTime())
+                .write(outputDirectory + "/aggregate_delay_per_person_per_time.csv");
     }
 
 }

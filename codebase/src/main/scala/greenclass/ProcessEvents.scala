@@ -10,6 +10,7 @@ import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
 import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionField}
+import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario}
 import org.matsim.api.core.v01.network.Link
@@ -63,13 +64,8 @@ class ProcessEvents {
     //add cars from csv file
 
     // load precomputed aggregate data
-    val attributes: util.List[String] = new util.LinkedList[String]
-    attributes.add(CongestionField.COUNT.getText)
-    attributes.add(CongestionField.DELAY_CAUSED.getText)
-    attributes.add(CongestionField.DELAY_EXPERIENCED.getText)
-    val aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl[Link](bin_size_s, scenario.getNetwork.getLinks.keySet, attributes, null)
     logger.info("load aggregate congestion data")
-    aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestion_file)
+    val aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(15).read(congestion_file);
 
     //read list of already processed files, in case of failure
     new File(outputFolder).mkdir()

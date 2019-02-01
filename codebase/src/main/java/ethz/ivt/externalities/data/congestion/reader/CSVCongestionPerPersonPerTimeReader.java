@@ -8,12 +8,21 @@ import java.io.BufferedReader;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CSVCongestionPerPersonPerTimeReader {
+
+    private double binSize;
+    private Map<Id<Person>, CongestionPerTime> map = new HashMap<>();
+
+    public CSVCongestionPerPersonPerTimeReader(Collection<Id<Person>> personIds, double binSize) {
+        this.binSize = binSize;
+        for (Id<Person> personId : personIds) {
+            map.putIfAbsent(personId, new CongestionPerTime(this.binSize));
+        }
+
+    }
+
     public Map<Id<Person>, CongestionPerTime> read(String path) throws IOException {
         Map<Id<Person>, CongestionPerTime> map = new HashMap<>();
 
@@ -29,19 +38,22 @@ public class CSVCongestionPerPersonPerTimeReader {
                 header = row;
             } else {
                 Id<Person> personId = Id.createPersonId(row.get(header.indexOf("personId")));
+                double originalBinSize = Double.parseDouble(row.get(header.indexOf("binSize")));
                 int timeBin = Integer.parseInt(row.get(header.indexOf("timeBin")));
+
+                double time = timeBin * originalBinSize;
+
                 double count = Double.parseDouble(row.get(header.indexOf("count")));
                 double delayCaused = Double.parseDouble(row.get(header.indexOf("delay_caused")));
                 double delayExperienced = Double.parseDouble(row.get(header.indexOf("delay_experienced")));
                 double congestionCaused = Double.parseDouble(row.get(header.indexOf("congestion_caused")));
                 double congestionExperienced = Double.parseDouble(row.get(header.indexOf("congestion_experienced")));
 
-                map.putIfAbsent(personId, new CongestionPerTime(3600.));
-                map.get(personId).setCountAtTimeBin(count, timeBin);
-                map.get(personId).setDelayCausedAtTimeBin(delayCaused, timeBin);
-                map.get(personId).setDelayExperiencedAtTimeBin(delayExperienced, timeBin);
-                map.get(personId).setCongestionCausedAtTimeBin(congestionCaused, timeBin);
-                map.get(personId).setCongestionExperiencedAtTimeBin(congestionExperienced, timeBin);
+                map.get(personId).addCountAtTime(count, time);
+                map.get(personId).addDelayCausedAtTime(delayCaused, time);
+                map.get(personId).addDelayExperiencedAtTime(delayExperienced, time);
+                map.get(personId).addCongestionCausedAtTime(congestionCaused, time);
+                map.get(personId).addCongestionExperiencedAtTime(congestionExperienced, time);
             }
         }
 
