@@ -1,11 +1,8 @@
-package ethz.ivt;
+package ethz.ivt.externalities;
 
-import ethz.ivt.externalities.counters.CarExternalityCounter;
-import ethz.ivt.externalities.counters.CongestionCounter;
-import ethz.ivt.externalities.counters.ExternalityCostCalculator;
-import ethz.ivt.externalities.counters.ExternalityCounter;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
-import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader;
+import ethz.ivt.JITvehicleCreator;
+import ethz.ivt.externalities.counters.*;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -17,19 +14,16 @@ import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
-import org.matsim.core.config.Config;
-import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.vehicles.Vehicle;
 import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -38,87 +32,35 @@ import java.util.Random;
 /**
  * Created by molloyj on 17.07.2017.
  */
-public class MeasureExternalitiesFromTraceEvents {
-    private final static Logger log = Logger.getLogger(MeasureExternalitiesFromTraceEvents.class);
+public class MeasureExternalities {
+    private final static Logger log = Logger.getLogger(MeasureExternalities.class);
     private final MatsimEventsReader reader;
     private final Scenario scenario;
     private final ExternalityCostCalculator ecc;
 
-    private String CONGESTION_FILE; // = "aggregate/congestion/aggregate_delay.csv";
-    private String NOISE_FILE; // = "aggregate/noise/marginal_damages_link_car_merged_xyt1t2t3etc.csv";
 
     private EventsManagerImpl eventsManager;
     private final ExternalityCounter externalityCounter;
     private String date;
-    private String costValuesFile;
 
-    public static void main(String[] args) throws IOException {
-        String configPath = args[0];
-        String eventPath = args[1];
-        String congestionPath = args[2];
-        double binSize = Double.parseDouble(args[3]);
-        String costValuesPath = args[4];
-        String vehicleCompositionPath = args[5];
-        String outputPath = args[6];
-
-//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
-//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
-//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
-//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
-
-//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/switzerland_config_w_emissions.xml";
-//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/20.events.xml.gz";
-//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
-//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/output/";
-
-
-        // load config file
-        Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
-
-        // preliminary scenario setup
-        Scenario scenario = ScenarioUtils.loadScenario(config);
-
-        VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
-        vehicleGenerator.read(vehicleCompositionPath, 2015);
-        vehicleGenerator.setUpVehicles();
-
-        CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
-        writer.write(outputPath + "vehicles.csv");
-
-        MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
-
-        // load precalculated aggregate congestion data per link per time
-        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(scenario.getNetwork().getLinks().keySet(), binSize).read(congestionPath);
-
-        MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
-        runner.process(eventPath, "xxxx", null);
-        runner.write(outputPath, "xxxx", "Switzerland");
-    }
-
-    public MeasureExternalitiesFromTraceEvents(
+    public MeasureExternalities(
             Scenario scenario,
-            Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
-            String costValuesFile) {
+            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
+            ExternalityCostCalculator ecc) {
 
-        this.costValuesFile = costValuesFile;
-        //NOISE_FILE = "";
         this.scenario = scenario;
-
+        this.ecc = ecc;
         date = "xxxx"; //ExternalityUtils.getDate(LocalDate.now());
 
         eventsManager = new EventsManagerImpl();
-        reader = new MatsimEventsReader(eventsManager);
-        log.info("add vehicles");
-
         eventsManager.addHandler(new JITvehicleCreator(scenario));
 
-        // setup externality counters
+        reader = new MatsimEventsReader(eventsManager);
+
         log.info("load emissions module");
+        // setup externality counters
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
+    //    ecg.setUsingDetailedEmissionCalculation(false);
 
         //add Hbefa mappings to the network
         HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
@@ -127,30 +69,28 @@ public class MeasureExternalitiesFromTraceEvents {
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, date);
-        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
-
         eventsManager.addHandler(externalityCounter);
+
+        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
         eventsManager.addHandler(carExternalityCounter);
+
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
         eventsManager.addHandler(congestionCounter);
-
-        ecc = new ExternalityCostCalculator(costValuesFile);
-
     }
 
     public void reset() {
         eventsManager.resetHandlers(0);
     }
 
-    public void process(String eventsFile, String date, String personId) {
-        externalityCounter.setDate(date);
+    public Map<Id<Person>, List<LegValues>> process(List<Event> events, LocalDate date) {
+        externalityCounter.setDate(date.toString());
         eventsManager.initProcessing();
-        reader.readFile(eventsFile);
+        events.forEach(eventsManager::processEvent);
 
         ecc.addCosts(externalityCounter);
 
         eventsManager.finishProcessing();
-        //TODO: make sure that the handlers get reset!!!!!!!!!!
+        return externalityCounter.getPersonId2Leg();
 
     }
 

@@ -30,7 +30,10 @@ package object greenclass {
 
   }
 
-  case class TripRecord(user_id: String, trip_id: Int, date: LocalDate, legs: List[TripLeg])
+  case class TripRecord(user_id: String, trip_id: Int, date: LocalDate, legs: List[TripLeg]) {
+    def getIdentifier = date.toString + " - " + user_id
+
+  }
 
 
 }
