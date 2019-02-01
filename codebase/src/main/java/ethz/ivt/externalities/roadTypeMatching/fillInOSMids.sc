@@ -3,8 +3,8 @@
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.scenario.ScenarioUtils
 
-import scala.io.Source
 import scala.collection.JavaConverters._
+import scala.io.Source
 
 
 val config = ConfigUtils.loadConfig("""C:\Projects\SCCER_project\scenarios\switzerland_10pct\switzerland_config_w_emissions.xml""")

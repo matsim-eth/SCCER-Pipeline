@@ -1,23 +1,12 @@
 package ethz.ivt.externalities.counters;
 
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.*;
-import org.matsim.api.core.v01.events.handler.*;
-import org.matsim.api.core.v01.population.Person;
+import org.matsim.api.core.v01.events.ActivityEndEvent;
+import org.matsim.api.core.v01.events.ActivityStartEvent;
+import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
+import org.matsim.api.core.v01.events.handler.ActivityStartEventHandler;
 import org.matsim.core.events.handler.EventHandler;
-import org.matsim.core.mobsim.qsim.interfaces.DepartureHandler;
-import org.matsim.vehicles.Vehicle;
-
-import java.io.BufferedWriter;
-import java.io.File;
-import java.io.FileWriter;
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.*;
-import java.util.stream.Collectors;
 
 public class PublicTransportExternalityCounter implements ActivityEndEventHandler, ActivityStartEventHandler, EventHandler {
 
