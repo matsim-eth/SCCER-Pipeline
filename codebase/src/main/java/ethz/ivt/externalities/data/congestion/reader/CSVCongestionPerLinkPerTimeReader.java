@@ -22,8 +22,6 @@ public class CSVCongestionPerLinkPerTimeReader {
     }
 
     public Map<Id<Link>, CongestionPerTime> read(String path) throws IOException {
-        Map<Id<Link>, CongestionPerTime> map = new HashMap<>();
-
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
 
         List<String> header = null;

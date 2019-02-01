@@ -20,12 +20,9 @@ public class CSVCongestionPerPersonPerTimeReader {
         for (Id<Person> personId : personIds) {
             map.putIfAbsent(personId, new CongestionPerTime(this.binSize));
         }
-
     }
 
     public Map<Id<Person>, CongestionPerTime> read(String path) throws IOException {
-        Map<Id<Person>, CongestionPerTime> map = new HashMap<>();
-
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
 
         List<String> header = null;

@@ -6,6 +6,8 @@ import ethz.ivt.externalities.counters.ExternalityCostCalculator;
 import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.CongestionField;
+import ethz.ivt.externalities.data.congestion.CongestionPerTime;
+import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -32,6 +34,7 @@ import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
 import java.util.Random;
 
 
@@ -93,15 +96,17 @@ public class MeasureExternalitiesFromTraceEvents {
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
         // load precalculated aggregate congestion data per link per time
-        List<String> attributes = new LinkedList<>();
-        attributes.add(CongestionField.COUNT.getText());
-        attributes.add(CongestionField.DELAY_CAUSED.getText());
-        attributes.add(CongestionField.DELAY_EXPERIENCED.getText());
-        AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600,
-                scenario.getNetwork().getLinks().keySet(),
-                attributes,
-                null);
-        aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestionPath);
+//        List<String> attributes = new LinkedList<>();
+//        attributes.add(CongestionField.COUNT.getText());
+//        attributes.add(CongestionField.DELAY_CAUSED.getText());
+//        attributes.add(CongestionField.DELAY_EXPERIENCED.getText());
+//        AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600,
+//                scenario.getNetwork().getLinks().keySet(),
+//                attributes,
+//                null);
+//        aggregateCongestionDataPerLinkPerTime.loadDataFromCsv(congestionPath);
+//
+        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(scenario.getNetwork().getLinks().keySet(), 900.).read(congestionPath);
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, "xxxx", null);
@@ -110,7 +115,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
     public MeasureExternalitiesFromTraceEvents(
             Scenario scenario,
-            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
+            Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
             String costValuesFile) {
 
         this.costValuesFile = costValuesFile;
@@ -143,7 +148,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
         externalityCounter = new ExternalityCounter(scenario, date);
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter, bin_size_s);
 
         eventsManager.addHandler(externalityCounter);
         eventsManager.addHandler(carExternalityCounter);
