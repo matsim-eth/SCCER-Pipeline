@@ -2,7 +2,9 @@ package ethz.ivt.externalities;
 
 import ethz.ivt.JITvehicleCreator;
 import ethz.ivt.externalities.counters.*;
+import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -45,7 +47,7 @@ public class MeasureExternalities {
 
     public MeasureExternalities(
             Scenario scenario,
-            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
+            Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
             ExternalityCostCalculator ecc) {
 
         this.scenario = scenario;

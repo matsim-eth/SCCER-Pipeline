@@ -55,7 +55,7 @@ public class MeasureAggregateCongestionFromScenario {
         this.eventsManager.addHandler(v2deh);
 
         // add congestion handler and aggregator
-        this.congestionHandler = new CongestionHandlerImplV3(this.eventsManager, scenario);
+        this.congestionHandler = new CongestionHandlerImplV3(this.eventsManager, scenario, v2deh);
         this.congestionAggregator = new CongestionAggregator(scenario, v2deh, this.binSize);
         this.eventsManager.addHandler(congestionHandler);
         this.eventsManager.addHandler(congestionAggregator);

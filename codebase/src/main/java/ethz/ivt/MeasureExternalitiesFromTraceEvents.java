@@ -92,7 +92,7 @@ public class MeasureExternalitiesFromTraceEvents {
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
         // load precalculated aggregate congestion data per link per time
-        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = new CSVCongestionPerLinkPerTimeReader(scenario.getNetwork().getLinks().keySet(), binSize).read(congestionPath);
+        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = CSVCongestionPerLinkPerTimeReader.read(congestionPath, binSize);
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, "xxxx", null);

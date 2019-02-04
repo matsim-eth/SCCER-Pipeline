@@ -11,18 +11,10 @@ import java.io.InputStreamReader;
 import java.util.*;
 
 public class CSVCongestionPerLinkPerTimeReader {
-    private double binSize;
-    private Map<Id<Link>, CongestionPerTime> map = new HashMap<>();
 
-    public CSVCongestionPerLinkPerTimeReader(Collection<Id<Link>> linkIds, double binSize) {
-        this.binSize = binSize;
-        for (Id<Link> linkId : linkIds) {
-            map.putIfAbsent(linkId, new CongestionPerTime(this.binSize));
-        }
-    }
-
-    public Map<Id<Link>, CongestionPerTime> read(String path) throws IOException {
+    static public Map<Id<Link>, CongestionPerTime> read(String path, double binSize) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+        Map<Id<Link>, CongestionPerTime> map = new HashMap<>();
 
         List<String> header = null;
         String line = null;
@@ -34,6 +26,8 @@ public class CSVCongestionPerLinkPerTimeReader {
                 header = row;
             } else {
                 Id<Link> linkId = Id.createLinkId(row.get(header.indexOf("linkId")));
+                map.putIfAbsent(linkId, new CongestionPerTime(binSize));
+
                 double originalBinSize = Double.parseDouble(row.get(header.indexOf("binSize")));
                 int timeBin = Integer.parseInt(row.get(header.indexOf("timeBin")));
 

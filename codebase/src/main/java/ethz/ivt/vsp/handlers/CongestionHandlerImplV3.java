@@ -31,6 +31,8 @@ import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
 import ethz.ivt.vsp.DelayInfo;
 import ethz.ivt.vsp.LinkCongestionInfo;
+import org.matsim.core.events.EventsManagerImpl;
+import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -63,8 +65,12 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 
 	private static String PREFIX_GPS = "gps";
 
-	public CongestionHandlerImplV3(EventsManager events, Scenario scenario) {
-		this.delegate = new CongestionHandlerBaseImpl(events, scenario);
+	public CongestionHandlerImplV3(EventsManager events, Scenario scenario, Vehicle2DriverEventHandler v2d) {
+		this.delegate = new CongestionHandlerBaseImpl(events, scenario, v2d);
+	}
+
+	public CongestionHandlerImplV3(EventsManager eventsManager, Scenario scenario) {
+		this(eventsManager, scenario, new Vehicle2DriverEventHandler());
 	}
 
 	@Override

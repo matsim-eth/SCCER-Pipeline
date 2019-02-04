@@ -40,7 +40,7 @@ public class CongestionWriterTest {
         new CSVCongestionPerLinkPerTimeWriter(expectedMap).write("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
 
 
-        Map<Id<Link>, CongestionPerTime> actualMap = new CSVCongestionPerLinkPerTimeReader(collection, binSize).read("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+        Map<Id<Link>, CongestionPerTime> actualMap = CSVCongestionPerLinkPerTimeReader.read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {
             Assert.assertEquals("Counts do not match", expectedMap.get(linkId).getCountAtTimeBin(bin), actualMap.get(linkId).getCountAtTimeBin(bin), 0.0);
@@ -113,7 +113,7 @@ public class CongestionWriterTest {
         new CSVCongestionPerLinkPerTimeWriter(inputMap).write("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
 
 
-        Map<Id<Link>, CongestionPerTime> outputMap = new CSVCongestionPerLinkPerTimeReader(collection, newBinSize).read("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+        Map<Id<Link>, CongestionPerTime> outputMap = CSVCongestionPerLinkPerTimeReader.read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", newBinSize);
 
         for (int bin=0; bin<outputMap.get(linkId).getNumBins(); bin++) {
             Assert.assertEquals("Counts do not match", value * aggregationFactor, outputMap.get(linkId).getCountAtTimeBin(bin), 0.0);
@@ -165,7 +165,7 @@ public class CongestionWriterTest {
         new CSVCongestionPerLinkPerTimeWriter(expectedMap).write("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
 
 
-        Map<Id<Link>, CongestionPerTime> actualMap = new CSVCongestionPerLinkPerTimeReader(collection, binSize).read("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+        Map<Id<Link>, CongestionPerTime> actualMap = CSVCongestionPerLinkPerTimeReader.read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {
             Assert.assertEquals("Counts do not match", expectedMap.get(linkId).getCountAtTimeBin(bin), actualMap.get(linkId).getCountAtTimeBin(bin), 0.0);
@@ -234,7 +234,7 @@ public class CongestionWriterTest {
 
         new CSVCongestionPerLinkPerTimeWriter(expectedMap).write("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
 
-        Map<Id<Link>, CongestionPerTime> actualMap = new CSVCongestionPerLinkPerTimeReader(idCollection, binSize).read("./src/test/java/ethz/ivt/externalities/data/congestion.csv");
+        Map<Id<Link>, CongestionPerTime> actualMap = CSVCongestionPerLinkPerTimeReader.read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (Id<Link> linkId : idCollection) {
             for (int bin=0; bin<expectedMap.get(linkId).getNumBins(); bin++) {

@@ -63,11 +63,12 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	private static String PREFIX_GPS = "gps";
 
-	private Vehicle2DriverEventHandler Veh2DriverDelegate = new Vehicle2DriverEventHandler();
+	private Vehicle2DriverEventHandler veh2DriverDelegate;
 
-	CongestionHandlerBaseImpl(EventsManager events, Scenario scenario) {
+	CongestionHandlerBaseImpl(EventsManager events, Scenario scenario, Vehicle2DriverEventHandler v2d) {
 		this.scenario = scenario;
 		this.events = events;
+		this.veh2DriverDelegate = v2d;
 
 		if (this.scenario.getNetwork().getCapacityPeriod() != 3600.) {
 			log.warn("Capacity period is other than 3600.");
@@ -100,7 +101,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		this.delayNotInternalized_roundingErrors = 0.;
 		this.totalInternalizedDelay = 0.;
 		
-		Veh2DriverDelegate.reset(iteration);
+		veh2DriverDelegate.reset(iteration);
 	}
 
 	@Override
@@ -117,7 +118,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent( VehicleEntersTrafficEvent event ) {
-		Veh2DriverDelegate.handleEvent(event);
+		veh2DriverDelegate.handleEvent(event);
 	}
 
 	@Override
@@ -140,7 +141,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		} else { // car! 
 			LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario ) ;
 
-			Id<Person> driverId = Veh2DriverDelegate.getDriverOfVehicle(event.getVehicleId());
+			Id<Person> driverId = veh2DriverDelegate.getDriverOfVehicle(event.getVehicleId());
 			AgentOnLinkInfo agentInfo = new AgentOnLinkInfo.Builder().setAgentId( driverId ).setLinkId( event.getLinkId() )
 					.setEnterTime( event.getTime() ).setFreeSpeedLeaveTime( event.getTime()+linkInfo.getFreeTravelTime()+1. ).build();
 			linkInfo.getAgentsOnLink().put( driverId, agentInfo ) ;
@@ -164,7 +165,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		// coming here ...
 		
 		
-		Id<Person> personId = Veh2DriverDelegate.getDriverOfVehicle( event.getVehicleId() ) ;
+		Id<Person> personId = veh2DriverDelegate.getDriverOfVehicle( event.getVehicleId() ) ;
 
 		LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo(event.getLinkId(), this.getLinkId2congestionInfo(), scenario);
 
@@ -310,7 +311,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 	}
 
 	public Vehicle2DriverEventHandler getVehicle2DriverEventHandler() {
-		return Veh2DriverDelegate;
+		return veh2DriverDelegate;
 	}
 
 	@Override
@@ -330,7 +331,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public void handleEvent(VehicleLeavesTrafficEvent event) {
-		Veh2DriverDelegate.handleEvent(event);
+		veh2DriverDelegate.handleEvent(event);
 	}
 
 
