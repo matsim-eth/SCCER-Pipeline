@@ -40,7 +40,7 @@ public class CSVCongestionReader<T> {
             if (header == null) {
                 header = row;
             } else {
-                Id<T> id = Id.create(row.get(header.indexOf("Id")), clazz);
+                Id<T> id = Id.create(row.get(header.indexOf("id")), clazz);
                 map.putIfAbsent(id, new CongestionPerTime(binSize));
 
                 double originalBinSize = Double.parseDouble(row.get(header.indexOf("binSize")));

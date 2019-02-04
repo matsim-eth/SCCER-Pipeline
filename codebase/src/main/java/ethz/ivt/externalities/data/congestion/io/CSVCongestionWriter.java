@@ -41,7 +41,7 @@ public class CSVCongestionWriter<T> {
 
     private String formatHeader() {
         return String.join(";", new String[] {
-                "Id", "binSize", "timeBin", "count", "delay_caused", "delay_experienced", "congestion_caused", "congestion_experienced"
+                "id", "binSize", "timeBin", "count", "delay_caused", "delay_experienced", "congestion_caused", "congestion_experienced"
         });
     }
 
