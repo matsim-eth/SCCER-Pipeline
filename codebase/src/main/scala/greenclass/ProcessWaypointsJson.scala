@@ -1,10 +1,11 @@
 package greenclass
 
-import java.io.File
+import java.io.{File, FileInputStream}
 import java.nio.file.{Files, Path, Paths}
 import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.time.format.DateTimeFormatter
+import java.util.Properties
 
 import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.routing.RoundRobinPool
@@ -44,15 +45,17 @@ object ProcessWaypointsJson {
 
     //val args = {"P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_config_no_facilities.xml", "C:\\Projects\\spark\\green_class_swiss_triplegs.csv","C:\\Projects\\spark\\green_class_waypoints.csv","C:\\Projects\\SCCER_project\\output_gc"}
 
+    val props = new Properties()
+    props.load(new FileInputStream(args(0)))
 
     val logger = Logger.getLogger(this.getClass)
-    val argI = args.iterator
-    val config = ConfigUtils.loadConfig(argI.next(), new EmissionsConfigGroup)
-    val costValuesFile = Paths.get(argI.next())
-    val trips_folder = Paths.get(argI.next())
-    val output_dir = Paths.get(argI.next())
+    val base_file_location = Paths.get(props.getProperty("base.data.location"))
+    val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
+    val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
 
-    val overwrite: Boolean = args.applyOrElse(argI.next().toInt, (_: Int) => "False").toBoolean
+    val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
+    val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
+    val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
     val congestionAggregator = ??? //CongestionAggregator.build(programConfig)
