@@ -16,6 +16,7 @@ import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
 import ethz.ivt.externalities.counters.ExternalityCostCalculator
+import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl}
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
@@ -33,6 +34,7 @@ import org.json4s.jackson.JsonMethods._
 import org.matsim.api.core.v01.events._
 import org.matsim.api.core.v01.network.Link
 import org.matsim.api.core.v01.population.Person
+import org.matsim.vehicles.{VehicleReaderV1, VehicleType, VehicleUtils, VehicleWriterV1}
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
@@ -53,21 +55,24 @@ object ProcessWaypointsJson {
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
+    val gc_vehicles_file = base_file_location.resolve(Paths.get(props.getProperty("vehicles.file")))
 
     val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
     val congestion_file = base_file_location.resolve(Paths.get(props.getProperty("congestion.file")))
     val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
     val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
+    val numCores = Option(props.getProperty("num.cores")).map(_.toInt).getOrElse(1)
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
-    val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
-    val ecc = new ExternalityCostCalculator(costValuesFile.toString)
+
+    Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
     val processWaypointsJson = new ProcessWaypointsJson(scenario)
+    val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+    val ecc = new ExternalityCostCalculator(costValuesFile.toString)
+    val me : MeasureExternalities = new MeasureExternalities(scenario, congestionAggregator, ecc)
 
-    val me : MeasureExternalities = new MeasureExternalities(scenario, null, ecc)
-
-
+    logger.info("Data loaded")
     val _system = ActorSystem("MainEngineActor")
 
 
@@ -75,10 +80,10 @@ object ProcessWaypointsJson {
     val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
 
     val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor)
-    val eventsActor = _system.actorOf(eventProps.withRouter(RoundRobinPool(5)), name = "EventActor")
+    val eventsActor = _system.actorOf(eventProps, name = "EventActor")
 
     val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
-    val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
+    val traceProcessors = _system.actorOf(traceProps.withRouter(RoundRobinPool(numCores)), name = "TraceActor")
 
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
     jsons.map(JsonFile).foreach(traceProcessors ! _)
