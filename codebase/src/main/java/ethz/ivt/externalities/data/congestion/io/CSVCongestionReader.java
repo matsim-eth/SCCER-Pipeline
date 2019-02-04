@@ -1,7 +1,8 @@
-package ethz.ivt.externalities.data.congestion.reader;
+package ethz.ivt.externalities.data.congestion.io;
 
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 
 import java.io.BufferedReader;
@@ -10,20 +11,25 @@ import java.io.IOException;
 import java.io.InputStreamReader;
 import java.util.*;
 
-public class CSVCongestionPerPersonPerTimeReader {
+public class CSVCongestionReader<T> {
 
-    private double binSize;
-    private Map<Id<Person>, CongestionPerTime> map = new HashMap<>();
+    private final Class<T> clazz;
 
-    public CSVCongestionPerPersonPerTimeReader(Collection<Id<Person>> personIds, double binSize) {
-        this.binSize = binSize;
-        for (Id<Person> personId : personIds) {
-            map.putIfAbsent(personId, new CongestionPerTime(this.binSize));
-        }
+    public static CSVCongestionReader<Link> forLink() {
+        return new CSVCongestionReader<>(Link.class);
     }
 
-    public Map<Id<Person>, CongestionPerTime> read(String path) throws IOException {
+    public static CSVCongestionReader<Person> forPerson() {
+        return new CSVCongestionReader<>(Person.class);
+    }
+
+    private CSVCongestionReader(Class<T> clazz) {
+        this.clazz = clazz;
+    }
+
+    public Map<Id<T>, CongestionPerTime> read(String path, double binSize) throws IOException {
         BufferedReader reader = new BufferedReader(new InputStreamReader(new FileInputStream(path)));
+        Map<Id<T>, CongestionPerTime> map = new HashMap<>();
 
         List<String> header = null;
         String line = null;
@@ -34,7 +40,9 @@ public class CSVCongestionPerPersonPerTimeReader {
             if (header == null) {
                 header = row;
             } else {
-                Id<Person> personId = Id.createPersonId(row.get(header.indexOf("personId")));
+                Id<T> id = Id.create(row.get(header.indexOf("Id")), clazz);
+                map.putIfAbsent(id, new CongestionPerTime(binSize));
+
                 double originalBinSize = Double.parseDouble(row.get(header.indexOf("binSize")));
                 int timeBin = Integer.parseInt(row.get(header.indexOf("timeBin")));
 
@@ -46,11 +54,11 @@ public class CSVCongestionPerPersonPerTimeReader {
                 double congestionCaused = Double.parseDouble(row.get(header.indexOf("congestion_caused")));
                 double congestionExperienced = Double.parseDouble(row.get(header.indexOf("congestion_experienced")));
 
-                map.get(personId).addCountAtTime(count, time);
-                map.get(personId).addDelayCausedAtTime(delayCaused, time);
-                map.get(personId).addDelayExperiencedAtTime(delayExperienced, time);
-                map.get(personId).addCongestionCausedAtTime(congestionCaused, time);
-                map.get(personId).addCongestionExperiencedAtTime(congestionExperienced, time);
+                map.get(id).addCountAtTime(count, time);
+                map.get(id).addDelayCausedAtTime(delayCaused, time);
+                map.get(id).addDelayExperiencedAtTime(delayExperienced, time);
+                map.get(id).addCongestionCausedAtTime(congestionCaused, time);
+                map.get(id).addCongestionExperiencedAtTime(congestionExperienced, time);
             }
         }
 

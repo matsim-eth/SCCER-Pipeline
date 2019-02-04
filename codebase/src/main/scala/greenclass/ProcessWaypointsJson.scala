@@ -16,7 +16,7 @@ import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
 import ethz.ivt.externalities.counters.ExternalityCostCalculator
-import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader
+import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
@@ -60,7 +60,7 @@ object ProcessWaypointsJson {
     val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
-    val congestionAggregator = CSVCongestionPerLinkPerTimeReader.read(congestion_file.toString, 900)
+    val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
 
     val processWaypointsJson = new ProcessWaypointsJson(scenario)

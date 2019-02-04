@@ -5,11 +5,10 @@ import ethz.ivt.externalities.counters.CongestionCounter;
 import ethz.ivt.externalities.counters.ExternalityCostCalculator;
 import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
-import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader;
+import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
@@ -30,7 +29,6 @@ import org.matsim.vehicles.VehicleUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
 
@@ -92,7 +90,7 @@ public class MeasureExternalitiesFromTraceEvents {
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
         // load precalculated aggregate congestion data per link per time
-        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = CSVCongestionPerLinkPerTimeReader.read(congestionPath, binSize);
+        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestionPath, binSize);
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, "xxxx", null);

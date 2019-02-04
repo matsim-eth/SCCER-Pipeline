@@ -9,8 +9,8 @@ import java.util.{LinkedList, List}
 import com.esotericsoftware.kryo.Kryo
 import com.esotericsoftware.kryo.io.{Input, Output}
 import ethz.ivt.MeasureExternalitiesFromTraceEvents
+import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.externalities.data.{AggregateDataPerTimeImpl, CongestionField}
-import ethz.ivt.externalities.data.congestion.reader.CSVCongestionPerLinkPerTimeReader
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario}
 import org.matsim.api.core.v01.network.Link
@@ -65,7 +65,7 @@ class ProcessEvents {
 
     // load precomputed aggregate data
     logger.info("load aggregate congestion data")
-    val aggregateCongestionDataPerLinkPerTime = CSVCongestionPerLinkPerTimeReader.read(congestion_file, bin_size_s)
+    val aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestion_file, bin_size_s)
 
     //read list of already processed files, in case of failure
     new File(outputFolder).mkdir()

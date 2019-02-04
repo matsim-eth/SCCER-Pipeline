@@ -1,12 +1,13 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
-import ethz.ivt.externalities.data.congestion.writer.CSVCongestionPerLinkPerTimeWriter;
-import ethz.ivt.externalities.data.congestion.writer.CSVCongestionPerPersonPerTimeWriter;
+import ethz.ivt.externalities.data.congestion.io.CSVCongestionWriter;
 import ethz.ivt.vsp.handlers.CongestionHandler;
 import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -75,10 +76,10 @@ public class MeasureAggregateCongestionFromScenario {
 
     public void write(String outputDirectory) throws IOException {
         // save congestion data to csv files
-        new CSVCongestionPerLinkPerTimeWriter(this.congestionAggregator.getAggregateCongestionDataPerLinkPerTime())
-                .write(outputDirectory + "/aggregate_delay_per_link_per_time.csv");
-        new CSVCongestionPerPersonPerTimeWriter(this.congestionAggregator.getAggregateCongestionDataPerPersonPerTime())
-                .write(outputDirectory + "/aggregate_delay_per_person_per_time.csv");
+        CSVCongestionWriter.forLink().write(this.congestionAggregator.getAggregateCongestionDataPerLinkPerTime(),
+                outputDirectory + "/aggregate_delay_per_link_per_time.csv");
+        CSVCongestionWriter.forPerson().write(this.congestionAggregator.getAggregateCongestionDataPerPersonPerTime(),
+                outputDirectory + "/aggregate_delay_per_person_per_time.csv");
     }
 
 }
