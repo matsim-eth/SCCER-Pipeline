@@ -22,11 +22,11 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd1 = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
+        AggregateDataPerTimeImpl<Link> acd1 = new AggregateDataPerTimeImpl<Link>(3600.0, att, Link.class);
         assertEquals("Incorrect number of bins!",30, acd1.getNumBins());
         assertEquals("Incorrect bin size!",3600.0, acd1.getBinSize(), 0.0);
 
-        AggregateDataPerTimeImpl<Link> acd2 = new AggregateDataPerTimeImpl<Link>(7200.0, att, null, Link.class);
+        AggregateDataPerTimeImpl<Link> acd2 = new AggregateDataPerTimeImpl<Link>(7200.0, att, Link.class);
         assertEquals("Incorrect number of bins!", 15, acd2.getNumBins());
         assertEquals("Incorrect bin size!", 7200.0, acd2.getBinSize(), 0.0);
 
@@ -41,7 +41,7 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, Link.class);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -85,7 +85,7 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, Link.class);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -112,7 +112,7 @@ public class AggregateDataPerTimeTest {
 
         String outputFile = "aggregate_delay_per_link_per_time.csv";
 
-        AggregateDataPerTimeImpl<Link> acdToWrite = new AggregateDataPerTimeImpl<Link>(3600.0, att, outputFile, Link.class);
+        AggregateDataPerTimeImpl<Link> acdToWrite = new AggregateDataPerTimeImpl<Link>(3600.0, att, Link.class);
 
         Random randomGenerator = new Random();
         for (Id<Link> lid : fixture.network.getLinks().keySet()) {
@@ -122,9 +122,9 @@ public class AggregateDataPerTimeTest {
             }
         }
 
-        acdToWrite.writeDataToCsv("");
+        acdToWrite.writeDataToCsv(outputFile);
 
-        AggregateDataPerTimeImpl<Link> acdToRead = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
+        AggregateDataPerTimeImpl<Link> acdToRead = new AggregateDataPerTimeImpl<Link>(3600.0, att, Link.class);
         acdToRead.loadDataFromCsv(outputFile);
 
         for (Id<Link> linkId : acdToWrite.getData().keySet()) {

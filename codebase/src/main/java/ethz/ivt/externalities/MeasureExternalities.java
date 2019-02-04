@@ -47,7 +47,7 @@ public class MeasureExternalities {
 
     public MeasureExternalities(
             Scenario scenario,
-            Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
+            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
             ExternalityCostCalculator ecc) {
 
         this.scenario = scenario;

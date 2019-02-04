@@ -4,6 +4,8 @@ import ethz.ivt.externalities.counters.CarExternalityCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 import ethz.ivt.externalities.counters.ExternalityCostCalculator;
 import ethz.ivt.externalities.counters.ExternalityCounter;
+import ethz.ivt.externalities.data.AggregateDataPerTime;
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import org.apache.log4j.Logger;
@@ -90,7 +92,7 @@ public class MeasureExternalitiesFromTraceEvents {
         MeasureExternalitiesFromTraceEvents.setUpRoadTypes(scenario.getNetwork());
 
         // load precalculated aggregate congestion data per link per time
-        Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestionPath, binSize);
+        AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestionPath, binSize);
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, "xxxx", null);
@@ -99,7 +101,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
     public MeasureExternalitiesFromTraceEvents(
             Scenario scenario,
-            Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
+            AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
             String costValuesFile) {
 
         this.costValuesFile = costValuesFile;

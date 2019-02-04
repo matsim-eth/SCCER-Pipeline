@@ -6,10 +6,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
 import java.io.*;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 
 public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
@@ -18,14 +15,12 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     private int numBins;
     private Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
     private List<String> attributes;
-    private String outputFileName;
 
-    public AggregateDataPerTimeImpl(double binSize, List<String> attributes, String outputFileName,
+    public AggregateDataPerTimeImpl(double binSize, List<String> attributes,
                                     Class<T> clazz) {
         this.numBins = (int) (30 * 3600 / binSize);
         this.binSize = binSize;
         this.attributes = attributes;
-        this.outputFileName = outputFileName;
         this.clazz = clazz;
 
     }
@@ -41,6 +36,11 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
 
     public Map<Id<T>, Map<String, double[]>> getData() {
         return aggregateDataPerLinkPerTime;
+    }
+
+    public double getValue(Id<T> id, double time, String attribute) {
+        int timeBin = getTimeBin(time);
+        return getValue(id, timeBin, attribute);
     }
 
     public double getValue(Id<T> id, int timeBin, String attribute) {
@@ -59,6 +59,11 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
         return 0.0;
     }
 
+    public void setValue(Id<T> id, double time, String attribute, double value) {
+        int timeBin = getTimeBin(time);
+        setValue(id, timeBin, attribute, value);
+    }
+
     public void setValue(Id<T> id, int timeBin, String attribute, double value) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". No value set.");
@@ -75,6 +80,11 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
         }
         log.warn("Id " + id + " is not valid. No value set.");
         return;
+    }
+
+    public void addValue(Id<T> id, double time, String attribute, double value) {
+        int timeBin = getTimeBin(time);
+        addValue(id, timeBin, attribute, value);
     }
 
     public void addValue(Id<T> id, int timeBin, String attribute, double value) {
@@ -116,17 +126,19 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                         // read line by line
                         while ((record = reader.readNext()) != null) {
                             Id<T> lid = Id.create(record[0], clazz);
-                            int bin = Integer.parseInt(record[1]);
+                            double originalBinSize = Double.parseDouble(record[1]);
+                            int timeBin = Integer.parseInt(record[2]);
+                            double time = timeBin * originalBinSize;
 
                             // go through all attributes
                             for (int i = 0; i < attributes.size(); i++) {
-                                double value = Double.parseDouble(record[i+2]);
+                                double value = Double.parseDouble(record[i+3]);
                                 if (Double.isNaN(value))
                                 {
                                     value = 0.;
                                 }
                                 setUpTimeBins(lid);
-                                this.aggregateDataPerLinkPerTime.get(lid).get(header[i+2])[bin] = value;
+                                this.addValue(lid, time, header[i+3], value);
                             }
                         }
                     }
@@ -160,14 +172,14 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
         File dir = new File(outputPath);
         dir.mkdirs();
 
-        String fileName = outputPath + outputFileName;
+        String fileName = outputPath;
 
         File file = new File(fileName);
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 
-            String header = Link.class.getSimpleName() + "id" + ";timebin";
+            String header = Link.class.getSimpleName() + "id;binSize;timebin";
             for (String attribute : this.attributes) {
                 header = header + ";" + attribute;
             }
@@ -177,7 +189,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             for (Map.Entry<Id<T>, Map<String, double[]>> e : this.aggregateDataPerLinkPerTime.entrySet()) {
                 for (int bin = 0; bin<this.numBins; bin++) {
 
-                    String entry = e.getKey() + ";" + bin;
+                    String entry = e.getKey() + ";" + binSize + ";" + bin;
 
                     for (String attribute : attributes) {
                         entry = entry + ";" + e.getValue().get(attribute)[bin];
@@ -196,5 +208,25 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             e.printStackTrace();
         }
 
+    }
+
+    private int getTimeBin(double time) {
+        //Agents who end their first activity before the simulation has started will depart in the first time step.
+        if (time <= 0.0) return 0;
+        //Calculate the bin for the given time.
+        int bin = (int) (time / this.binSize);
+        //Anything larger than 30 hours gets placed in the final bin.
+        return Math.min(bin, this.numBins-1);
+    }
+
+    public static AggregateDataPerTimeImpl congestion(double binSize, Class clazz) {
+        List<String> attributes = new ArrayList<>();
+        attributes.add("count");
+        attributes.add("delay_caused");
+        attributes.add("delay_experienced");
+        attributes.add("congestion_caused");
+        attributes.add("congestion_experienced");
+
+        return new AggregateDataPerTimeImpl<>(binSize, attributes, clazz);
     }
 }

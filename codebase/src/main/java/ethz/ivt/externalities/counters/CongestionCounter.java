@@ -1,5 +1,6 @@
 package ethz.ivt.externalities.counters;
 
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -20,14 +21,14 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
     private static final Logger log = Logger.getLogger(CongestionCounter.class);
     private Scenario scenario;
 
-    private Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime;
+    private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
     private Map<Id<Person>, Double> personLinkEntryTime = new HashMap<>();
 
     private ExternalityCounter externalityCounterDelegate;
 
 
     public CongestionCounter(Scenario scenario,
-                             Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime,
+                             AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
                              ExternalityCounter externalityCounterDelegate) {
 
         this.scenario = scenario;
@@ -88,13 +89,13 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-        double count = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCountAtTime(time);
+        double count = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "count");
 
         if (count > 0) {
-            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayCausedAtTime(time) / count;
-            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getDelayExperiencedAtTime(time) / count;
-            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionCausedAtTime(time) / count;
-            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.get(lid).getCongestionExperiencedAtTime(time) / count;
+            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "delay_caused") / count;
+            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "delay_experienced") / count;
+            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "congestion_caused") / count;
+            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "congestion_experienced") / count;
 
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_experienced", delayExperienced);

@@ -32,8 +32,8 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
         this.drivers = v2deh;
         List<String> attributes = new ArrayList<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
 
-        this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, attributes, "aggregate_emissions_per_link_per_time.csv", Link.class);
-        this.aggregateEmissionsDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, attributes, "aggregate_emissions_per_person_per_time.csv", Person.class);
+        this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, attributes, Link.class);
+        this.aggregateEmissionsDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, attributes, Person.class);
     }
 
     @Override

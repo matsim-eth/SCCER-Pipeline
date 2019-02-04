@@ -1,5 +1,6 @@
 package ethz.ivt.externalities.aggregation;
 
+import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import ethz.ivt.vsp.CongestionEvent;
@@ -31,8 +32,8 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     private final Vehicle2DriverEventHandler drivers;
     private double binSize;
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
-    private Map<Id<Link>, CongestionPerTime> aggregateCongestionDataPerLinkPerTime = new HashMap<>();
-    private Map<Id<Person>, CongestionPerTime> aggregateCongestionDataPerPersonPerTime = new HashMap<>();
+    private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
+    private AggregateDataPerTimeImpl<Person> aggregateCongestionDataPerPersonPerTime;
 
     private double congestionThresholdRatio = 0.65;
 
@@ -40,19 +41,15 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         this.scenario = scenario;
         this.drivers = drivers;
         this.binSize = binSize;
+        aggregateCongestionDataPerLinkPerTime = AggregateDataPerTimeImpl.congestion(binSize, Link.class);
+        aggregateCongestionDataPerPersonPerTime =  AggregateDataPerTimeImpl.congestion(binSize, Person.class);
+
         
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
             person2linkinfo.put(personId, new AgentOnLinkInfo(personId, null, -1.0, -1.0));
         });
 
-        // set up aggregateCongestionData
-        for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()) {
-            aggregateCongestionDataPerLinkPerTime.putIfAbsent(linkId, new CongestionPerTime(this.binSize));
-        }
-        for (Id<Person> personId : scenario.getPopulation().getPersons().keySet()) {
-            aggregateCongestionDataPerPersonPerTime.putIfAbsent(personId, new CongestionPerTime(this.binSize));
-        }
     }
 
     @Override
@@ -81,16 +78,16 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         }
 
         // store delay info
-        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addDelayCausedAtTime(delay, causingAgentEnterTime);
-        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addDelayExperiencedAtTime(delay, affectedAgentLeaveTime);
-        aggregateCongestionDataPerLinkPerTime.get(causingAgentLinkId).addCongestionCausedAtTime(congestion, causingAgentEnterTime);
-        aggregateCongestionDataPerLinkPerTime.get(affectedAgentLinkId).addCongestionExperiencedAtTime(congestion, affectedAgentLeaveTime);
+        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId,causingAgentEnterTime, "delay_caused", delay);
+        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId,affectedAgentLeaveTime, "delay_experienced", delay);
+        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId,causingAgentEnterTime, "congestion_caused", congestion);
+        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId,affectedAgentLeaveTime, "congestion_experienced", congestion);
 
-        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addDelayCausedAtTime(delay, causingAgentEnterTime);
-        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addDelayExperiencedAtTime(delay, affectedAgentLeaveTime);
-        aggregateCongestionDataPerPersonPerTime.get(causingAgentId).addCongestionCausedAtTime(congestion, causingAgentEnterTime);
-        aggregateCongestionDataPerPersonPerTime.get(affectedAgentId).addCongestionExperiencedAtTime(congestion, affectedAgentLeaveTime);
-    }
+        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId,causingAgentEnterTime, "delay_caused", delay);
+        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId,affectedAgentLeaveTime, "delay_experienced", delay);
+        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId,causingAgentEnterTime, "congestion_caused", congestion);
+        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId,affectedAgentLeaveTime, "congestion_experienced", congestion);
+   }
 
     /*
      * We only count the agent once when it enters the link,
@@ -109,7 +106,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+            aggregateCongestionDataPerLinkPerTime.addValue(linkId, enterTime, "count", 1);
         }
     }
 
@@ -129,7 +126,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.get(linkId).addCountAtTime(1.0, enterTime);
+            aggregateCongestionDataPerLinkPerTime.addValue(linkId, enterTime, "count", 1);
         }
     }
 
@@ -161,11 +158,11 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         return congestionThresholdRatio;
     }
 
-    public Map<Id<Link>, CongestionPerTime> getAggregateCongestionDataPerLinkPerTime() {
+    public AggregateDataPerTimeImpl<Link> getAggregateCongestionDataPerLinkPerTime() {
         return aggregateCongestionDataPerLinkPerTime;
     }
 
-    public Map<Id<Person>, CongestionPerTime> getAggregateCongestionDataPerPersonPerTime() {
+    public AggregateDataPerTimeImpl<Person> getAggregateCongestionDataPerPersonPerTime() {
         return aggregateCongestionDataPerPersonPerTime;
     }
 }
