@@ -22,18 +22,14 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd1 = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        AggregateDataPerTimeImpl<Link> acd1 = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
         assertEquals("Incorrect number of bins!",30, acd1.getNumBins());
         assertEquals("Incorrect bin size!",3600.0, acd1.getBinSize(), 0.0);
 
-        AggregateDataPerTimeImpl<Link> acd2 = new AggregateDataPerTimeImpl<Link>(7200.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        AggregateDataPerTimeImpl<Link> acd2 = new AggregateDataPerTimeImpl<Link>(7200.0, att, null, Link.class);
         assertEquals("Incorrect number of bins!", 15, acd2.getNumBins());
         assertEquals("Incorrect bin size!", 7200.0, acd2.getBinSize(), 0.0);
 
-        for (Id<Link> lid : fixture.network.getLinks().keySet()) {
-            assertEquals("Count array for link " + lid + " in data map has incorrect number of elements!",30, acd1.getData().get(lid).get("count").length);
-            assertEquals("Delay array for link " + lid + " in data map has incorrect number of elements!",30, acd1.getData().get(lid).get("delay").length);
-        }
     }
 
     @Test
@@ -45,7 +41,7 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -56,8 +52,8 @@ public class AggregateDataPerTimeTest {
 
         // link does not exist
         Id<Link> linkId2 = Id.create("10",Link.class);
-        acd.setValue(linkId2, 1, "count", 50.0);
-        acd.setValue(linkId2, 1, "delay", 100.0);
+    //    acd.setValue(linkId2, 1, "count", 50.0);
+    //    acd.setValue(linkId2, 1, "delay", 100.0);
         assertEquals("Wrong count!", 0.0, acd.getValue(linkId2, 1, "count"), 0.0);
         assertEquals("Wrong delay!", 0.0, acd.getValue(linkId2, 1, "delay"), 0.0);
 
@@ -89,7 +85,7 @@ public class AggregateDataPerTimeTest {
         att.add("count");
         att.add("delay");
 
-        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        AggregateDataPerTimeImpl<Link> acd = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
 
         // link exists
         Id<Link> linkId1 = Id.create("0",Link.class);
@@ -116,19 +112,19 @@ public class AggregateDataPerTimeTest {
 
         String outputFile = "aggregate_delay_per_link_per_time.csv";
 
-        AggregateDataPerTimeImpl<Link> acdToWrite = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, outputFile);
+        AggregateDataPerTimeImpl<Link> acdToWrite = new AggregateDataPerTimeImpl<Link>(3600.0, att, outputFile, Link.class);
 
         Random randomGenerator = new Random();
         for (Id<Link> lid : fixture.network.getLinks().keySet()) {
             for (int i = 0; i < 30; i++) {
-                acdToWrite.getData().get(lid).get("count")[i] = randomGenerator.nextInt(100);
-                acdToWrite.getData().get(lid).get("delay")[i] = randomGenerator.nextDouble();
+                acdToWrite.setValue(lid, i,"count", randomGenerator.nextInt(100));
+                acdToWrite.setValue(lid, i,"delay", randomGenerator.nextInt(100));
             }
         }
 
         acdToWrite.writeDataToCsv("");
 
-        AggregateDataPerTimeImpl<Link> acdToRead = new AggregateDataPerTimeImpl<Link>(3600.0, fixture.scenario.getNetwork().getLinks().keySet(), att, null);
+        AggregateDataPerTimeImpl<Link> acdToRead = new AggregateDataPerTimeImpl<Link>(3600.0, att, null, Link.class);
         acdToRead.loadDataFromCsv(outputFile);
 
         for (Id<Link> linkId : acdToWrite.getData().keySet()) {

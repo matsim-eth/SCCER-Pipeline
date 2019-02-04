@@ -13,18 +13,21 @@ import java.util.Set;
 
 public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
+    final Class<T> clazz;
     private double binSize;
     private int numBins;
     private Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
     private List<String> attributes;
     private String outputFileName;
 
-    public AggregateDataPerTimeImpl(double binSize, Set<Id<T>> ids, List<String> attributes, String outputFileName) {
+    public AggregateDataPerTimeImpl(double binSize, List<String> attributes, String outputFileName,
+                                    Class<T> clazz) {
         this.numBins = (int) (30 * 3600 / binSize);
         this.binSize = binSize;
         this.attributes = attributes;
         this.outputFileName = outputFileName;
-        setUpTimeBins(ids);
+        this.clazz = clazz;
+
     }
 
     // getters
@@ -43,7 +46,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     public double getValue(Id<T> id, int timeBin, String attribute) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
-            return this.numBins - 1;
+            return 0.0;
         }
         if (aggregateDataPerLinkPerTime.containsKey(id)) {
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
@@ -61,6 +64,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             log.warn("Time bin must be < " + this.numBins + ". No value set.");
             return;
         }
+        setUpTimeBins(id);
         if (aggregateDataPerLinkPerTime.containsKey(id)) {
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
                 aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin] = value;
@@ -81,12 +85,13 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
 
 
     // setup
-    public void setUpTimeBins(Set<Id<T>> ids) {
-        ids.forEach(id -> {
-            aggregateDataPerLinkPerTime.put(id, new HashMap<>());
+    private void setUpTimeBins(Id<T> id) {
+        aggregateDataPerLinkPerTime.computeIfAbsent(id, a -> {
+            HashMap<String, double[]> map = new HashMap<>();
             for (String attribute : this.attributes) {
-                aggregateDataPerLinkPerTime.get(id).putIfAbsent(attribute, new double[numBins]);
+                map.putIfAbsent(attribute, new double[numBins]);
             }
+            return map;
         });
     }
 
@@ -110,7 +115,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                     else {
                         // read line by line
                         while ((record = reader.readNext()) != null) {
-                            Id<Link> lid = Id.createLinkId(record[0]);
+                            Id<T> lid = Id.create(record[0], clazz);
                             int bin = Integer.parseInt(record[1]);
 
                             // go through all attributes
@@ -120,6 +125,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                                 {
                                     value = 0.;
                                 }
+                                setUpTimeBins(lid);
                                 this.aggregateDataPerLinkPerTime.get(lid).get(header[i+2])[bin] = value;
                             }
                         }

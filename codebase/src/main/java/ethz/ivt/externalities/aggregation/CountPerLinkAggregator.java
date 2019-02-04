@@ -39,9 +39,7 @@ public class CountPerLinkAggregator implements LinkEnterEventHandler, LinkLeaveE
         String outputFileName = "aggregate_counts_per_link_per_time.csv";
 
         this.aggregateCountDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600,
-                scenario.getNetwork().getLinks().keySet(),
-                attributes,
-                outputFileName);
+                attributes, outputFileName, Link.class);
 
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
             person2enterTime.put(personId, 0.0);
