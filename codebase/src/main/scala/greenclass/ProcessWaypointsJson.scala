@@ -70,20 +70,21 @@ object ProcessWaypointsJson {
     val processWaypointsJson = new ProcessWaypointsJson(scenario)
     val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
-    val me : MeasureExternalities = new MeasureExternalities(scenario, congestionAggregator, ecc)
+    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
 
     logger.info("Data loaded")
     val _system = ActorSystem("MainEngineActor")
 
+    val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
 
-    val extProps = ExternalitiesActor.props(me)
+    val extProps = ExternalitiesActor.props(me, writerActorProps)
     val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
 
     val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor)
-    val eventsActor = _system.actorOf(eventProps, name = "EventActor")
+    val eventsActor = _system.actorOf(eventProps.withRouter(RoundRobinPool(numCores)), name = "EventActor")
 
     val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
-    val traceProcessors = _system.actorOf(traceProps.withRouter(RoundRobinPool(numCores)), name = "TraceActor")
+    val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
     jsons.map(JsonFile).foreach(traceProcessors ! _)
@@ -92,7 +93,7 @@ object ProcessWaypointsJson {
     import scala.concurrent.duration._
     implicit val ec: ExecutionContext = _system.dispatcher
 
-    gracefulStop(traceProcessors, 3 minutes, logger.info("stoped trace processors"))
+    gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
       .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
       .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
       .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))

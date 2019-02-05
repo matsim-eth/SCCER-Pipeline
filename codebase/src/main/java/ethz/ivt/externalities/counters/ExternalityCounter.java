@@ -16,6 +16,7 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.LocalDate;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -77,12 +78,11 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
     }
 
-    public void writeCsvFile(Path outputPath, String filename) {
-		Path outputFileName = outputPath.resolve(filename + "_externalities.csv");
-    	
+    public void writeCsvFile(Path outputFileName) {
+
 		File file = outputFileName.toFile();
 		file.getParentFile().mkdirs();
-		
+
 
 		try {
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -103,18 +103,18 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
                         bw.write(header + String.join(";", keys));
 	    				bw.newLine();
 	    	        	headerWritten = true;
-	    	        } 
+	    	        }
 	    	        bw.write(record);
 	    	        bw.newLine();
 	    		}
-	    	}	
+	    	}
 			bw.close();
 			log.info("Output written to " + outputFileName);
-			
+
 		} catch (IOException e) {
 			e.printStackTrace();
 		}
-    	
+
     }
 
 	@Override

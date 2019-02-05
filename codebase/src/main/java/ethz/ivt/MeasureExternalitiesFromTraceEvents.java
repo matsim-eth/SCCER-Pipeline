@@ -96,7 +96,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, "xxxx", null);
-        runner.write(outputPath, "xxxx", "Switzerland");
+        runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
     }
 
     public MeasureExternalitiesFromTraceEvents(
@@ -156,9 +156,9 @@ public class MeasureExternalitiesFromTraceEvents {
 
 
 
-    public void write(String folder, String date, String person) {
-        Path outputFolder = Paths.get(folder, date);
-        externalityCounter.writeCsvFile(outputFolder, person);
+    public void write(Path folder) {
+        Path outputFolder = folder.resolve(date);
+        externalityCounter.writeCsvFile(outputFolder);
     }
 
     public static void setUpRoadTypes(Network network) {

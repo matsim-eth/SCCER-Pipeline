@@ -64,10 +64,6 @@ public class MeasureExternalities {
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
     //    ecg.setUsingDetailedEmissionCalculation(false);
 
-        //add Hbefa mappings to the network
-        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
-        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
-
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, date);
@@ -84,7 +80,7 @@ public class MeasureExternalities {
         eventsManager.resetHandlers(0);
     }
 
-    public Map<Id<Person>, List<LegValues>> process(List<Event> events, LocalDate date) {
+    public ExternalityCounter process(List<Event> events, LocalDate date) {
         externalityCounter.setDate(date.toString());
         eventsManager.initProcessing();
         events.forEach(eventsManager::processEvent);
@@ -92,15 +88,14 @@ public class MeasureExternalities {
         ecc.addCosts(externalityCounter);
 
         eventsManager.finishProcessing();
-        return externalityCounter.getPersonId2Leg();
+        return externalityCounter;
 
     }
 
 
 
-    public void write(String folder, String date, String person) {
-        Path outputFolder = Paths.get(folder, date);
-        externalityCounter.writeCsvFile(outputFolder, person);
+    public void write(Path outputFolder) {
+        externalityCounter.writeCsvFile(outputFolder);
     }
 
     public static void setUpRoadTypes(Network network) {

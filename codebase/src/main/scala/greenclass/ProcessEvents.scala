@@ -51,7 +51,7 @@ class ProcessEvents {
     val events_folder = Paths.get(args(1))
     val congestion_file = args(2)
     val car_ownership_file = args(3)
-    val outputFolder = args(4)
+    val outputFolder = Paths.get(args(4))
     val costValuesFile = args(5)
     val ncores = args.applyOrElse(6, (_: Int) => "1").toInt
 
@@ -68,8 +68,8 @@ class ProcessEvents {
     val aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestion_file, bin_size_s)
 
     //read list of already processed files, in case of failure
-    new File(outputFolder).mkdir()
-    val processedListFile = new File(outputFolder, "processed.txt")
+    outputFolder.toFile.mkdir()
+    val processedListFile = outputFolder.resolve("processed.txt").toFile
     if (!processedListFile.exists()) processedListFile.createNewFile()
     val filesToSkip: Set[Path] = Source.fromFile(processedListFile).getLines().map { case x: String => Paths.get(x) }.toSet
     val pw = new PrintWriter(processedListFile)
@@ -97,7 +97,7 @@ class ProcessEvents {
 
           externalitiyCalculator.process(f.toString, date, person_id)
 
-          externalitiyCalculator.write(outputFolder, date, person_id)
+          externalitiyCalculator.write(outputFolder)
           pw.println(f)
           pw.flush()
           externalitiyCalculator.reset() //reset handlers before returning

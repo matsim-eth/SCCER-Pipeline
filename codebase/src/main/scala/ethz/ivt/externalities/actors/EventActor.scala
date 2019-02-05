@@ -13,6 +13,6 @@ object EventActor {
 
 class EventActor (pwj: ProcessWaypointsJson, externalitiesActor : ActorRef) extends Actor {
   override def receive: Receive = {
-    case tr : TripRecord => externalitiesActor ! EventList(tr.date, pwj.processJson(Stream(tr)))
+    case tr : TripRecord => externalitiesActor ! EventList(tr, pwj.processJson(Stream(tr)))
   }
 }
