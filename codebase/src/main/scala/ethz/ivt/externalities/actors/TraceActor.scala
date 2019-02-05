@@ -4,7 +4,8 @@ import java.nio.file.Path
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
-import greenclass.{ProcessWaypointsJson, TripRecord}
+import ethz.ivt.externalities.data.TripRecord
+import greenclass.ProcessWaypointsJson
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}

@@ -16,7 +16,7 @@ import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
 import ethz.ivt.externalities.counters.ExternalityCostCalculator
-import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl}
+import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl, TripLeg, TripRecord}
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}

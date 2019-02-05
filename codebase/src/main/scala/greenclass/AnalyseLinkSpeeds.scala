@@ -21,7 +21,7 @@ import org.matsim.vehicles.VehicleType
 
 import scala.collection.JavaConverters._
 import scala.io.Source
-
+import AnalyseLinkSpeeds.TimingSummary
 
 
 object AnalyseLinkSpeeds {
@@ -36,6 +36,9 @@ object AnalyseLinkSpeeds {
     runner.run(args)
 
   }
+
+  case class TimingSummary(link_id: Id[Link], num_records: Int, freespeed: Double, min: Double, average: Double, max: Double)
+
 }
 
 class AnalyseLinkSpeeds {
@@ -123,4 +126,3 @@ class AnalyseLinkSpeeds {
 
 }
 
-case class TimingSummary(link_id: Id[Link], num_records: Int, freespeed: Double, min: Double, average: Double, max: Double)

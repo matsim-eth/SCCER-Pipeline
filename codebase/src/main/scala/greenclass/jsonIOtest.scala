@@ -2,24 +2,10 @@ package greenclass
 
 package greenclass
 
-  import java.io.File
   import java.nio.file._
-  import java.sql.{DriverManager, ResultSet}
-  import java.time.LocalDate
-  import java.time.format.DateTimeFormatter
-
-  import com.graphhopper.util.GPXEntry
-  import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
+  import ethz.ivt.externalities.data.TripRecord
   import org.apache.log4j.{Level, Logger}
-  import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
-  import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
-  import org.matsim.core.config.ConfigUtils
-  import org.matsim.core.events.algorithms.EventWriterXML
-  import org.matsim.core.scenario.ScenarioUtils
-  import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84
 
-  import scala.collection.JavaConverters._
-  import scala.io.{BufferedSource, Source}
   import org.json4s._
   import org.json4s.jackson.JsonMethods._
   import org.json4s.jackson.Serialization

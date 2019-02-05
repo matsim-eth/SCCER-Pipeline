@@ -6,9 +6,7 @@ import java.util
 import akka.actor.Status.Success
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import ethz.ivt.externalities.counters.{ExternalityCounter, LegValues}
-import greenclass.TripRecord
-import org.matsim.api.core.v01.Id
-import org.matsim.api.core.v01.population.Person
+import ethz.ivt.externalities.data.TripRecord
 
 import scala.concurrent.Future
 

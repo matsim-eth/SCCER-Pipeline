@@ -1,17 +1,15 @@
 package greenclass
 
 import java.io.{File, PrintWriter}
-import java.nio.file.{Files, Path, Paths}
-import java.sql.{Connection, DriverManager, PreparedStatement, Statement}
-import java.time.{LocalDate, LocalDateTime}
+import java.nio.file.{Files, Paths}
+import java.sql.{DriverManager, PreparedStatement}
+import java.time.{LocalDateTime}
 import java.time.format.DateTimeFormatter
 
-import com.vividsolutions.jts.geom.GeometryFactory
-import com.vividsolutions.jts.io.WKTReader
+import ethz.ivt.externalities.data.{LatLon, TripLeg, TripRecord}
+import ethz.ivt.externalities.data.WaypointRecord
 import org.apache.log4j.{Level, Logger}
-import org.geotools.geometry.text.WKTParser
 
-import scala.io.Source
 import org.json4s.jackson.Serialization
 
 object SplitWaypoints {

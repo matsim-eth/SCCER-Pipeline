@@ -6,7 +6,7 @@ import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import akka.util.Timeout
 import ethz.ivt.externalities.MeasureExternalities
 import ethz.ivt.externalities.counters.LegValues
-import greenclass.TripRecord
+import ethz.ivt.externalities.data.TripRecord
 import org.matsim.api.core.v01.Id
 import org.matsim.api.core.v01.events.Event
 import org.matsim.api.core.v01.population.Person
