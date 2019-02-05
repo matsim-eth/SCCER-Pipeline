@@ -88,7 +88,6 @@ public class CongestionWriterTest {
         }
     }
 
-    @Ignore
     @Test
     public void ReadPerLinkDifferentBinSize() throws IOException {
         double originalBinSize = 60.;
@@ -114,7 +113,7 @@ public class CongestionWriterTest {
 
         AggregateDataPerTimeImpl<Link> actualMap = CSVCongestionReader.forLink().read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", newBinSize);
 
-        for (int bin=0; bin<inputMap.getNumBins(); bin++) {
+        for (int bin=0; bin<actualMap.getNumBins(); bin++) {
             Assert.assertEquals("Counts do not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "count"), 0.0);
             Assert.assertEquals("Delay caused does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "delay_caused"), 0.0);
             Assert.assertEquals("Delay experienced does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "delay_experienced"), 0.0);

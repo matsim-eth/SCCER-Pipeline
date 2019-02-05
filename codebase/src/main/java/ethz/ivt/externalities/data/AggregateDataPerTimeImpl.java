@@ -130,6 +130,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                             int timeBin = Integer.parseInt(record[2]);
                             double time = timeBin * originalBinSize;
 
+                            setUpTimeBins(lid);
                             // go through all attributes
                             for (int i = 0; i < attributes.size(); i++) {
                                 double value = Double.parseDouble(record[i+3]);
@@ -137,7 +138,6 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                                 {
                                     value = 0.;
                                 }
-                                setUpTimeBins(lid);
                                 this.addValue(lid, time, header[i+3], value);
                             }
                         }
