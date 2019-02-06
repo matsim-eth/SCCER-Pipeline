@@ -134,16 +134,6 @@
 	  	<version>${matsim.version}</version>
 	  </dependency>
 	  <dependency>
-	  	<groupId>org.matsim.contrib</groupId>
-	  	<artifactId>analysis</artifactId>
-	  	<version>${matsim.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.matsim.contrib</groupId>
-		  <artifactId>accessibility</artifactId>
-		  <version>${matsim.version}</version>
-	  </dependency>
-	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>socnetgen</artifactId>
 		  <version>${matsim.version}</version>
@@ -215,6 +205,11 @@
 		  <groupId>com.typesafe.akka</groupId>
 		  <artifactId>akka-actor_${scala.version}</artifactId>
 		  <version>2.5.20</version>
+	  </dependency>
+	  <dependency>
+		  <groupId>com.zaxxer</groupId>
+		  <artifactId>HikariCP</artifactId>
+		  <version>3.3.0</version>
 	  </dependency>
   <!--
 	  <dependency>

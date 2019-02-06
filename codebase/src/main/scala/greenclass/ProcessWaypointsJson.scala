@@ -11,6 +11,7 @@ import akka.actor.{ActorRef, ActorSystem, Props}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import ethz.ivt.externalities.MeasureExternalities
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
@@ -21,7 +22,7 @@ import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
-import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
+import org.matsim.contrib.emissions.utils.{EmissionUtils, EmissionsConfigGroup}
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
@@ -38,6 +39,13 @@ import org.matsim.vehicles.{VehicleReaderV1, VehicleType, VehicleUtils, VehicleW
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
+import akka.pattern.ask
+import akka.util.Timeout
+import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping
+import org.matsim.core.network.NetworkUtils
+
+import scala.concurrent.duration._
+import scala.util.{Failure, Success}
 
 object ProcessWaypointsJson {
 
@@ -63,43 +71,60 @@ object ProcessWaypointsJson {
     val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
     val numCores = Option(props.getProperty("num.cores")).map(_.toInt).getOrElse(1)
 
-    val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
-    Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
-    val processWaypointsJson = new ProcessWaypointsJson(scenario)
-    val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
-    val ecc = new ExternalityCostCalculator(costValuesFile.toString)
-    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
 
-    logger.info("Data loaded")
+
     val _system = ActorSystem("MainEngineActor")
 
-    val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
+    //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
+    val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
-    val extProps = ExternalitiesActor.props(me, writerActorProps)
-    val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
+    val writerActorProps = ExternalitiesWriterActor.buildPostgres(dbProps)
+    val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
 
-    val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor)
-    val eventsActor = _system.actorOf(eventProps.withRouter(RoundRobinPool(numCores)), name = "EventActor")
-
-    val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
-    val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
-
-    val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
-    jsons.map(JsonFile).foreach(traceProcessors ! _)
-
-    import akka.pattern.gracefulStop
-    import scala.concurrent.duration._
     implicit val ec: ExecutionContext = _system.dispatcher
 
-    gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
-      .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
-      .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
-      .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))
+    akka.pattern.ask(writerActor, CREATE_DB(true))(Timeout(20 seconds)) recover  {
+      case e: Exception =>
+        e.printStackTrace()
+        System.exit(-1)
+    } onComplete { case Success(_) =>
 
+        val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
+        val roadTypeMapping = OsmHbefaMapping.build()
+      roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
+        Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
+
+        val processWaypointsJson = new ProcessWaypointsJson(scenario)
+        val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+        val ecc = new ExternalityCostCalculator(costValuesFile.toString)
+        def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
+
+        logger.info("Data loaded")
+
+        val extProps = ExternalitiesActor.props(me, writerActor)
+        val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
+
+        val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor)
+        val eventsActor = _system.actorOf(eventProps.withRouter(RoundRobinPool(numCores)), name = "EventActor")
+
+        val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
+        val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
+
+        val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
+        jsons.map(JsonFile).foreach(traceProcessors ! _)
+
+        import akka.pattern.gracefulStop
+        import scala.concurrent.duration._
+
+        gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
+          .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
+          .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
+          .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))
+      }
 
   }
 

@@ -101,11 +101,13 @@ public class ExternalityCostCalculator {
             costs.put("NOx_costs", NOX_regional);
         }
         //Zinc
-        double zinc_regional = (emissions.get("Distance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
-        costs.put("Zinc_costs", zinc_regional);
+        if ("Car".equals(emissions.getMode())) {
+            double zinc_regional = (emissions.get("Distance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
+            costs.put("Zinc_costs", zinc_regional);
 
-        double noise_costs = (emissions.get("Distance")) / 1000 * rv.get("noise.average.cost.adj");
-        costs.put("Noise_costs", noise_costs);
+            double noise_costs = (emissions.get("Distance")) / 1000 * rv.get("noise.average.cost.adj");
+            costs.put("Noise_costs", noise_costs);
+        }
 
         return costs;
     }

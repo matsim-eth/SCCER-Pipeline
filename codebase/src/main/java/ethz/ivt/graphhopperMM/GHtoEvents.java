@@ -155,19 +155,17 @@ public class GHtoEvents {
         LinkGPXStruct firstE = x.next();
         double entryTimeSeconds = toSeconds(firstE.entryTime);
         double exitTimeSeconds = toSeconds(firstE.exitTime);
-        int numGpsPoints = firstE.getGpxExtensions().size();
 
-        events.add(new GpsLinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId(), numGpsPoints ));
+        events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId() ));
 
         while (x.hasNext()) {
             LinkGPXStruct curr = x.next();
             double currEntryTimeSeconds = toSeconds(curr.entryTime);
             double currExitTimeSeconds = toSeconds(curr.exitTime);
-            int currNumGpsPoints = curr.getGpxExtensions().size();
 
             if (x.hasNext()) {
                 events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
-                events.add(new GpsLinkLeaveEvent(currExitTimeSeconds, vehicleId, curr.getLink().getId(), currNumGpsPoints));
+                events.add(new LinkLeaveEvent(currExitTimeSeconds, vehicleId, curr.getLink().getId()));
             } else { //process final element
                 events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
 
