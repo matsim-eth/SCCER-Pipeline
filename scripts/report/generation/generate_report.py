@@ -1,5 +1,6 @@
 import pprint
 import random
+from types import SimpleNamespace
 
 import numpy as np
 import pandas as pd
@@ -83,16 +84,20 @@ mytemplate = template_lookup.get_template("control.html")
 week = datetime(2007, 4, 1, 15, 30)
 week =  format_date(week, "long", locale=locale)
 weekly_hours = format_unit(2, 'hour', locale=locale)
-
+weekly_stats = SimpleNamespace()
+weekly_stats.hours = weekly_hours
+weekly_stats.car = 20
+weekly_stats.bus = 30
+weekly_stats.walk = 50
 
 html = mytemplate.render(title=_('report_title'),
                                           weekly_totals = weekly_totals,
                                           person = person_details,
                                             week = week,
-                                            weekly_hours = weekly_hours,
+                                        weekly_stats = weekly_stats,
                                           distance_week = distance_string(distance_week))
 
-inlined_css = premailer.transform(html)
+inlined_css = premailer.transform(html, )
 
 with open("generation/test_report.html", "w") as file:
     file.write(inlined_css)
