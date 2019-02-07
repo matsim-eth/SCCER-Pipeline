@@ -1,0 +1,68 @@
+# English translations for Emissions Feedback Generator.
+# Copyright (C) 2019 ORGANIZATION
+# This file is distributed under the same license as the Emissions Feedback
+# Generator project.
+# FIRST AUTHOR <EMAIL@ADDRESS>, 2019.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Emissions Feedback Generator 0.1\n"
+"Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
+"POT-Creation-Date: 2019-02-07 12:52+0100\n"
+"PO-Revision-Date: 2019-02-07 12:40+0100\n"
+"Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
+"Language: en\n"
+"Language-Team: en <LL@li.org>\n"
+"Plural-Forms: nplurals=2; plural=(n != 1)\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=utf-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Generated-By: Babel 2.6.0\n"
+
+#: generation/templates/control.html:58
+msgid "with_Car"
+msgstr ""
+
+#: generation/templates/control.html:58
+msgid "with_Walk"
+msgstr ""
+
+#~ msgid "with_Car"
+#~ msgstr ""
+
+#~ msgid "report_title"
+#~ msgstr ""
+
+#~ msgid "Bundesamt für Strassen ASTRA"
+#~ msgstr ""
+
+#~ msgid "greeting_male"
+#~ msgstr ""
+
+#~ msgid "Francois Pinard"
+#~ msgstr ""
+
+#~ msgid "Mode"
+#~ msgstr ""
+
+#~ msgid "Date"
+#~ msgstr ""
+
+#~ msgid "Duration"
+#~ msgstr ""
+
+#~ msgid "Distance"
+#~ msgstr ""
+
+#~ msgid "Emissions"
+#~ msgstr ""
+
+#~ msgid "Delay Ex."
+#~ msgstr ""
+
+#~ msgid "Delay Caused"
+#~ msgstr ""
+
+#~ msgid "with_Walk"
+#~ msgstr ""
+

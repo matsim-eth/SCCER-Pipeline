@@ -1,0 +1,8 @@
+
+#: generation/templates/control.html:58
+msgid "with_Car"
+msgstr ""
+
+#: generation/templates/control.html:58
+msgid "with_Walk"
+msgstr ""

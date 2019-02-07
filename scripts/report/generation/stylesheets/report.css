@@ -1,0 +1,17 @@
+.car {
+    background-color: red;
+}
+
+.walk {
+    background-color: green;
+}
+
+.bus {
+    background-color: blue;
+}
+
+.rep_divider {
+    background-color: #336699;
+    padding: 3px;
+    width: 100%;
+}

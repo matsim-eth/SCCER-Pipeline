@@ -1,21 +1,18 @@
 package ethz.ivt.externalities.counters;
 
+import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
 
 public class LegValues {
     Map<String, Double> personId2Leg2Values = new HashMap<>();
+    private LocalDateTime timestamp = LocalDateTime.now();
     private String mode;
 
     public void addTempValues(Map<String, Double> values) {
         personId2Leg2Values.putAll(values);
 
-    }
-
-
-    public void setMode(String mode) {
-        this.mode = mode;
     }
 
     public void put(String key, double value) {
@@ -42,8 +39,20 @@ public class LegValues {
         return personId2Leg2Values.containsKey(key);
     }
 
+    public void setMode(String mode) {
+        this.mode = mode;
+    }
+
     public String getMode() {
         return mode;
+    }
+
+    public void setTimestamp(LocalDateTime timestamp) {
+        this.timestamp = timestamp;
+    }
+
+    public LocalDateTime getTimestamp() {
+        return timestamp;
     }
 
     public Stream<String> keys() {

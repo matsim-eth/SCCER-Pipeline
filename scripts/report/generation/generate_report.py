@@ -1,3 +1,4 @@
+import pprint
 import random
 
 import numpy as np
@@ -5,25 +6,24 @@ import pandas as pd
 from datetime import datetime
 from os import path
 import glob
+import psycopg2 as pg
+import pandas.io.sql as psql
 
 from babel.units import format_unit
 from babel.dates import format_date, format_datetime, format_time
 
 from mako.template import Template
 from mako.lookup import TemplateLookup
-
-template_lookup = TemplateLookup(directories=['report/generation/templates'])
+from premailer import premailer
 
 locale = 'de'
 
 import gettext
-lang_de = gettext.translation('generation', localedir="report/generation/locale", languages=[locale])
+lang_de = gettext.translation('generation', localedir="generation/locale", languages=[locale])
 lang_de.install()
 
 to_datetime = lambda d: datetime.strptime(d, '%Y-%m-%d')
 
-
-files = glob.glob(r"C:\Projects\SCCER_project\output_gc\externalities/2016-12-*/1602_congestion.csv")
 
 def get_emissions(value):
     return random.choice(["High", "Medium", "Low"])
@@ -52,29 +52,48 @@ def distance_string(dist):
 
     return km_string + m_string
 
-ordered_files = sorted([(get_date(fname), fname) for fname in files], key= (lambda x: x[0]))
 
-most_recent_week = ordered_files[-7:]
+connection = pg.connect(host='localhost',  dbname="sbb-green", user="postgres", password='password')
 
-[print (f) for f in most_recent_week]
-
-df = pd.concat([pd.read_csv(f, sep=";", converters={'Date': to_datetime} ) for (date,f) in most_recent_week], ignore_index=True)
-print(df.dtypes)
-df["short_date"] = df.Date.apply(lambda d : format_date(d, 'd MMM', locale=locale))
-df["display_time"] = (df.EndTime - df.StartTime).apply(hms_string)
-df["display_distance"] = (df.matsim_delay).apply(distance_string)
-df["display_exp_delay"] = (df.delay_experienced).apply(hms_string)
-df["display_matsim_delay"] = (df.delay_caused).apply(hms_string)
-df["emissions_string"] = (df.Mode).apply(get_emissions)
-#df["short_date"] = df.Date.dt.strftime('%d %b')
-print(df)
-
-mytemplate = template_lookup.get_template("newsletter_template.html")
+person_details = pd.read_sql_query("SELECT * FROM participants where person_id = '1723'", connection).to_dict('records')[0]
 
 
-print(mytemplate.render(title="test", df=df))
+leg_details = pd.read_sql_query("SELECT * FROM legs where person_id = '1723'", connection)
+leg_in_list = ','.join(map(str, leg_details['leg_id']))
 
-with open("output/test_report.html", "w") as file:
-    file.write(mytemplate.render(title=_('report_title'), df=df))
+externalities = pd.read_sql_query("SELECT * FROM externalities where leg_id in (%s)" % leg_in_list, connection)
+grouped_df = externalities.groupby("leg_id")
 
-print (df.iloc[0])
+#create a dictionary of the legs
+legs = {l : dict(zip(details.variable, details.val))
+        for (l, details) in grouped_df}
+
+pprint.pprint(person_details)
+
+pprint.pprint(legs)
+
+weekly_totals = leg_details.groupby('leg_mode')['distance'].sum().reset_index()
+pprint.pprint(weekly_totals)
+distance_week = weekly_totals['distance'].sum()
+
+template_lookup = TemplateLookup(directories=['generation/templates'])
+
+mytemplate = template_lookup.get_template("control.html")
+
+week = datetime(2007, 4, 1, 15, 30)
+week =  format_date(week, "long", locale=locale)
+weekly_hours = format_unit(2, 'hour', locale=locale)
+
+
+html = mytemplate.render(title=_('report_title'),
+                                          weekly_totals = weekly_totals,
+                                          person = person_details,
+                                            week = week,
+                                            weekly_hours = weekly_hours,
+                                          distance_week = distance_string(distance_week))
+
+inlined_css = premailer.transform(html)
+
+with open("generation/test_report.html", "w") as file:
+    file.write(inlined_css)
+

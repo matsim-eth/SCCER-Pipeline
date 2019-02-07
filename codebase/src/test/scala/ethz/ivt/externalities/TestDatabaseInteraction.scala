@@ -8,7 +8,7 @@ import java.util.Properties
 
 import akka.actor.ActorSystem
 import com.zaxxer.hikari.HikariConfig
-import ethz.ivt.externalities.actors.{CREATE_DB, Externalities, ExternalitiesWriterActor}
+import ethz.ivt.externalities.actors.{Externalities, ExternalitiesWriterActor}
 import ethz.ivt.externalities.counters.{ExternalityCounter, LegValues}
 import ethz.ivt.externalities.data.{LatLon, TripLeg, TripRecord}
 import org.matsim.api.core.v01.Id
@@ -81,10 +81,7 @@ object TestDatabaseInteraction {
     implicit val ec = _system.dispatcher
 
 
-    writerActor ? CREATE_DB(replace = true) flatMap { _ =>
-        println("database loaded or created successfully")
-        writerActor ? Externalities(tr, new MockEC())
-    } recover {
+    writerActor ? Externalities(tr, new MockEC()) recover {
         case e : SQLException =>
           throw new RuntimeException(e.getNextException)
           _system terminate

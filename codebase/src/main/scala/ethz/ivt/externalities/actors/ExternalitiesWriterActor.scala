@@ -1,7 +1,8 @@
 package ethz.ivt.externalities.actors
 
 import java.nio.file.{Path, Paths}
-import java.sql.{Connection, Date, DriverManager, SQLException}
+import java.sql._
+import java.time.LocalDateTime
 import java.util.stream.Collectors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
@@ -23,7 +24,6 @@ object ExternalitiesWriterActor {
 }
 
 final case class Externalities(tr : TripRecord, externalitiesCounter : ExternalityCounter)
-final case class CREATE_DB(replace : Boolean)
 
 sealed trait ExternalitiesWriterActor extends Actor with ActorLogging{
 
@@ -52,58 +52,45 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
   val sqlIndex : Map[String, Int] = headers.zipWithIndex.toMap.mapValues(_ + 1)
   //def sqlIndex(s : String) = sqlIndexes(s.replace("(", "_").replace(")", "_").toLowerCase)
 
-  val create_sql =
-      s"CREATE TABLE externalities(\n id SERIAL,\n" +
-      sqlTypes.map{ case (k, t) => s"\t$k $t"}.mkString(",\n") +
-      ");"
+  val leg_insert_sql = s"INSERT INTO legs (person_id, leg_date, leg_mode, distance) values (?, ?, ?, ?);"
 
-  val insert_sql = s"INSERT INTO externalities " +
-    s"( ${headers.mkString(",")}) " +
-    s"VALUES ( ${headers.map(_=> "?").mkString(",")} )"
-
-  log.info(insert_sql)
-
+  val externalities_insert_sql = s"INSERT INTO externalities (leg_id, variable, val) values (?, ?, ?);"
 
   def receive : Receive = {
-    case CREATE_DB(replace) => {
-      log.info("checking for and creating DB")
-      val con = ds.getConnection()
-
-      //check if table exists
-      val future : Future[Boolean] = Future {
-        if (replace) {
-          con.createStatement().execute("DROP TABLE IF EXISTS externalities; \n")
-        } else {false}
-      } map {
-        _ => con.createStatement().execute(create_sql)
-      } pipeTo sender()
-    }
     case Externalities(tr, ec) => {
       log.info(s"writing ${tr.legs.size} legs to db for ${tr.user_id}")
       val future = Future {
         val con = ds.getConnection()
         try {
-          val pst = con.prepareStatement(insert_sql)
+          val leg_pst = con.prepareStatement(leg_insert_sql,  Statement.RETURN_GENERATED_KEYS)
+          val externalities_pst = con.prepareStatement(externalities_insert_sql)
+
           val res = ec.getPersonId2Leg().asScala.map { case (pid, legValues) => {
+            val insert_date = LocalDateTime.now()
 
-            log.info(legValues.get(0).keys().collect(Collectors.joining(";")))
-
-            pst.setString(sqlIndex("person_id"), pid.toString)
-            pst.setDate(sqlIndex("leg_date"), java.sql.Date.valueOf(tr.date))
+            leg_pst.setString(1, pid.toString)
 
             legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) => {
-              pst.setInt(sqlIndex("leg"), leg_num)
-              pst.setString(sqlIndex("mode_choice"), leg.getMode)
+              leg_pst.setTimestamp(2, java.sql.Timestamp.valueOf(leg.getTimestamp))
+              leg_pst.setString(3, leg.getMode)
+              leg_pst.setDouble(4, 0.0)
+              val affectedRows = leg_pst.executeUpdate
+
+              if (affectedRows == 0) throw new SQLException("Creating leg failed, no rows affected.")
+              val generatedKeys = leg_pst.getGeneratedKeys
+              if (!generatedKeys.next()) throw new SQLException("Creating leg failed, no ID obtained.")
+              val leg_id = generatedKeys.getInt(1)
 
               leg.keys().forEach(k => {
                 val v = leg.get(k)
-                pst.setString(sqlIndex("variable"), k)
-                pst.setDouble(sqlIndex("value"), v)
-                pst.addBatch()
+                externalities_pst.setInt(1, leg_id)
+                externalities_pst.setString(2, k)
+                externalities_pst.setDouble(3, v)
+                externalities_pst.addBatch()
 
               })
             }}
-            (pid, pst.executeBatch())
+            (pid, externalities_pst.executeBatch())
           }
           }.toMap
 

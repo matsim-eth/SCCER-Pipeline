@@ -1,0 +1,161 @@
+## -*- coding: utf-8 -*-
+
+<!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Transitional//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-transitional.dtd">
+<html>
+<head>
+<!-- If you delete this meta tag, the ground will open and swallow you. -->
+<meta name="viewport" content="width=device-width" />
+
+<meta http-equiv="Content-Type" content="text/html; charset=UTF-8" />
+<title>ZURBemails</title>
+	
+<link rel="stylesheet" type="text/css" href="generation/stylesheets/email.css" >
+<link rel="stylesheet" type="text/css" href="generation/stylesheets/report.css" >
+
+</head>
+ 
+<body bgcolor="#FFFFFF" topmargin="0" leftmargin="0" marginheight="0" marginwidth="0">
+
+<!-- HEADER -->
+<table class="head-wrap" bgcolor="#FFF">
+	<tr>
+		<td></td>
+		<td class="header container" align="">
+			
+            <!-- content -->
+				<div class="content">
+					<table>
+						<tr>
+							<td align="left"><img src="images/eth_logo_kurz_pos.jpg" height="100px"/></td>
+							<td align="center"><img src="images/Uni_basel_logo.svg.png" height="100px" /></td>
+							<td align="right"><img src="images/zhaw_logo_bw.png" height="100px" /></td>
+						</tr>
+					</table>
+				</div><!-- /content -->
+        </td>
+		<td></td>
+	</tr>
+    <tr>
+        <td colspan=2 class="rep_divider"></td>
+    </tr>
+</table><!-- /HEADER -->
+
+<!-- BODY -->
+<table class="body-wrap" bgcolor="">
+	<tr>
+		<td></td>
+		<td class="container" align="" bgcolor="#FFFFFF">
+			
+			<!-- content -->
+			<div class="content">
+				<table>
+					<tr>
+						<td>
+                            <p> ${_('greeting_male')} ${person['last_name']} </p>
+
+                            <h2> ${_('your_report')}</h2>
+                            <p> ${_('for_the_week_of')} ${week} </p>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h3>Over the past week, you travelled</h3>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <h2>16km</h2>
+                        </td>
+                        <td>
+                            <h2>${weekly_hours}</h2>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+   			<div class="content">
+                <table>
+                    <tr>
+                            <ul>
+                            % for row in weekly_totals.itertuples():
+                                <li> ${row.distance} km ${_("with_"+ row.leg_mode)} </li> \
+                            % endfor
+                            </ul>
+
+                            <div style="horiz-align: center; width : 100%; height :30px; background-color: cornflowerblue; overflow: hidden; border-radius: 10px ">
+                                <div style="float: left; width : 20%; height :30px; background-color: red" > </div>
+                                <div style="float: left; width : 30%; height :30px; background-color: green" ></div>
+                                <div style="float: left; width : 50%; height :30px; background-color: yellow" ></div>
+
+                            </div>
+
+                        </td>
+					</tr>
+				</table>
+			</div><!-- /content -->
+   			<div class="content">
+                <table>
+                    <tr>
+                        <td colspan="2">
+                            <h2>Main Mode</h2>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td>
+                            <ul>
+                                <li><img src="images/mode_icons/car_icon.png" height="20px"> : ex</li>
+                                <li><img src="images/mode_icons/train_icon.png" height="20px"> : ex</li>
+                                <li><img src="images/mode_icons/walk_icon.png" height="20px"> : ex</li>
+
+                            </ul>
+                        </td>
+                        <td>
+                            <ul>
+                                <li>M : ex</li>
+                                <li>T : ex</li>
+                                <li>W : ex</li>
+                            </ul>
+                        </td>
+                    </tr>
+                </table>
+            </div>
+
+
+
+
+
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /BODY -->
+
+<!-- FOOTER -->
+<table class="footer-wrap">
+    <tr>
+        <td colspan=2 class="rep_divider"></td>
+    </tr>
+	<tr>
+		<td></td>
+		<td class="container">
+			
+				<!-- content -->
+				<div class="content">
+					<table>
+						<tr>
+							<td align="center">
+								<p>
+									<a href="#">Terms</a> |
+									<a href="#">Privacy</a> |
+									<a href="#"><unsubscribe>Unsubscribe</unsubscribe></a>
+								</p>
+							</td>
+						</tr>
+					</table>
+				</div><!-- /content -->
+				
+		</td>
+		<td></td>
+	</tr>
+</table><!-- /FOOTER -->
+
+</body>
+</html>
