@@ -54,7 +54,8 @@ def distance_string(dist):
     return km_string + m_string
 
 
-connection = pg.connect(host='localhost',  dbname="sbb-green", user="postgres", password='password')
+# connection = pg.connect(host='localhost',  dbname="sbb-green", user="postgres", password='password')
+connection = pg.connect(dbname="ctchervenkov", user="ctchervenkov", password='abc')
 
 person_details = pd.read_sql_query("SELECT * FROM participants where person_id = '1723'", connection).to_dict('records')[0]
 
@@ -89,6 +90,7 @@ weekly_stats.hours = weekly_hours
 weekly_stats.car = 20
 weekly_stats.bus = 30
 weekly_stats.walk = 50
+weekly_stats.bike = 50
 
 html = mytemplate.render(title=_('report_title'),
                                           weekly_totals = weekly_totals,
