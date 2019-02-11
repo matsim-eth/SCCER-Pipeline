@@ -8,7 +8,7 @@
     <meta name="viewport" content="width=device-width">
     <title>Title</title>
 
-    <style  data-premailer="ignore">
+    <style  >
       .wrapper {
   width: 100%; }
 
@@ -1359,13 +1359,14 @@ body.outlook p {
       min-width: 0; } }
 
     </style>
-
       <link rel="stylesheet" type="text/css" href="generation/stylesheets/report.css" >
 
 </head>
  
 
 <body>
+
+
   <!-- Wrapper for the body of the email -->
   <table class="body" data-made-with-foundation>
     <tr>
@@ -1375,47 +1376,62 @@ body.outlook p {
             <table class="container">
               <tr>
                 <td>
-                    <table class="row">
+                    <table class="row logos">
+                        <tbody>
                       <tr>
                         <th class="small-4 large-4 first columns">
-			               <img src="images/eth_logo_kurz_pos.jpg" height="100px"  align="center" class="float-center"/>
-
+                            <center>
+                                <img align="center" class="float-center" src="images/eth_logo_kurz_pos.jpg" height="100px"  align="center" class="float-center"/>
+                            </center>
                         </th>
                         <th class="small-4 large-4 columns">
-                          	<img src="images/Uni_basel_logo.svg.png" height="100px"  align="center" class="float-center"/>
+                          	<center>
+                                <img align="center" class="float-center" src="images/Uni_basel_logo.svg.png" height="100px"  align="center" class="float-center"/>
+                            </center>
                         </th>
                         <th class="small-4 large-4 last columns">
-	                        <img src="images/zhaw_logo_bw.png" height="100px"  align="center" class="float-center"/>
+                            <center>
+	                        <img align="center" class="float-center" src="images/zhaw_logo_bw.png" height="100px"  align="center" class="float-center"/>
+                            </center>
                         </th>
                         <th class="expander"></th>
 
                       </tr>
+                        </tbody>
                     </table>
                      <table class="row">
+                         <tbody>
                       <tr>
                           <th class="rep_divider small-12 large-12"></th>
-
                         <th class="expander"></th>
                       </tr>
                     </table>
                     <table class="row">
                       <tr>
-                        <th class="small-12 large-12 first columns">
-                                <h4 class="weekdate"> ${_('your_report_for_the_week_of')} ${week} </h4>
+                        <th class="small-12 large-12 first last columns">
+                                <h4 class="weekdate"> ${_('your_report_for_the_week_of')} ${weekly_stats.start_date_string} </h4>
 
-                                <p class="greeting"> ${_('greeting_male')} ${person['last_name']} </p>
-
-                                <h3>Over the past week, you travelled</h3>
+                                <p class="greeting">
+                                %if person['male']:
+                                    ${_('greeting_male')}
+                                %else :
+                                    ${_('greeting_female')}
+                                %endif
+                                ${person['last_name']}
+                                </p><p>
+                                Over the past week, you travelled </p>
                         </th>
                         <th class="expander"></th>
                       </tr>
+                        </tbody>
                     </table>
                     <table class="row">
+                        <tbody>
                         <tr>
                             <th class="small-6 large-6 first columns">
                                 <h2>16km</h2>
                             </th>
-                            <th class="small-6 large-6 first columns">
+                            <th class="small-6 large-6 last columns">
                                 <h2>${weekly_stats.hours}</h2>
                             </th>
                         <th class="expander"></th>
@@ -1423,27 +1439,66 @@ body.outlook p {
                     </table>
                     <table class="row">
                         <tr>
-                            <th class="small-12 large-12 first columns">
+                            <th class="small-12 large-12 first last columns">
 
-                        <table cellpadding="0" cellspacing="0">
-                            <tr style="height :30px;">
-                                <td class="bar-chart car" width="${weekly_stats.car}%" > <span>16 km</span> </td>
-                                <td class="bar-chart bus"  width="${weekly_stats.bus}%"  > 2 km </td>
-                                <td class="bar-chart walk" width="${weekly_stats.walk}%" > 8 km </td>
+                        <table class="bar-chart" cellpadding="0" cellspacing="0">
+                            <tbody>
+                            <tr align="left">
+                                <td class="car" height="30" style="width:${weekly_stats.car}%" > 16 km </td>
+                                <td class="bus"   height="30" style="width:${weekly_stats.bus}%"  > 2 km </td>
+                                <td class="walk"  height="30" style="width:${weekly_stats.walk}%" > 8 km </td>
                             </tr>
+                            </tbody>
                         </table>
+                            </th>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table class="row">
+                         <tbody>
+                      <tr>
+                          <th class="rep_divider small-12 large-12"></th>
+                        <th class="expander"></th>
+                      </tr>
+                    </table>
+                    <table class="row">
+                        <tbody>
+                        <tr>
+                            <th  class="small-12 large-12 first last columns">
 
-                        <h2>Main Mode</h2>
+                        <h2>${_('main_mode')}</h2>
+                            </th>
+                            <th class="expander"></th>
 
-                        <ul>
+                        </tr>
+                        </tbody>
+                    </table>
+                    <table class="row"><tbody>
+                            % for week in weeks:
+                        <tr class="per_day">
+
+                            <th class="small-3 large-3 first columns weekday"><div>${week.date_string}</div></th>
+                            <th class="small-3 large-3 columns"><div>${week.mode_image_url}</div></th>
+                            <th class="small-3 large-3 columns"><div>${week.distance}</div></th>
+                              <th class="small-3 large-3 last columns"><div>${week.duration}</div></th>
+                            <th class="expander"></th>
+                        </tr>
+                            % endfor
+                        </tbody>
+<%doc>
+
                             <li><img src="images/mode_icons/car_icon.png" height="20px"> : ex</li>
                             <li><img src="images/mode_icons/train_icon.png" height="20px"> : ex</li>
                             <li><img src="images/mode_icons/walk_icon.png" height="20px"> : ex</li>
+</%doc>
 
-                        </ul>
-
-                            </th>
-                        </tr>
+                    </table>
+                    <table class="row">
+                         <tbody>
+                      <tr>
+                          <th class="rep_divider small-12 large-12"></th>
+                        <th class="expander"></th>
+                      </tr>
                     </table>
                 </td>
               </tr>

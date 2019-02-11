@@ -11,7 +11,7 @@ import psycopg2 as pg
 import pandas.io.sql as psql
 
 from babel.units import format_unit
-from babel.dates import format_date, format_datetime, format_time
+from babel.dates import *
 
 from mako.template import Template
 from mako.lookup import TemplateLookup
@@ -81,24 +81,41 @@ template_lookup = TemplateLookup(directories=['generation/templates'])
 
 mytemplate = template_lookup.get_template("control.html")
 
-week = datetime(2007, 4, 1, 15, 30)
-week =  format_date(week, "long", locale=locale)
+
 weekly_hours = format_unit(2, 'hour', locale=locale)
 weekly_stats = SimpleNamespace()
+
+weekly_stats.start_date = date(2019, 2, 4) #
+weekly_stats.start_date_string = format_date(weekly_stats.start_date, "long", locale=locale) #
 weekly_stats.hours = weekly_hours
 weekly_stats.car = 20
 weekly_stats.bus = 30
-weekly_stats.walk = 50
+weekly_stats.walk = 45
+
+
+#test data
+weeks = [SimpleNamespace(
+    date_string = format_date(weekly_stats.start_date + timedelta(days=i), "E", locale),
+    mode = random.choice(["Car", "Train", "Walk"]),
+    distance = distance_string(10000), duration=format_unit(4, "minute", locale=locale)
+        ) for i in range(0,7)]
+
+
+def get_mode_image_tag(mode):
+    return '<img class="mode" src="images/mode_icons/{}_icon.png"> </img>'.format(mode.lower())
+
+
+for w in weeks:
+    w.mode_image_url = get_mode_image_tag(w.mode)
 
 html = mytemplate.render(title=_('report_title'),
-                                          weekly_totals = weekly_totals,
-                                          person = person_details,
-                                            week = week,
-                                        weekly_stats = weekly_stats,
-                                          distance_week = distance_string(distance_week))
+                                            weekly_totals = weekly_totals,
+                                            person = person_details,
+                                            weeks = weeks,
+                                            weekly_stats = weekly_stats, output_encoding='utf-8')
 
 inlined_css = premailer.transform(html, )
 
-with open("generation/test_report.html", "w") as file:
+with open("generation/test_report.html", "w", encoding="utf8") as file:
     file.write(inlined_css)
 

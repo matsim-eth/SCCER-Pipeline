@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Emissions Feedback Generator 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-02-07 12:43+0100\n"
+"POT-Creation-Date: 2019-02-08 17:20+0100\n"
 "PO-Revision-Date: 2018-10-02 14:02+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -19,52 +19,25 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: generation/generate_report.py:88
+#: generation/generate_report.py:111
 msgid "report_title"
 msgstr "Das Title"
 
-#: generation/templates/control.html:29
-#: generation/templates/newsletter_template.html:29
-msgid "Bundesamt für Strassen ASTRA"
-msgstr ""
+#: generation/templates/control.html:1412
+msgid "your_report_for_the_week_of"
+msgstr "Mobilitätsbericht für die Woche"
 
-#: generation/templates/control.html:52
+#: generation/templates/control.html:1416
 msgid "greeting_male"
 msgstr "Sehr geehrter Herr"
 
-#: generation/templates/control.html:58
-msgid "with_Car"
-msgstr "mit dem Auto"
+#: generation/templates/control.html:1418
+#, fuzzy
+#| msgid "greeting_male"
+msgid "greeting_female"
+msgstr "Sehr geehrte Frau"
 
-#: generation/templates/myreport_template.html:6
-msgid "Francois Pinard"
-msgstr "Franky Deutsch"
-
-#: generation/templates/myreport_template.html:12
-msgid "Mode"
-msgstr ""
-
-#: generation/templates/myreport_template.html:13
-msgid "Date"
-msgstr ""
-
-#: generation/templates/myreport_template.html:14
-msgid "Duration"
-msgstr ""
-
-#: generation/templates/myreport_template.html:15
-msgid "Distance"
-msgstr ""
-
-#: generation/templates/myreport_template.html:16
-msgid "Emissions"
-msgstr ""
-
-#: generation/templates/myreport_template.html:17
-msgid "Delay Ex."
-msgstr ""
-
-#: generation/templates/myreport_template.html:18
-msgid "Delay Caused"
-msgstr ""
+#: generation/templates/control.html:1460
+msgid "main_mode"
+msgstr "Hauptmittelwahl jedes Tages der Woche"
 

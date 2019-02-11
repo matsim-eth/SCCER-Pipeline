@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Emissions Feedback Generator 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-02-07 12:52+0100\n"
+"POT-Creation-Date: 2019-02-08 17:20+0100\n"
 "PO-Revision-Date: 2019-02-07 12:40+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -19,12 +19,24 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: generation/templates/control.html:58
-msgid "with_Car"
+#: generation/generate_report.py:111
+msgid "report_title"
 msgstr ""
 
-#: generation/templates/control.html:58
-msgid "with_Walk"
+#: generation/templates/control.html:1412
+msgid "your_report_for_the_week_of"
+msgstr ""
+
+#: generation/templates/control.html:1416
+msgid "greeting_male"
+msgstr ""
+
+#: generation/templates/control.html:1418
+msgid "greeting_female"
+msgstr ""
+
+#: generation/templates/control.html:1460
+msgid "main_mode"
 msgstr ""
 
 #~ msgid "with_Car"
