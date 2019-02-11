@@ -1,17 +1,18 @@
 .car {
     background-color: lightgreen;
-    border-bottom-left-radius: 5px;
-    border-top-left-radius: 5px;
 }
 
 .walk {
     background-color: lightskyblue;
-    border-bottom-right-radius: 5px;
-    border-top-right-radius: 5px;
 }
 
 .bus {
     background-color: lightsalmon;
+}
+
+
+.train {
+    background-color: orange;
 }
 
 .rep_divider {
@@ -26,7 +27,6 @@
     padding:0;
     text-align:left;
     vertical-align:top;
-    width:100%;
 }
 
 table.bar-chart tr {
@@ -39,12 +39,18 @@ table.bar-chart td {
     text-align: center;
     line-height: 30px;
     height: 30px;
-    float: left;
-    border-color: #336699;
-    border-style: solid;
-    border-width: 1px;
 
 }
+
+
+table.bar-chart td.solid {
+
+    border-color: #336699;
+    border-style: none;
+    border-width: 0px;
+
+}
+
 
 
 table.logos th {
@@ -55,17 +61,6 @@ table.logos img {
 
 }
 
-tr.per_day th.weekday div {
-    background: #e1faea;
-    border-color: #336699;
-    border-width: 1px;
-    border-radius: 5px;
-    border-style: solid;
-    width: 40px;
-    padding: 6px;
-    margin-bottom: 12px;
-    text-align: center;
-}
 
 img.mode {
     display: block;

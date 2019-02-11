@@ -93,28 +93,35 @@ weekly_stats.bus = 30
 weekly_stats.walk = 45
 
 
-#test data
-weeks = [SimpleNamespace(
-    date_string = format_date(weekly_stats.start_date + timedelta(days=i), "E", locale),
-    mode = random.choice(["Car", "Train", "Walk"]),
-    distance = distance_string(10000), duration=format_unit(4, "minute", locale=locale)
-        ) for i in range(0,7)]
-
-
 def get_mode_image_tag(mode):
     return '<img class="mode" src="images/mode_icons/{}_icon.png"> </img>'.format(mode.lower())
 
+#test data
 
-for w in weeks:
-    w.mode_image_url = get_mode_image_tag(w.mode)
+#format_unit(, "minute", "short", locale=locale)
+
+modes = [SimpleNamespace(
+    mode = mode,
+    mode_image_url = get_mode_image_tag(mode),
+    distance = random.uniform(1000, 10000),
+    duration=random.randrange(1,60)
+        ) for mode in ["Car", "Train", "Walk"]]
+
+total_dist = sum([m.distance for m in modes])
+total_duration = sum([m.duration for m in modes])
+for m in modes:
+    m.distance_pc = int(m.distance / total_dist * 100)
+    m.duration_pc = int(m.duration / total_duration * 100)
+    m.distance_str = format_unit(round(m.distance / 1000, 2), "kilometer", "short", locale=locale)
+    m.duration_str = format_unit(round(m.duration, 2), "minute", "short", locale=locale)
 
 html = mytemplate.render(title=_('report_title'),
                                             weekly_totals = weekly_totals,
                                             person = person_details,
-                                            weeks = weeks,
+                                            modes = modes,
                                             weekly_stats = weekly_stats, output_encoding='utf-8')
-
-inlined_css = premailer.transform(html, )
+#, disable_basic_attributes=["width", "height", "valign", "align"]
+inlined_css = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/", strip_important=False).transform()
 
 with open("generation/test_report.html", "w", encoding="utf8") as file:
     file.write(inlined_css)
