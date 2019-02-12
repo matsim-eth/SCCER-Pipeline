@@ -75,19 +75,22 @@ pprint.pprint(legs)
 
 weekly_totals = leg_details.groupby('leg_mode')['distance'].sum().reset_index()
 pprint.pprint(weekly_totals)
-distance_week = weekly_totals['distance'].sum()
+
 
 template_lookup = TemplateLookup(directories=['generation/templates'])
 
 mytemplate = template_lookup.get_template("control.html")
 
 
-weekly_hours = format_unit(2, 'hour', locale=locale)
 weekly_stats = SimpleNamespace()
 
 weekly_stats.start_date = date(2019, 2, 4) #
 weekly_stats.start_date_string = format_date(weekly_stats.start_date, "long", locale=locale) #
-weekly_stats.hours = weekly_hours
+weekly_stats.hours_str = format_unit(2, 'hour', locale=locale)
+
+weekly_stats.distance = weekly_totals['distance'].sum()
+weekly_stats.distance_str = format_unit(weekly_stats.distance, 'kilometer', locale=locale)
+
 weekly_stats.car = 20
 weekly_stats.bus = 30
 weekly_stats.walk = 45
@@ -115,10 +118,25 @@ for m in modes:
     m.distance_str = format_unit(round(m.distance / 1000, 2), "kilometer", "short", locale=locale)
     m.duration_str = format_unit(round(m.duration, 2), "minute", "short", locale=locale)
 
+
+
+days = [SimpleNamespace(
+    date_string = format_date(weekly_stats.start_date + timedelta(days=i), "E", locale),
+    main_mode = random.choice(["Car", "Train", "Walk"]),
+    distance_str = distance_string(10000), duration_str=format_unit(4, "minute", locale=locale),
+    distance_pc =  25
+) for i in range(0,7)]
+
+for d in days:
+    d.mode_image_url = get_mode_image_tag(d.main_mode)
+
+
+
 html = mytemplate.render(title=_('report_title'),
                                             weekly_totals = weekly_totals,
                                             person = person_details,
                                             modes = modes,
+                                            days = days,
                                             weekly_stats = weekly_stats, output_encoding='utf-8')
 #, disable_basic_attributes=["width", "height", "valign", "align"]
 inlined_css = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/", strip_important=False).transform()
