@@ -77,7 +77,7 @@ weekly_totals = leg_details.groupby('leg_mode')['distance'].sum().reset_index()
 pprint.pprint(weekly_totals)
 
 
-template_lookup = TemplateLookup(directories=['generation/templates'])
+template_lookup = TemplateLookup(directories=['generation/templates'],strict_undefined=True )
 
 mytemplate = template_lookup.get_template("control.html")
 
@@ -96,8 +96,8 @@ weekly_stats.bus = 30
 weekly_stats.walk = 45
 
 
-def get_mode_image_tag(mode):
-    return '<img class="mode" src="images/mode_icons/{}_icon.png"> </img>'.format(mode.lower())
+def get_mode_image_src(mode):
+    return 'images/mode_icons/{}_icon.png'.format(mode.lower())
 
 #test data
 
@@ -105,7 +105,7 @@ def get_mode_image_tag(mode):
 
 modes = [SimpleNamespace(
     mode = mode,
-    mode_image_url = get_mode_image_tag(mode),
+    mode_image_src = get_mode_image_src(mode),
     distance = random.uniform(1000, 10000),
     duration=random.randrange(1,60)
         ) for mode in ["Car", "Train", "Walk"]]
@@ -124,11 +124,12 @@ days = [SimpleNamespace(
     date_string = format_date(weekly_stats.start_date + timedelta(days=i), "E", locale),
     main_mode = random.choice(["Car", "Train", "Walk"]),
     distance_str = distance_string(10000), duration_str=format_unit(4, "minute", locale=locale),
-    distance_pc =  25
+    distance_pc =  25,
+    odd = "odd" if i % 2 else "even"
 ) for i in range(0,7)]
 
 for d in days:
-    d.mode_image_url = get_mode_image_tag(d.main_mode)
+    d.mode_image_src = get_mode_image_src(d.main_mode)
 
 
 

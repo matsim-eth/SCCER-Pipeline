@@ -93,7 +93,7 @@
             <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
                 <tr>
                     <th>
-                        <img align="center" class="float-center" src="images/eth_logo_kurz_pos.jpg" height="100"
+                        <img align="center" class="float-center" src="images/eth_logo_kurz_pos.gif" height="100"
                              width="100" align="center" class="float-center"/>
 
                         <img align="center" class="float-center" src="images/Uni_basel_logo.svg.png" height="100"
@@ -157,6 +157,9 @@
                     ${person['last_name']}
                         </p>
                         <p>
+                            ${_("Thank you for participanting in the mobility study. This week was the {week_ordinal} of the study, there are only {remaining_weeks} to go")}
+                        </p>
+                        <p>
                             ${_("Over the past week, you spent <strong>{hours_str}</strong> traveling, and covered <strong>{distance_str}</strong>.".format(hours_str = weekly_stats.hours_str, distance_str = weekly_stats.distance_str))}
                             <!--
                <table class="bar-chart" cellpadding="0" cellspacing="0" width="100%">
@@ -172,6 +175,23 @@
 -->
                     </td>
                 </tr>
+       </table>
+            <!--[if (gte mso 9)|(IE)]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+    <!-- SUPPORT CALLOUT -->
+    <tr>
+        <td bgcolor="#f4f4f4" align="center" style="padding: 30px 10px 0px 10px;">
+            <!--[if (gte mso 9)|(IE)]>
+            <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+            <tr>
+            <td align="center" valign="top" width="600">
+            <![endif]-->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
 
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
@@ -195,7 +215,7 @@
                                     <td class="${mode.mode.lower()} solid" style="width:${(0.25*mode.distance_pc)}%">
                                         &nbsp;
                                     </td>
-                                    <td style="width:20%">${mode.mode_image_url}</td>
+                                    <td style="width:20%"><img class="mode" src="${mode.mode_image_src}"> </img></td>
                                     <td class="${mode.mode.lower()} solid" style="width:${(0.25*mode.duration_pc)}%">
                                         &nbsp;
                                     </td>
@@ -210,6 +230,23 @@
 
                     </td>
                 </tr>
+       </table>
+            <!--[if (gte mso 9)|(IE)]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+    <!-- SUPPORT CALLOUT -->
+    <tr>
+        <td bgcolor="#f4f4f4" align="center" style="padding: 30px 10px 0px 10px;">
+            <!--[if (gte mso 9)|(IE)]>
+            <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+            <tr>
+            <td align="center" valign="top" width="600">
+            <![endif]-->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
 
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
@@ -220,30 +257,30 @@
 
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
-
-                        % for day in days:
-                            <table class="bar-chart" cellpadding="0" cellspacing="0" width="100%">
+                            <table cellpadding="0" cellspacing="0" width="100%">
                                 <tbody>
-                                <tr align="left">
-                                    <th>${da}</th>
+                                <tr align="center">
+                                    <th></th>
+                                    <th>${_("Main travel mode")}</th>
+                                    <th>${_("Total km")}</th>
+                                    <th>${_("Total time")}</th>
+                                    <th></th>
                                 </tr>
-                                <tr align="left">
-                                    <th style="width:20%">${day.date_string}</th>
-                                    <td style="width:20%">${day.mode_image_url}</td>
-                                    <td style="width:15%">
+                        % for day in days:
+
+                                <tr align="center" class="${day.odd}">
+                                    <th align="center"style="width:20%">${day.date_string}</th>
+                                    <td style="width:20%"><img class="mode-small" src="${day.mode_image_src}"> </img></td>
+                                    <td style="width:30%">
                                         ${day.distance_str}
                                     </td>
-
-
-                                    <td style="width:15%">
+                                    <td style="width:30%">
                                         ${day.duration_str}
                                     </td>
-                                    <td style="width:70%">
-                                    </td>
                                 </tr>
-                                </tbody>
+                             % endfor
+                           </tbody>
                             </table>
-                        % endfor
 
                     </td>
                 </tr>
