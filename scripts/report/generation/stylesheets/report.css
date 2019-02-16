@@ -164,11 +164,11 @@ img.mode-small {
 
 }
 
-.total td.bad-cell {
+.total .bad-cell {
     background-color: darksalmon;
 }
 
 
-.total td.good-cell {
+.total .good-cell {
     background-color: palegreen;
 }
