@@ -97,7 +97,7 @@ weekly_stats.walk = 45
 
 
 def get_mode_image_src(mode):
-    return 'images/mode_icons/{}_icon.png'.format(mode.lower())
+    return 'images/mode_icons/{}-solid.gif'.format(mode.lower())
 
 #test data
 
@@ -107,8 +107,13 @@ modes = [SimpleNamespace(
     mode = mode,
     mode_image_src = get_mode_image_src(mode),
     distance = random.uniform(1000, 10000),
-    duration=random.randrange(1,60)
-        ) for mode in ["Car", "Train", "Walk"]]
+    duration=random.randrange(1,60),
+    odd="odd" if i % 2 else "even",
+    externalities = SimpleNamespace(
+                            co2 = "30 g", pm = "20 g", health = "5 CHF", noise = "8 CHF" ),
+    average = random.uniform(3000, 6000)
+
+) for i,mode in enumerate(["Car", "Train", "Walk"])]
 
 total_dist = sum([m.distance for m in modes])
 total_duration = sum([m.duration for m in modes])
@@ -118,18 +123,16 @@ for m in modes:
     m.distance_str = format_unit(round(m.distance / 1000, 2), "kilometer", "short", locale=locale)
     m.duration_str = format_unit(round(m.duration, 2), "minute", "short", locale=locale)
 
+    m.bar1 = m.distance if m.distance <= m.average else m.average
+    m.bar2 = m.average - m.distance if m.distance <= m.average else m.distance - m.average
+    m.bar3 = 10000 - max(m.average, m.distance)
 
+    m.bar1 = m.bar1/10000 * 60
+    m.bar2 = m.bar2/10000 * 60
+    m.bar3 = m.bar3/10000 * 60
 
-days = [SimpleNamespace(
-    date_string = format_date(weekly_stats.start_date + timedelta(days=i), "E", locale),
-    main_mode = random.choice(["Car", "Train", "Walk"]),
-    distance_str = distance_string(10000), duration_str=format_unit(4, "minute", locale=locale),
-    distance_pc =  25,
-    odd = "odd" if i % 2 else "even"
-) for i in range(0,7)]
+    m.bar2class = "above_avg" if m.distance > m.average else "below_avg"
 
-for d in days:
-    d.mode_image_src = get_mode_image_src(d.main_mode)
 
 
 
@@ -137,7 +140,6 @@ html = mytemplate.render(title=_('report_title'),
                                             weekly_totals = weekly_totals,
                                             person = person_details,
                                             modes = modes,
-                                            days = days,
                                             weekly_stats = weekly_stats, output_encoding='utf-8')
 #, disable_basic_attributes=["width", "height", "valign", "align"]
 inlined_css = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/", strip_important=False).transform()

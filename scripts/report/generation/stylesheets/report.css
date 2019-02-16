@@ -1,5 +1,12 @@
+img.float-center,
+img.text-center {
+  margin: 0 auto;
+  Margin: 0 auto;
+  float: none;
+  text-align: center; }
+
 .car {
-    background-color: lightgreen;
+    background-color: #90EE90;
 }
 
 .walk {
@@ -13,6 +20,27 @@
 
 .train {
     background-color: orange;
+}
+
+.car.above_avg{
+    background-color: #90EE90;
+    /*background-color: #ccffcc;*/
+}
+
+.walk.above_avg {
+    background-color: lightskyblue;
+    /*background-color: #ddfdff; */
+}
+
+.bus.above_avg {
+    background-color: lightsalmon;
+    /* background-color: #ffbab2; */
+}
+
+
+.train.above_avg {
+    background-color: orange;
+    /* background-color: #FFD700; */
 }
 
 .rep_divider {
@@ -73,6 +101,31 @@ table.bar-chart td.solid {
 }
 
 
+table.bar-chart td.above_avg {
+    border-left-color: #336699;
+    border-left-style: solid;
+    border-left-width: 2px;
+
+}
+
+
+table.bar-chart td.below_avg {
+
+    border-right-color: #336699;
+    border-right-style: solid;
+    border-right-width: 2px;
+    background-color: white;
+
+}
+
+td.legend {
+    border-left-color: #336699;
+    border-left-style: solid;
+    border-left-width: 2px;
+    padding-left: 5px;
+
+}
+
 
 table.logos th {
 }
@@ -92,10 +145,30 @@ img.mode {
 img.mode-small {
     display: block;
     margin: auto;
-    height: 20px;
-    padding: 3px 3px 3px 3px;
+    height: 37px;
 }
 
 .empty {
     display: none;
+}
+
+.total td, .total th {
+
+    border-top-color: #336699;
+    border-top-style: solid;
+    border-top-width: 2px;
+
+    border-bottom-color: #336699;
+    border-bottom-style: solid;
+    border-bottom-width: 2px;
+
+}
+
+.total td.bad-cell {
+    background-color: darksalmon;
+}
+
+
+.total td.good-cell {
+    background-color: palegreen;
 }
