@@ -53,7 +53,7 @@ img.text-center {
     border-collapse:collapse;
     border-spacing:0;
     padding:0;
-    text-align:left;
+    margin: 0 auto;
 }
 
 table.bar-chart tr {
