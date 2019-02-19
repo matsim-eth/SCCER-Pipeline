@@ -25,10 +25,14 @@
         }
 
         @media all and (max-width: 599px) and (min-width: 320px) {
-            body{
+            body {
                 font-size: 12px;
             }
 
+            .externalities {
+                font-size: 10px;
+            }
+        }
 
         /* CLIENT-SPECIFIC STYLES */
         body, table, td, a {
@@ -385,20 +389,21 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Externalities")}</h2>
+                        <h2> ${_("External costs (CHF)")}</h2>
                     </td>
                 </tr>
 
                 <tr>
-                    <td class="cellbox" bgcolor="#ffffff" align="left">
+                    <td class="cellbox externalities" bgcolor="#ffffff" align="left">
                             <table cellpadding="0" cellspacing="0" width="100%">
                                 <tbody>
                                 <tr align="center">
                                     <th></th>
                                     <th>${_("CO2")}</th>
-                                    <th>${_("PM")}</th>
-                                    <th>${_("Health Costs")}</th>
-                                    <th>${_("Noise Costs")}</th>
+                                    <th>${_("Environ-\nment")}</th>
+                                    <th>${_("Health")}</th>
+                                    <th>${_("Time")}</th>
+                                    <th>${_("Total")}</th>
                                 </tr>
                         % for mode in modes:
 
@@ -416,6 +421,9 @@
                                     <td>
                                         ${mode.externalities.noise}
                                     </td>
+                                    <th>
+                                        ${"20 CHF"}
+                                    </th>
                                 </tr>
                              % endfor
 
@@ -433,6 +441,9 @@
                                     <th class="good-cell">
                                         ${10}
                                     </th>
+                                    <th class="good-cell">
+                                        ${"22 CHF"}
+                                    </th>
                              </tr>
 
                              <tr align="center" class="total">
@@ -447,7 +458,10 @@
                                         ${10}
                                     </th>
                                     <th>
-                                        ${12}
+                                        ${22}
+                                    </th>
+                                    <th>
+                                        ${"22 CHF"}
                                     </th>
                              </tr>
                            </tbody>

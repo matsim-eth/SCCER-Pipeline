@@ -110,7 +110,7 @@ modes = [SimpleNamespace(
     duration=random.randrange(1,60),
     odd="odd" if i % 2 else "even",
     externalities = SimpleNamespace(
-                            co2 = "30 g", pm = "20 g", health = "5 CHF", noise = "8 CHF" ),
+                            co2 = "30", pm = "20", health = "5", noise = "8" ),
     pop_average = random.uniform(3000, 6000),
     my_average = random.uniform(3000, 6000),
     max_val = 10000
