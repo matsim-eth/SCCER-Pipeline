@@ -17,9 +17,12 @@ img.text-center {
     background-color: lightsalmon;
 }
 
-
 .train {
     background-color: orange;
+}
+
+.bicycle {
+    background-color: khaki;
 }
 
 .car.above_avg{
@@ -100,28 +103,38 @@ table.bar-chart td.solid {
 
 }
 
+table.bar-chart td.clear {
 
-table.bar-chart td.above_avg {
-    border-left-color: #336699;
-    border-left-style: solid;
-    border-left-width: 2px;
-
-}
-
-
-table.bar-chart td.below_avg {
-
-    border-right-color: #336699;
-    border-right-style: solid;
-    border-right-width: 2px;
+    background: none;
     background-color: white;
 
 }
 
+td.distance {
+
+}
+
+td.max_val {
+    background-color: white;
+}
+
+td.my_average {
+    border-right-color: #8b0000;
+    border-right-style: solid;
+    border-right-width: 2px;
+
+}
+
+
+td.pop_average {
+
+    border-right-color: #336699;
+    border-right-style: solid;
+    border-right-width: 2px;
+
+}
+
 td.legend {
-    border-left-color: #336699;
-    border-left-style: solid;
-    border-left-width: 2px;
     padding-left: 5px;
 
 }
@@ -137,15 +150,13 @@ table.logos img {
 
 
 img.mode {
-    display: block;
     margin: auto;
-    height: 37px;
+    width: 37px;
 }
 
 img.mode-small {
-    display: block;
     margin: auto;
-    height: 37px;
+    width: 37px;
 }
 
 .empty {

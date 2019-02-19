@@ -111,9 +111,11 @@ modes = [SimpleNamespace(
     odd="odd" if i % 2 else "even",
     externalities = SimpleNamespace(
                             co2 = "30 g", pm = "20 g", health = "5 CHF", noise = "8 CHF" ),
-    average = random.uniform(3000, 6000)
+    pop_average = random.uniform(3000, 6000),
+    my_average = random.uniform(3000, 6000),
+    max_val = 10000
 
-) for i,mode in enumerate(["Car", "Train", "Walk"])]
+) for i,mode in enumerate(["Car", "Train", "Bus", "bicycle", "Walk"])]
 
 total_dist = sum([m.distance for m in modes])
 total_duration = sum([m.duration for m in modes])
@@ -123,17 +125,17 @@ for m in modes:
     m.distance_str = format_unit(round(m.distance / 1000, 2), "kilometer", "short", locale=locale)
     m.duration_str = format_unit(round(m.duration, 2), "minute", "short", locale=locale)
 
-    m.bar1 = m.distance if m.distance <= m.average else m.average
-    m.bar2 = m.average - m.distance if m.distance <= m.average else m.distance - m.average
-    m.bar3 = 10000 - max(m.average, m.distance)
 
-    m.bar1 = m.bar1/10000 * 60
-    m.bar2 = m.bar2/10000 * 60
-    m.bar3 = m.bar3/10000 * 60
+    values = sorted([("0", 0), ("distance", m.distance),
+                     ("pop_average", m.pop_average), ("my_average", m.my_average),
+                     ("max_val", m.max_val)], key=lambda x: x[1])
+    values = [(k + " clear" if v > m.distance else k, v) for k,v in values]
 
-    m.bar2class = "above_avg" if m.distance > m.average else "below_avg"
+    classes, values1 = zip(*values)
+    bar_widths = zip(classes[1:], np.diff(values1))
 
 
+    m.bar_widths = [(k, max(w/m.max_val * 60, 1)) for k,w in bar_widths]
 
 
 html = mytemplate.render(title=_('report_title'),
