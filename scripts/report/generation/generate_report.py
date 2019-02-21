@@ -11,6 +11,7 @@ import psycopg2 as pg
 import pandas.io.sql as psql
 
 from babel.units import format_unit
+from babel.numbers import format_currency
 from babel.dates import *
 
 from mako.template import Template
@@ -95,6 +96,12 @@ weekly_stats.car = 20
 weekly_stats.bus = 30
 weekly_stats.walk = 45
 
+weekly_stats.ext_totals = {}
+weekly_stats.ext_totals['health'] = 0
+weekly_stats.ext_totals['CO2'] = 0
+weekly_stats.ext_totals['environment'] = 0
+weekly_stats.ext_totals['congestion'] = 0
+
 
 def get_mode_image_src(mode):
     return 'images/mode_icons/{}-solid.gif'.format(mode.lower())
@@ -110,10 +117,11 @@ modes = [SimpleNamespace(
     duration=random.randrange(1,60),
     odd="odd" if i % 2 else "even",
     externalities = SimpleNamespace(
-                            co2 = "30", pm = "20", health = "5", noise = "8" ),
+                            co2 = 30, environment = 20, health = 5 * (((i % 2)*-2)+1), congestion = 8 ),
     pop_average = random.uniform(3000, 6000),
     my_average = random.uniform(3000, 6000),
     max_val = 10000
+
 
 ) for i,mode in enumerate(["Car", "Train", "Bus", "bicycle", "Walk"])]
 
@@ -138,14 +146,91 @@ for m in modes:
     m.bar_widths = [(k, max(w/m.max_val * 60, 1)) for k,w in bar_widths]
 
 
+
+min_health = abs(min([m.externalities.health for m in modes]))
+
+
+max_total = max([abs(m.externalities.health) +
+                       m.externalities.co2 +
+                       m.externalities.environment +
+                       m.externalities.congestion for m in modes])
+
+right_width_value = max_total - min_health
+
+total_table_width_pc = 70
+
+for m in modes:
+    e1 = m.externalities
+
+    right_total_value = (max(m.externalities.health, 0) +
+                       m.externalities.co2 +
+                       m.externalities.environment +
+                       m.externalities.congestion)
+
+    if e1.health < 0:
+        left_padding = min_health + e1.health
+        left_padding_pc = left_padding / max_total
+        health_pc = abs(e1.health) / max_total
+        health_class = "health negative"
+    else:
+        left_padding = min_health
+        left_padding_pc = min_health /max_total
+        health_pc = abs(e1.health) / max_total
+        health_class = "health positive"
+
+    co2_pc = abs(e1.co2) / max_total
+    environment_pc = abs(e1.environment) / max_total
+    congestion_pc = abs(e1.congestion) / max_total
+    right_padding_pc = (max_total - right_total_value) / max_total
+
+    bars = [("left_padding clear", left_padding_pc * total_table_width_pc),
+            (health_class, health_pc * total_table_width_pc),
+            ("CO2", co2_pc * total_table_width_pc),
+            ("environment", environment_pc * total_table_width_pc),
+            ("congestion", congestion_pc * total_table_width_pc),
+            ("clear", right_padding_pc * total_table_width_pc)]
+
+    bars = [(c, v) for c,v in bars if v > 0] # remove bars with zero width
+    print (bars)
+    m.externalitiy_bar_widths = bars
+
+    m.total_external_cost_str = format_currency(right_total_value + m.externalities.health, "CHF", locale=locale)
+
+    weekly_stats.ext_totals['health'] += e1.health
+    weekly_stats.ext_totals['CO2'] += e1.co2
+    weekly_stats.ext_totals['environment'] += e1.environment
+    weekly_stats.ext_totals['congestion'] += e1.congestion
+
+for k,v in list(weekly_stats.ext_totals.items()):
+    weekly_stats.ext_totals[k+'_str'] = format_currency(v, "CHF", locale=locale)
+
+
 html = mytemplate.render(title=_('report_title'),
-                                            weekly_totals = weekly_totals,
+                                            weekly_stats = weekly_stats,
                                             person = person_details,
                                             modes = modes,
-                                            weekly_stats = weekly_stats, output_encoding='utf-8')
+                                            output_encoding='utf-8')
 #, disable_basic_attributes=["width", "height", "valign", "align"]
-inlined_css = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/", strip_important=False).transform()
+inlined_html = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/", strip_important=False).transform()
+
+import pytracking
+from pytracking.html import adapt_html
+
+configuration = pytracking.Configuration(
+    base_open_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
+    base_click_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
+    webhook_url="https://www.ivtmobis.ethz.ch/engagement_webhook",
+    include_webhook_url=False)
+
+
+new_html_email_text = adapt_html(
+    inlined_html, extra_metadata={"partipant_id": 1, "report_id": 1, "sent_at": datetime.now().isoformat()},
+    click_tracking=True, open_tracking=True, configuration=configuration)
+
 
 with open("generation/test_report.html", "w", encoding="utf8") as file:
-    file.write(inlined_css)
+    file.write(new_html_email_text)
 
+#write to webserver
+with open("M:/htdocs/test_report.html", "w", encoding="utf8") as file:
+    file.write(new_html_email_text)

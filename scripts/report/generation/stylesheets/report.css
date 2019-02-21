@@ -183,3 +183,45 @@ img.mode-small {
 .total .good-cell {
     background-color: palegreen;
 }
+
+table.bar-chart.externalities td {
+    border-top: #0a0a0a solid 1px;
+    border-bottom: #0a0a0a solid 1px;
+}
+
+.health {
+    background-color: #90EE90;
+}
+
+table.bar-chart.externalities td.health.negative {
+
+    border-right-color: #0a0a0a;
+    border-right-style: solid;
+    border-right-width: 4px;
+}
+
+table.bar-chart.externalities td.health.positive {
+
+    border-left-color: #0a0a0a;
+    border-left-style: solid;
+    border-left-width: 4px;
+}
+
+.CO2 {
+    background-color: lightskyblue;
+}
+
+.environment {
+    background-color: lightsalmon;
+}
+
+.congestion {
+    background-color: orange;
+}
+
+td.ext_legend {
+    padding: 5px;
+    border-color: black;
+    border-style: solid;
+    border-width: 1px;
+}
