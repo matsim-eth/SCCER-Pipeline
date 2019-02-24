@@ -31,6 +31,8 @@ import org.matsim.vehicles.VehicleUtils;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.time.LocalDateTime;
+import java.time.format.DateTimeFormatter;
 import java.util.Map;
 import java.util.Random;
 
@@ -49,7 +51,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
     private EventsManagerImpl eventsManager;
     private final ExternalityCounter externalityCounter;
-    private String date;
+    private LocalDateTime date;
     private String costValuesFile;
 
     public static void main(String[] args) throws IOException {
@@ -95,7 +97,7 @@ public class MeasureExternalitiesFromTraceEvents {
         AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime = CSVCongestionReader.forLink().read(congestionPath, binSize);
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
-        runner.process(eventPath, "xxxx", null);
+        runner.process(eventPath, LocalDateTime.now(), null);
         runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
     }
 
@@ -108,7 +110,7 @@ public class MeasureExternalitiesFromTraceEvents {
         //NOISE_FILE = "";
         this.scenario = scenario;
 
-        date = "xxxx"; //ExternalityUtils.getDate(LocalDate.now());
+        date = LocalDateTime.now(); //ExternalityUtils.getDate(LocalDate.now());
 
         eventsManager = new EventsManagerImpl();
         reader = new MatsimEventsReader(eventsManager);
@@ -126,7 +128,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
-        externalityCounter = new ExternalityCounter(scenario, date);
+        externalityCounter = new ExternalityCounter(scenario);
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
         CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
 
@@ -142,7 +144,7 @@ public class MeasureExternalitiesFromTraceEvents {
         eventsManager.resetHandlers(0);
     }
 
-    public void process(String eventsFile, String date, String personId) {
+    public void process(String eventsFile, LocalDateTime date, String personId) {
         externalityCounter.setDate(date);
         eventsManager.initProcessing();
         reader.readFile(eventsFile);
@@ -157,7 +159,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
 
     public void write(Path folder) {
-        Path outputFolder = folder.resolve(date);
+        Path outputFolder = folder.resolve(date.format(DateTimeFormatter.ISO_DATE));
         externalityCounter.writeCsvFile(outputFolder);
     }
 

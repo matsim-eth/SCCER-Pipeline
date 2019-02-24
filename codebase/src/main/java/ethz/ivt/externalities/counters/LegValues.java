@@ -7,7 +7,13 @@ import java.util.stream.Stream;
 
 public class LegValues {
     Map<String, Double> personId2Leg2Values = new HashMap<>();
-    private LocalDateTime timestamp = LocalDateTime.now();
+
+    public LegValues(LocalDateTime timestamp, String mode) {
+        this.timestamp = timestamp;
+        this.mode = mode;
+    }
+
+    private LocalDateTime timestamp;
     private String mode;
 
     public void addTempValues(Map<String, Double> values) {

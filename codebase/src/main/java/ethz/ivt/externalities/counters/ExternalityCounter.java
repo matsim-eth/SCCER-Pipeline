@@ -16,7 +16,10 @@ import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
+import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
 
@@ -24,14 +27,13 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 
     protected final Scenario scenario;
-	private String date;
+	private LocalDateTime date;
 	private Map<Id<Person>,List<LegValues>> personId2Leg = new HashMap<>(); //summed emissions values per person per leg
     private Map<Id<Person>, LegValues> tempValues = new HashMap<>(); //summed values within leg
     private Set<String> keys = new LinkedHashSet<>(); //list of all leg data fields
 
-    public ExternalityCounter(Scenario scenario, String date) {
+    public ExternalityCounter(Scenario scenario) {
     	this.scenario = scenario;
-    	this.date = date;
     	initializeFields();
     }
 
@@ -57,8 +59,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	public void handleEvent(PersonDepartureEvent e) {
 		Id<Person> pid = e.getPersonId();
 		//check if person in map, assume that first event is always departure event
-
-		this.tempValues.putIfAbsent(pid, new LegValues());
+		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode()));
 		tempValues.get(pid).put("StartTime", e.getTime());
         tempValues.get(pid).setMode(e.getLegMode());
 
@@ -68,13 +70,15 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
-		this.tempValues.putIfAbsent(pid, new LegValues());
+		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
+
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode()));
 		tempValues.get(pid).put("EndTime", e.getTime());
 		personId2Leg.putIfAbsent(pid, new ArrayList<>());
 		personId2Leg.get(pid).add(tempValues.get(pid)); //add new leg
 
         //reset
-        tempValues.put(pid, new LegValues());
+        tempValues.put(pid, new LegValues(eventDateTime, e.getLegMode()));
 
     }
 
@@ -123,11 +127,11 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 		tempValues.clear();
 	}
 
-	public String getDate() {
+	public LocalDateTime getDate() {
 		return date;
 	}
 
-	public void setDate(String date) {
+	public void setDate(LocalDateTime date) {
 		this.date = date;
 	}
 
@@ -136,14 +140,12 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	}
 
 	public double getTempValue(Id<Person> personId, String key) {
-    	this.tempValues.putIfAbsent(personId, new LegValues());
-    	keys.add(key);
-    	this.tempValues.get(personId).putIfAbsent(key, 0.0);
+
+		this.tempValues.get(personId).putIfAbsent(key, 0.0);
 		return this.tempValues.get(personId).get(key);
 	}
 
 	public void putTempValue(Id<Person> personId, String key, double value) {
-		this.tempValues.putIfAbsent(personId, new LegValues());
 		this.tempValues.get(personId).put(key, value);
 	}
 

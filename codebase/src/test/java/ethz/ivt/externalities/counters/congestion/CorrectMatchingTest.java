@@ -63,7 +63,7 @@ public class CorrectMatchingTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -132,7 +132,7 @@ public class CorrectMatchingTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -208,7 +208,7 @@ public class CorrectMatchingTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -279,7 +279,7 @@ public class CorrectMatchingTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, date);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);

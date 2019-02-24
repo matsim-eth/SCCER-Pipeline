@@ -39,7 +39,7 @@ class ExternalitiesActor(measureExternalities: MeasureExternalities, writerActor
       log.info(s"processing ${events.size} on ${tr.date} for ${tr.user_id}")
       import collection.JavaConverters._
       //calculate externalities here
-      val externalities = measureExternalities.process(events.toList.asJava, tr.date)
+      val externalities = measureExternalities.process(events.toList.asJava, tr.date.atStartOfDay())
       writerActor ? Externalities(tr, externalities) onComplete {
         case Failure(e: SQLException) => log.error(e, "Error writing externalities")
         case _  => log.info("Externalities written successfully")

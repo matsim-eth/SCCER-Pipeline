@@ -54,7 +54,7 @@ object TestDatabaseInteraction {
 
     val tr = TripRecord("test", 0, LocalDate.now(), List(leg))
 
-    class MockEC extends ExternalityCounter(null, LocalDate.now().minusYears(1).toString) {
+    class MockEC extends ExternalityCounter(null) {
       import collection.JavaConverters._
 
       override def getPersonId2Leg() : util.Map[Id[Person], util.List[LegValues]] = {
@@ -63,8 +63,7 @@ object TestDatabaseInteraction {
 
         val values = headers.split(";").zip(data.split(";")).drop(4).toMap
 
-        val legValues = new LegValues()
-        legValues.setMode("Car")
+        val legValues = new LegValues(LocalDate.now().minusYears(1).atStartOfDay(), "Car")
         values.foreach{ case (k,v) => {
           legValues.put(k,v.toDouble)
         }}

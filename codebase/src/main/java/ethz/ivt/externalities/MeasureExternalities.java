@@ -26,6 +26,7 @@ import org.matsim.vehicles.VehicleUtils;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -43,7 +44,6 @@ public class MeasureExternalities {
 
     private EventsManagerImpl eventsManager;
     private final ExternalityCounter externalityCounter;
-    private String date;
 
     public MeasureExternalities(
             Scenario scenario,
@@ -52,7 +52,6 @@ public class MeasureExternalities {
 
         this.scenario = scenario;
         this.ecc = ecc;
-        date = "xxxx"; //ExternalityUtils.getDate(LocalDate.now());
 
         eventsManager = new EventsManagerImpl();
         eventsManager.addHandler(new JITvehicleCreator(scenario));
@@ -66,7 +65,7 @@ public class MeasureExternalities {
 
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
-        externalityCounter = new ExternalityCounter(scenario, date);
+        externalityCounter = new ExternalityCounter(scenario);
         eventsManager.addHandler(externalityCounter);
 
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
@@ -80,8 +79,8 @@ public class MeasureExternalities {
         eventsManager.resetHandlers(0);
     }
 
-    public ExternalityCounter process(List<Event> events, LocalDate date) {
-        externalityCounter.setDate(date.toString());
+    public ExternalityCounter process(List<Event> events, LocalDateTime date) {
+        externalityCounter.setDate(date);
         eventsManager.initProcessing();
         events.forEach(eventsManager::processEvent);
 

@@ -113,8 +113,9 @@ object SplitWaypoints {
       .map { case ((user_id, date), trs: Stream[TripRow]) =>
         TripRecord(user_id, 0, date, trs.map(_.tripLeg).toList)
       }
-      .map( tr => tr.copy(legs = tr.legs.filter(tl => tl.mode == "Car" || tl.mode == "Ecar" )) )
+      .map( tr => tr.copy(legs = tr.legs   ))//.filter(tl => tl.mode == "Car" || tl.mode == "Ecar" )) )
       .filterNot(_.legs.isEmpty)
+      .filter(_.user_id == "1649")
       .toList
 
     logger.info(s"${personday_triplegs.size} trips loaded")
