@@ -35,7 +35,8 @@ connection = pg.connect(host='localhost',  dbname="sbb-green", user="postgres", 
 person_details = pd.read_sql_query("SELECT * FROM participants where person_id = '{}'".format(person_id), connection).to_dict('records')[0]
 
 
-leg_details = pd.read_sql_query("SELECT * FROM legs where person_id = '{}'".format(person_id), connection)
+leg_details = pd.read_sql_query("SELECT * FROM legs where person_id = '{}' "
+                                "and to_char(leg_date, 'YYYY-IW') = '2016-50'".format(person_id), connection)
 leg_in_list = ','.join(map(str, leg_details['leg_id']))
 
 externalities = pd.read_sql_query("SELECT * FROM externalities where leg_id in ({})".format(leg_in_list), connection)
