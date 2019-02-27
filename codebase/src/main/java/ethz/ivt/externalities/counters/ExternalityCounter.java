@@ -1,13 +1,17 @@
 package ethz.ivt.externalities.counters;
 
+import ethz.ivt.externalities.MeasureExternalities;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.events.Event;
 import org.matsim.api.core.v01.events.PersonArrivalEvent;
 import org.matsim.api.core.v01.events.PersonDepartureEvent;
 import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
+import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.handler.EventHandler;
 import org.matsim.vehicles.Vehicle;
 
@@ -23,7 +27,7 @@ import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, EventHandler {
+public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, ExtendedPersonDepartureEventEventHandler, EventHandler {
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 
     protected final Scenario scenario;
@@ -31,9 +35,11 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	private Map<Id<Person>,List<LegValues>> personId2Leg = new HashMap<>(); //summed emissions values per person per leg
     private Map<Id<Person>, LegValues> tempValues = new HashMap<>(); //summed values within leg
     private Set<String> keys = new LinkedHashSet<>(); //list of all leg data fields
+	private EventsManager eventsManager;
 
-    public ExternalityCounter(Scenario scenario) {
+	public ExternalityCounter(Scenario scenario, EventsManager eventsManager) {
     	this.scenario = scenario;
+    	this.eventsManager = eventsManager;
     	initializeFields();
     }
 
@@ -52,6 +58,16 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 	public Map<Id<Person>, List<LegValues>> getPersonId2Leg() {
 		return personId2Leg;
+	}
+
+	public void handleEvent(ExtendedPersonDepartureEvent e ) {
+		Id<Person> pid = e.getPersonId();
+		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getPersonDepartureEvent().getLegMode()));
+		tempValues.get(pid).setTriplegId(e.getTripleg_id());
+		tempValues.get(pid).setDistance(e.getDistance());
+		eventsManager.processEvent(e.getPersonDepartureEvent());
+
 	}
 
 	// Check if leg is traveled by car and get start time

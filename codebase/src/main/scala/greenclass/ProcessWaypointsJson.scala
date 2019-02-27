@@ -16,7 +16,7 @@ import ethz.ivt.externalities.MeasureExternalities
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
-import ethz.ivt.externalities.counters.ExternalityCostCalculator
+import ethz.ivt.externalities.counters.{ExtendedPersonDepartureEvent, ExternalityCostCalculator}
 import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl, TripLeg, TripRecord}
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
@@ -167,6 +167,7 @@ class ProcessWaypointsJson(scenario: Scenario) {
     val linkEvents = if (matsim_mode == TransportMode.car) {
       gh.gpsToEvents(tl.waypoints.map(_.toGPX).asJava, vehicleId).asScala.toList
     } else List.empty
+
     val events_full = bookendEventswithDepArr(gh, tl, personId, tl.mode, linkEvents)
     events_full
   }
@@ -207,7 +208,9 @@ class ProcessWaypointsJson(scenario: Scenario) {
       logger.error(s"the trip end for $tl could not be matched to the matsim network")
     }
 
-    val departureEvent = new PersonDepartureEvent(tl.getStartedSeconds, personId, departureLink, mappedMode)
+    val departureEvent = new ExtendedPersonDepartureEvent(tl.getStartedSeconds,
+      personId, departureLink, mappedMode, tl.distance, tl.leg_id)
+
     val arrivalEvent = new PersonArrivalEvent(tl.getFinishedSeconds, personId, arrivalLink, mappedMode)
     departureEvent :: (linkEvents ::: List(arrivalEvent))
   }

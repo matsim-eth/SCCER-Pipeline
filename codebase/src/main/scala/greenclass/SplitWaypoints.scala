@@ -58,9 +58,12 @@ object SplitWaypoints {
         |	ST_Y(ST_StartPoint(geometry)) as start_y,
         |	ST_X(ST_EndPoint(geometry)) as finish_x,
         |	ST_Y(ST_EndPoint(geometry)) as finish_y,
+        | ST_Length(ST_transform(geometry, 2055)) as distance,
         |	trim(leading 'Mode::' from mode_validated) as mode_validated
         |FROM version_20181213_switzerland.triplegs
         |WHERE id not in (SELECT id FROM version_20181213_switzerland.triplegs_anomalies)
+        | and mode_validated in ('Mode::Tram', 'Mode::Bus', 'Mode::Ecar', 'Mode::Ebicycle',
+        |        'Mode::Train', 'Mode::Bicycle', 'Mode::Car', 'Mode::Walk')
         |order by user_id, started_at
         |
       """.stripMargin
@@ -104,7 +107,9 @@ object SplitWaypoints {
       TripRow(rs.getLong("user_id").toString, rs.getLong("trip_id"), TripLeg(rs.getLong("id"),
         rs.getTimestamp("started_at").toLocalDateTime, rs.getTimestamp("finished_at").toLocalDateTime,
         LatLon(rs.getDouble("start_y"), rs.getDouble("start_x")),
-        LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")), rs.getString("mode_validated"), Nil)
+        LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")),
+        rs.getDouble("distance"),
+        rs.getString("mode_validated"), Nil)
       )
     }
 

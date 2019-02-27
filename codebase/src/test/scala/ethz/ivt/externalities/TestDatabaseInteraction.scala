@@ -48,13 +48,14 @@ object TestDatabaseInteraction {
       LocalDateTime.now(),
       LocalDateTime.now().plusHours(1),
       LatLon(0.0, 0.0), LatLon(0.0, 0.0),
+      1000,
       "Car",
       List.empty
     )
 
     val tr = TripRecord("test", 0, LocalDate.now(), List(leg))
 
-    class MockEC extends ExternalityCounter(null) {
+    class MockEC extends ExternalityCounter(null, null) {
       import collection.JavaConverters._
 
       override def getPersonId2Leg() : util.Map[Id[Person], util.List[LegValues]] = {

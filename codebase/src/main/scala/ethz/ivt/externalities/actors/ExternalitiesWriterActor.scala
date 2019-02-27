@@ -73,7 +73,7 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
             legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) => {
               leg_pst.setTimestamp(2, java.sql.Timestamp.valueOf(leg.getTimestamp))
               leg_pst.setString(3, leg.getMode)
-              leg_pst.setDouble(4, 0.0)
+              leg_pst.setDouble(4, leg.getDistance)
               val affectedRows = leg_pst.executeUpdate
 
               if (affectedRows == 0) throw new SQLException("Creating leg failed, no rows affected.")

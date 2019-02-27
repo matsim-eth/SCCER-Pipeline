@@ -65,7 +65,7 @@ public class MeasureExternalities {
 
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
-        externalityCounter = new ExternalityCounter(scenario);
+        externalityCounter = new ExternalityCounter(scenario, eventsManager);
         eventsManager.addHandler(externalityCounter);
 
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);

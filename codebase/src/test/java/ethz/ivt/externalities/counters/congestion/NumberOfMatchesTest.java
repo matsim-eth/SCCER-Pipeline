@@ -62,12 +62,12 @@ public class NumberOfMatchesTest {
         scenario.getPopulation().addPerson(gps2);
 
         // set up event manager and handlers
-        EventsManager eventsManager = new EventsManagerImpl();
+        EventsManagerImpl eventsManager = new EventsManagerImpl();
         Vehicle2DriverEventHandler v2deh = new Vehicle2DriverEventHandler();
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, eventsManager);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -128,7 +128,7 @@ public class NumberOfMatchesTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, eventsManager);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -193,7 +193,7 @@ public class NumberOfMatchesTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, eventsManager);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -263,7 +263,7 @@ public class NumberOfMatchesTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, eventsManager);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
@@ -334,7 +334,7 @@ public class NumberOfMatchesTest {
         eventsManager.addHandler(v2deh);
 
         String date = "2018-07-27";
-        ExternalityCounter externalityCounter = new ExternalityCounter(scenario);
+        ExternalityCounter externalityCounter = new ExternalityCounter(scenario, eventsManager);
         DisaggregateCongestionCounter congestionCounter = new DisaggregateCongestionCounter(scenario, externalityCounter);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);

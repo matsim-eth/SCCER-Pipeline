@@ -22,6 +22,7 @@ package object data {
                       finished_at : LocalDateTime,
                       start_point : LatLon,
                       finish_point : LatLon,
+                      distance: Double,
                       mode: String,
                       waypoints : List[WaypointRecord]
                     ) {
