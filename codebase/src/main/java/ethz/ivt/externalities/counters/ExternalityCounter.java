@@ -139,8 +139,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 	@Override
 	public void reset(int iteration) {
-		personId2Leg.clear();
-		tempValues.clear();
+		personId2Leg = new HashMap<>();
+		tempValues = new HashMap<>();
 	}
 
 	public LocalDateTime getDate() {
@@ -173,5 +173,13 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 	public void addKeys(Set<String> newKeys) {
 		keys.addAll(newKeys);
+	}
+
+	public ExternalityCounter copy() {
+		ExternalityCounter ec = new ExternalityCounter(scenario, eventsManager);
+		ec.setDate(date);
+		ec.personId2Leg = getPersonId2Leg();
+		ec.keys = new HashSet<>(keys);
+		return ec;
 	}
 }

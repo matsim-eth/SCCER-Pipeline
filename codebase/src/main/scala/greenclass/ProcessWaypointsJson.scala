@@ -114,10 +114,10 @@ object ProcessWaypointsJson {
     import akka.pattern.gracefulStop
     import scala.concurrent.duration._
 
-    gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
-      .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
-      .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
-      .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))
+//    gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
+//      .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
+//      .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
+//      .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))
   }
 
 }
@@ -139,7 +139,6 @@ class ProcessWaypointsJson(scenario: Scenario) {
   def filterJsonFiles(triplegs_folder: Path): Stream[Path] = {
     Files.walk(triplegs_folder).iterator().asScala
       .filter(json_matcher.matches(_))
-      .take(5)
       .toStream
   }
 

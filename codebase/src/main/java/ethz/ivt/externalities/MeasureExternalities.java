@@ -43,7 +43,7 @@ public class MeasureExternalities {
 
 
     private EventsManagerImpl eventsManager;
-    private final ExternalityCounter externalityCounter;
+    private ExternalityCounter externalityCounter;
 
     public MeasureExternalities(
             Scenario scenario,
@@ -87,7 +87,9 @@ public class MeasureExternalities {
         ecc.addCosts(externalityCounter);
 
         eventsManager.finishProcessing();
-        return externalityCounter;
+        ExternalityCounter ecCopy = externalityCounter.copy();
+        eventsManager.resetHandlers(0);
+        return ecCopy;
 
     }
 

@@ -74,6 +74,7 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
               leg_pst.setTimestamp(2, java.sql.Timestamp.valueOf(leg.getTimestamp))
               leg_pst.setString(3, leg.getMode)
               leg_pst.setDouble(4, leg.getDistance)
+              leg_pst.setDouble(4, leg.getDistance)
               val affectedRows = leg_pst.executeUpdate
 
               if (affectedRows == 0) throw new SQLException("Creating leg failed, no rows affected.")
@@ -95,6 +96,7 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
           }.toMap
 
           log.info (s"${res.values.map(_.length).sum} added to DB")
+
 
           res
         }
