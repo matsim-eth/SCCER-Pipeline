@@ -2,6 +2,7 @@ package ethz.ivt.externalities.counters;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 
 import java.io.IOException;
@@ -52,7 +53,7 @@ public class ExternalityCostCalculator {
     public void addCosts(ExternalityCounter ec) {
         Map<Id<Person>,List<LegValues>> emissions = ec.getPersonId2Leg();
         emissions.forEach((pid, list) -> {
-            list.forEach(xs -> xs.putAll(calculateCostsForCarLeg(xs)));
+            list.forEach(xs -> xs.putAll(calculateCostsForLeg(xs)));
         });
         ec.addKeys(getAllKeys(emissions));
     }
@@ -61,8 +62,13 @@ public class ExternalityCostCalculator {
         return emissions.values().stream().flatMap(x->x.stream().flatMap(LegValues::keys)).collect(Collectors.toSet());
     }
 
-    private Map<String,Double> calculateCostsForCarLeg(LegValues emissions) {
+    private Map<String,Double> calculateCostsForLeg(LegValues emissions) {
         Map<String, Double> costs = new HashMap<>();
+
+        if ("Car".equals(emissions.getMode()) && emissions.get("MappedDistance") == 0.0) {
+            emissions.setDistance(emissions.get("MappedDistance"));
+        }
+        addPTEmissions(emissions);
 
         //CO2.
         if (emissions.containsKey("CO2(total)")) {
@@ -70,9 +76,9 @@ public class ExternalityCostCalculator {
             costs.put("CO2_costs", CO2);
         }
         //Non-exhaust PM
-        if (emissions.containsKey("Distance_urban") && emissions.containsKey("Distance_rural")) {
-            double PM_urban_non_exhaust = emissions.get("Distance_urban") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
-            double PM_rural_non_exhaust = emissions.get("Distance_rural") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
+        if (emissions.containsKey("MappedDistance_urban") && emissions.containsKey("MappedDistance_rural")) {
+            double PM_urban_non_exhaust = emissions.get("MappedDistance_urban") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
+            double PM_rural_non_exhaust = emissions.get("MappedDistance_rural") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
 
             double PM_urban_total = emissions.get("PM_urban") + PM_urban_non_exhaust;
             double PM_rural_total = emissions.get("PM_rural") + PM_rural_non_exhaust;
@@ -102,13 +108,40 @@ public class ExternalityCostCalculator {
         }
         //Zinc
         if ("Car".equals(emissions.getMode())) {
-            double zinc_regional = (emissions.get("Distance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
+            double zinc_regional = (emissions.get("MappedDistance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
             costs.put("Zinc_costs", zinc_regional);
 
-            double noise_costs = (emissions.get("Distance")) / 1000 * rv.get("noise.average.cost.adj");
+            double noise_costs = (emissions.get("MappedDistance")) / 1000 * rv.get("noise.average.cost.adj");
             costs.put("Noise_costs", noise_costs);
         }
+        else if ("Walk".equals(emissions.getMode())) {
+            costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("walking.health.cost"));
+        }
+        else if ("Bicycle".equals(emissions.getMode())) {
+            costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("cycling.health.cost"));
+
+        }
+
 
         return costs;
     }
+
+    private void addPTEmissions(LegValues emissions) {
+        String mode = null;
+
+        if ("Train".equals(emissions.getMode())) {
+            mode = "sbb.regional_train.";
+        } else if (TransportMode.pt.equals(emissions.getMode())) {
+            mode = "sbb.bus.";
+        }
+
+        if (mode != null) {
+            emissions.put("PM_urban", emissions.getDistance() / 1000  * (rv.get(mode + "PM10")) * 0.5);
+            emissions.put("PM_rural", emissions.getDistance() / 1000 * (rv.get(mode + "PM10")) * 0.5);
+            emissions.put("NOx", emissions.getDistance() / 1000 * rv.get(mode + "NOX"));
+
+            emissions.put("CO2(total)", emissions.getDistance() / 1000 * rv.get(mode + "CO2"));
+        }
+    }
+
 }

@@ -47,7 +47,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
     protected void initializeFields() {
         keys.add("StartTime");
         keys.add("EndTime");
-        keys.add("Distance");
+        keys.add("MappedDistance");
 
     }
 
@@ -156,6 +156,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	}
 
 	public double getTempValue(Id<Person> personId, String key) {
+		if (!this.tempValues.containsKey(personId)) return 0.0;
 
 		this.tempValues.get(personId).putIfAbsent(key, 0.0);
 		return this.tempValues.get(personId).get(key);

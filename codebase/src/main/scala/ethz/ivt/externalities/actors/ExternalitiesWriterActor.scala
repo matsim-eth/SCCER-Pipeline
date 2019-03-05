@@ -94,7 +94,6 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
             (pid, externalities_pst.executeBatch())
           }
           }.toMap
-
           log.info (s"${res.values.map(_.length).sum} added to DB")
 
 
