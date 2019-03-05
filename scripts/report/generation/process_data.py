@@ -84,7 +84,7 @@ def structure_externality_information(modes_df, locale):
     }
 
 
-def build_mode_bar_chart(modes_df, locale):
+def build_mode_bar_chart(modes_df, norms_df, locale):
     mode_names = ['Car', 'Train', 'Bicycle', 'Walk']
 
     total_dist = modes_df['distance'].sum()
@@ -92,16 +92,12 @@ def build_mode_bar_chart(modes_df, locale):
     max_val = modes_df['distance'].max() * 1.1
     barchart_width = 60
 
-    pop_average = {'Car' : 5000, 'Train' : 10000,
-                   'pt' : 7000, 'Bicycle' : 2000, 'Walk' : 1000}
-
-    my_average = {'Car': 5000, 'Train': 10000,
-                   'pt': 7000, 'Bicycle': 2000, 'Walk': 1000}
-
-
 
     for mode in mode_names:
         mode_bar_chart[mode] = {}
+
+        pop_average = norms_df.loc[mode, 'cluster_distance']
+        my_average = norms_df.loc[mode, 'my_distance']
 
         distance = modes_df.loc[mode, 'distance']
 
@@ -111,7 +107,7 @@ def build_mode_bar_chart(modes_df, locale):
         mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", "short", locale=locale)
 
         values = sorted([("0", 0), ("distance", distance),
-                         ("pop_average", pop_average[mode]), ("my_average", my_average[mode]),
+                         ("pop_average", pop_average), ("my_average", my_average),
                          ("max_val", max_val+10)], key=lambda x: x[1])
         values = [(k + " clear" if v > distance else k, v) for k,v in values]
 
@@ -183,8 +179,10 @@ def build_mode_bar_chart(modes_df, locale):
     return (mode_bar_chart)
 
 
-def build_externality_barchart(mode_values_df, locale):
+def build_externality_barchart(mode_values_df, norms_df, locale):
     ext_bars = {}
+
+    norms_df_summed = norms_df.sum()
 
     extern_labels = ["health", 'co2', 'environment', 'congestion']
     max_val = max([mode_values_df[k].sum() for k in extern_labels]) * 1.1
@@ -192,8 +190,8 @@ def build_externality_barchart(mode_values_df, locale):
 
     for k in extern_labels:
         ext_v = abs(mode_values_df[k].sum())
-        social_norm = 50
-        my_norm = 40
+        social_norm = norms_df_summed['cluster_'+k]
+        my_norm = norms_df_summed['my_'+k]
 
         values = sorted([("0", 0), ("externality", ext_v),
                          ("pop_average", social_norm), ("my_average", my_norm),

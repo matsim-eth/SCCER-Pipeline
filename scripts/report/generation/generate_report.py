@@ -47,41 +47,41 @@ leg_details = pd.read_sql_query("SELECT * FROM legs where person_id = '{}' "
                                 "and to_char(leg_date, 'YYYY-IW') = '2016-50'".format(person_id), connection)
 leg_in_list = ','.join(map(str, leg_details['leg_id']))
 
-externalities = pd.read_sql_query("SELECT * FROM externalities where leg_id in ({})".format(leg_in_list), connection)
-grouped_df = externalities.groupby("leg_id")
+leg_ext = pd.read_sql_query("SELECT * FROM wide_externalities where leg_id in ({})".format(leg_in_list), connection)
 
+norms_sql = '''
+select leg_mode, avg(health) as health, avg (distance) as distance, 
+    avg(environment) as environment, avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
+from (
+	select EXTRACT(WEEK FROM leg_date) as week, leg_mode, sum(health) as health, sum (distance) as distance, 
+	sum(environment) as environment, sum(co2) as co2, sum(congestion) as congestion, sum(total) as total
+	from wide_externalities
+	where {} = {}
+	group by week, leg_mode
+) as ll
+group by leg_mode
+order by leg_mode
+'''
 
-wide_externalities = externalities.pivot_table(index='leg_id', columns='variable', values='val', fill_value=0)
+norms_person = pd.read_sql_query(norms_sql.format('person_id', "'{}'".format(person_id)), connection)
+norms_cluster = pd.read_sql_query(norms_sql.format('cluster_id', person_details['cluster_id']), connection)
 
-wide_externalities['health'] = wide_externalities['PM_health_costs'] + \
-                               wide_externalities['Noise_costs'] + \
-                               wide_externalities['NOx_costs'] + \
-                               wide_externalities['Active_costs']
+norms = pd.DataFrame()
+norms['leg_mode'] = norms_person['leg_mode']
+for col in ['distance', "health", 'co2', 'environment', 'congestion', 'total']:
+    norms['my_'+col] = norms_person[col]
+    norms['cluster_'+col] = norms_cluster[col]
 
-wide_externalities['environment'] = wide_externalities['PM_building_damage_costs'] + \
-                               wide_externalities['Zinc_costs']
+norms.set_index('leg_mode', inplace=True)
 
-wide_externalities['co2'] = wide_externalities['CO2_costs']
-wide_externalities['congestion'] = wide_externalities['delay_caused'] * 26.1 / 3600
-
-
-
-leg_ext = wide_externalities.merge(leg_details, on='leg_id')[
-    ['leg_mode', 'distance', 'health','environment', 'congestion', 'co2']]
-
-mode_values = leg_ext.groupby(['leg_mode']).sum()
-
-mode_values['total'] = mode_values['health'] + \
-                       mode_values['environment'] + \
-                       mode_values['co2'] + \
-                       mode_values['congestion']
+mode_values = leg_ext.groupby(['leg_mode'])[['distance', 'health', 'environment', 'co2', 'congestion', 'total']].sum()
 
 
 ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', locale=locale))
 
-mode_bar_chart = build_mode_bar_chart(mode_values, locale)
+mode_bar_chart = build_mode_bar_chart(mode_values, norms, locale)
 
-externality_bar_chart = build_externality_barchart(mode_values, locale)
+externality_bar_chart = build_externality_barchart(mode_values, norms, locale)
 
 #ext_summary = mode_values.sum()
 
