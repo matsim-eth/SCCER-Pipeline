@@ -1,6 +1,7 @@
 import pprint
 import random
 from types import SimpleNamespace
+import math
 
 import numpy as np
 import pandas as pd
@@ -88,7 +89,8 @@ def build_mode_bar_chart(modes_df, locale):
 
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
-    max_val = modes_df['distance'].max()
+    max_val = modes_df['distance'].max() * 1.1
+    barchart_width = 60
 
     pop_average = {'Car' : 5000, 'Train' : 10000,
                    'pt' : 7000, 'Bicycle' : 2000, 'Walk' : 1000}
@@ -113,21 +115,24 @@ def build_mode_bar_chart(modes_df, locale):
                          ("max_val", max_val+10)], key=lambda x: x[1])
         values = [(k + " clear" if v > distance else k, v) for k,v in values]
 
+
+
         classes, values1 = zip(*values)
         bar_widths = list(zip(classes[1:], np.diff(values1)))
 
-        mode_bar_chart[mode]['distance_bars'] = [(k, max(w/(max_val+10) * 60, 1)) for k,w in bar_widths]
+        mode_bar_chart[mode]['distance_bars'] = [(k, max(round(w / max_val * barchart_width), 1)) for k, w in bar_widths]
+        mode_bar_chart[mode]['distance_bars'][-1] = (mode_bar_chart[mode]['distance_bars'][-1][0],
+                           barchart_width - sum([v[1] for v in mode_bar_chart[mode]['distance_bars'][:-1]]))
+        print(mode_bar_chart[mode]['distance_bars'])
 
-
-
-    max_total = modes_df['total'].max()
+    max_total = modes_df['total'].max() * 1.1
     min_health = abs(modes_df['health'].min())
 
     left_total_value = max(min_health, 0.1* max_total)
 
     total_table_width_pc = 70
-    left_width_pc = left_total_value/(left_total_value + max_total)*total_table_width_pc
-    right_width_pc = max_total/(left_total_value + max_total)*total_table_width_pc
+    left_width_pc = round(left_total_value/(left_total_value + max_total)*total_table_width_pc)
+    right_width_pc = total_table_width_pc - left_width_pc
 
     for mode in mode_names:
 
@@ -140,20 +145,25 @@ def build_mode_bar_chart(modes_df, locale):
         left_padding_class = "left_padding clear"
         health_class = "health"
 
+
+        co2_pc = math.ceil(abs(modes_df.loc[mode,  'co2']) / max_total * right_width_pc)
+        environment_pc = math.ceil(abs(modes_df.loc[mode, 'environment']) / max_total * right_width_pc)
+        congestion_pc = math.ceil(abs(modes_df.loc[mode, 'congestion']) / max_total * right_width_pc)
+
+        right_padding_pc = right_width_pc - co2_pc - environment_pc - congestion_pc
+
+
         if modes_df.loc[mode, 'health'] < 0:
+            health_pc = math.ceil(abs(modes_df.loc[mode, 'health']) / left_total_value * left_width_pc)
             left_padding = left_total_value + modes_df.loc[mode, 'health']
-            left_padding_pc = left_padding / left_total_value * left_width_pc
-            health_pc = abs(modes_df.loc[mode, 'health']) / left_total_value * left_width_pc
-            health_class += "right_border"
+            left_padding_pc = left_width_pc - health_pc
+            health_class += " right_border"
         else:
             left_padding_pc = left_width_pc
-            health_pc = abs(modes_df.loc[mode, 'health']) / max_total * right_width_pc
+            health_pc = math.ceil(abs(modes_df.loc[mode, 'health']) / max_total * right_width_pc)
             left_padding_class += " right_border"
+            right_padding_pc -= health_pc
 
-        co2_pc = abs(modes_df.loc[mode,  'co2']) / max_total * right_width_pc
-        environment_pc = abs(modes_df.loc[mode, 'environment']) / max_total * right_width_pc
-        congestion_pc = abs(modes_df.loc[mode, 'congestion']) / max_total * right_width_pc
-        right_padding_pc = (max_total - right_total_value) / max_total * right_width_pc
 
         bars = [(left_padding_class, left_padding_pc),
                 (health_class, health_pc),
@@ -163,6 +173,8 @@ def build_mode_bar_chart(modes_df, locale):
                 ("clear", right_padding_pc)]
 
         bars = [(c, v) for c,v in bars if v > 0 or 'left_padding' in c] # remove bars with zero width
+
+
         mode_bar_chart[mode]['externalitiy_bars'] = bars
 
         mode_bar_chart[mode]['total_external_cost_str'] = \
@@ -175,12 +187,13 @@ def build_externality_barchart(mode_values_df, locale):
     ext_bars = {}
 
     extern_labels = ["health", 'co2', 'environment', 'congestion']
+    max_val = max([mode_values_df[k].sum() for k in extern_labels]) * 1.1
+    barchar_width = 60
 
     for k in extern_labels:
-        ext_v = mode_values_df[k].sum()
+        ext_v = abs(mode_values_df[k].sum())
         social_norm = 50
         my_norm = 40
-        max_val = 200
 
         values = sorted([("0", 0), ("externality", ext_v),
                          ("pop_average", social_norm), ("my_average", my_norm),
@@ -190,6 +203,11 @@ def build_externality_barchart(mode_values_df, locale):
         classes, values1 = zip(*values)
         bar_widths = zip(classes[1:], np.diff(values1))
 
-        ext_bars[k] = [(k, max(w / max_val * 60, 1)) for k, w in bar_widths]
+        ext_bars[k] = [(k, max(round(w / max_val * barchar_width), 1)) for k, w in bar_widths]
+        ext_bars[k][-1] = (ext_bars[k][-1][0],
+                           barchar_width - sum([v[1] for v in ext_bars[k][:-1]]))
+
+        print(sum([v[1] for v in ext_bars[k]]))
+        print(ext_bars[k])
 
     return ext_bars

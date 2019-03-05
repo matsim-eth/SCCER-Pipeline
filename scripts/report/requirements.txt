@@ -2,3 +2,4 @@ numpy
 Babel
 Mako
 premailer
+num2words

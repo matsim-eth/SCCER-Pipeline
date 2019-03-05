@@ -12,6 +12,7 @@ from babel.units import format_unit
 from babel.numbers import format_currency
 from babel.dates import *
 from babel import Locale
+from num2words import num2words
 
 from mako.lookup import TemplateLookup
 from premailer import premailer
@@ -28,12 +29,19 @@ lang_de.install()
 to_datetime = lambda d: datetime.strptime(d, '%Y-%m-%d')
 
 person_id = '1649'
-start_date = '2016-30-11'
+week_number = 1
+study_length = 8
+
+report_details = {}
+report_details['week_start_date'] = '2016-30-11'
+report_details['week_ordinal'] = num2words(week_number, ordinal=True, lang=language)
+report_details['remaining_weeks'] = num2words(study_length, lang=language)
 
 connection = pg.connect(host='localhost',  dbname="sbb-green", user="postgres", password='password')
 
 person_details = pd.read_sql_query("SELECT * FROM participants where person_id = '{}'".format(person_id), connection).to_dict('records')[0]
 
+person_details['group'] = 'nudging'
 
 leg_details = pd.read_sql_query("SELECT * FROM legs where person_id = '{}' "
                                 "and to_char(leg_date, 'YYYY-IW') = '2016-50'".format(person_id), connection)
@@ -43,11 +51,12 @@ externalities = pd.read_sql_query("SELECT * FROM externalities where leg_id in (
 grouped_df = externalities.groupby("leg_id")
 
 
-wide_externalities = externalities.pivot(index='leg_id', columns='variable', values='val')
+wide_externalities = externalities.pivot_table(index='leg_id', columns='variable', values='val', fill_value=0)
 
 wide_externalities['health'] = wide_externalities['PM_health_costs'] + \
                                wide_externalities['Noise_costs'] + \
-                               wide_externalities['NOx_costs']
+                               wide_externalities['NOx_costs'] + \
+                               wide_externalities['Active_costs']
 
 wide_externalities['environment'] = wide_externalities['PM_building_damage_costs'] + \
                                wide_externalities['Zinc_costs']
@@ -88,7 +97,7 @@ from mako import exceptions
 
 try:
     html = mytemplate.render(title=_('report_title'),
-                                            week_start_date = start_date,
+                                            report_details = report_details,
                                             person = person_details,
                                             mode_values = mode_values,
                                             mode_bar_chart = mode_bar_chart,

@@ -187,7 +187,7 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h4 class="weekdate"> ${_('your_report_for_the_week_of')} ${week_start_date} </h4>
+                        <h4 class="weekdate"> ${_('your_report_for_the_week_of {week_start_date}').format_map(report_details)} </h4>
 
                         <p class="greeting">
                             %if person['male']:
@@ -198,10 +198,12 @@
                     ${person['last_name']}
                         </p>
                         <p>
-                            ${_("Thank you for participanting in the mobility study. This week was the {week_ordinal} of the study, there are only {remaining_weeks} to go")}
+                            ${_("Thank you for participanting in the MOBIS study. "
+                            "This week was the {week_ordinal} of the study, "
+                            "there are only {remaining_weeks} to go").format_map(report_details)}
                         </p>
                         <p>
-                            ${_("Over the past week, you spent <strong>{hours_str}</strong> traveling, and covered <strong>{distance_str}</strong>.".format(hours_str = 0, distance_str = mode_values['distance'].sum() ))}
+                            ${_("Your use of different travel modes and their external costs are displayed below")}
 
                     </td>
                 </tr>
@@ -294,10 +296,16 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Textbox for information group")}</h2>
-                         <p> SAMPLE TEXT: Presented below are a breakdown of your weekly
-                         damages to the environment. You can see how you compare
-                         to your peers. etc etc....</p>
+                        <h2> ${_("What are external costs?")}</h2>
+                         <p> Each of us, when we travel, has an impact on our fellow citizens and the environment.
+                         These are called externalities, and include environmental, health and Congestion costs. </p>
+
+                        %if person['group'] != 'control':
+                            <p>
+                            The following diagrams also indicate how your travelling compares to both your
+                            previous travels during the study and that of other particpants.
+                            </p>
+                        %endif
 
                     </td>
                 </tr>
@@ -325,7 +333,7 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Externaltiies")}</h2>
+                        <h2> ${_("Externalities by transport mode")}</h2>
                     </td>
                 </tr>
 
@@ -361,7 +369,7 @@
                             <td style="width:2%" class="">&nbsp;</td>
                             <td class="ext_legend health">${_("Health")}<br /> <strong>${ext_totals["health"]} </strong></td>
                             <td style="width:2%" class="">&nbsp;</td>
-                            <td class="ext_legend co2">${_("CO2")}<br /> <strong>${ext_totals["co2"]} </strong></td>
+                            <td class="ext_legend co2">${_("Co2")}<br /> <strong>${ext_totals["co2"]} </strong></td>
                             <td style="width:2%" class="">&nbsp;</td>
                             <td class="ext_legend environment">${_("Environment")}<br /> <strong>${ext_totals["environment"]} </strong></td>
                             <td style="width:2%" class="">&nbsp;</td>
@@ -397,7 +405,7 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Norms by externality")}</h2>
+                        <h2> ${_("Externalities by type")}</h2>
                     </td>
                 </tr>
 
