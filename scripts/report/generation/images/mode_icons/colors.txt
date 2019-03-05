@@ -1,0 +1,683 @@
+
+Path: [built-in]
+
+Name                  Color                                         Compliance
+-------------------------------------------------------------------------------
+AliceBlue             srgb(240,248,255)                             SVG X11 XPM 
+AntiqueWhite          srgb(250,235,215)                             SVG X11 XPM 
+AntiqueWhite1         srgb(255,239,219)                             X11 
+AntiqueWhite2         srgb(238,223,204)                             X11 
+AntiqueWhite3         srgb(205,192,176)                             X11 
+AntiqueWhite4         srgb(139,131,120)                             X11 
+aqua                  srgb(0,255,255)                               SVG 
+aquamarine            srgb(127,255,212)                             SVG X11 XPM 
+aquamarine1           srgb(127,255,212)                             X11 
+aquamarine2           srgb(118,238,198)                             X11 
+aquamarine3           srgb(102,205,170)                             X11 
+aquamarine4           srgb(69,139,116)                              X11 
+azure                 srgb(240,255,255)                             SVG X11 XPM 
+azure1                srgb(240,255,255)                             X11 
+azure2                srgb(224,238,238)                             X11 
+azure3                srgb(193,205,205)                             X11 
+azure4                srgb(131,139,139)                             X11 
+beige                 srgb(245,245,220)                             SVG X11 XPM 
+bisque                srgb(255,228,196)                             SVG X11 XPM 
+bisque1               srgb(255,228,196)                             X11 
+bisque2               srgb(238,213,183)                             X11 
+bisque3               srgb(205,183,158)                             X11 
+bisque4               srgb(139,125,107)                             X11 
+black                 srgb(0,0,0)                                   SVG X11 XPM 
+BlanchedAlmond        srgb(255,235,205)                             SVG X11 XPM 
+blue                  srgb(0,0,255)                                 SVG X11 XPM 
+blue1                 srgb(0,0,255)                                 X11 
+blue2                 srgb(0,0,238)                                 X11 
+blue3                 srgb(0,0,205)                                 X11 
+blue4                 srgb(0,0,139)                                 X11 
+BlueViolet            srgb(138,43,226)                              SVG X11 XPM 
+brown                 srgb(165,42,42)                               SVG X11 XPM 
+brown1                srgb(255,64,64)                               X11 
+brown2                srgb(238,59,59)                               X11 
+brown3                srgb(205,51,51)                               X11 
+brown4                srgb(139,35,35)                               X11 
+burlywood             srgb(222,184,135)                             SVG X11 XPM 
+burlywood1            srgb(255,211,155)                             X11 
+burlywood2            srgb(238,197,145)                             X11 
+burlywood3            srgb(205,170,125)                             X11 
+burlywood4            srgb(139,115,85)                              X11 
+CadetBlue             srgb(95,158,160)                              SVG X11 XPM 
+CadetBlue1            srgb(152,245,255)                             X11 
+CadetBlue2            srgb(142,229,238)                             X11 
+CadetBlue3            srgb(122,197,205)                             X11 
+CadetBlue4            srgb(83,134,139)                              X11 
+chartreuse            srgb(127,255,0)                               SVG X11 XPM 
+chartreuse1           srgb(127,255,0)                               X11 
+chartreuse2           srgb(118,238,0)                               X11 
+chartreuse3           srgb(102,205,0)                               X11 
+chartreuse4           srgb(69,139,0)                                X11 
+chocolate             srgb(210,105,30)                              SVG X11 XPM 
+chocolate1            srgb(255,127,36)                              X11 
+chocolate2            srgb(238,118,33)                              X11 
+chocolate3            srgb(205,102,29)                              X11 
+chocolate4            srgb(139,69,19)                               X11 
+coral                 srgb(255,127,80)                              SVG X11 XPM 
+coral1                srgb(255,114,86)                              X11 
+coral2                srgb(238,106,80)                              X11 
+coral3                srgb(205,91,69)                               X11 
+coral4                srgb(139,62,47)                               X11 
+CornflowerBlue        srgb(100,149,237)                             SVG X11 XPM 
+cornsilk              srgb(255,248,220)                             SVG X11 XPM 
+cornsilk1             srgb(255,248,220)                             X11 
+cornsilk2             srgb(238,232,205)                             X11 
+cornsilk3             srgb(205,200,177)                             X11 
+cornsilk4             srgb(139,136,120)                             X11 
+crimson               srgb(220,20,60)                               SVG 
+cyan                  srgb(0,255,255)                               SVG X11 XPM 
+cyan1                 srgb(0,255,255)                               X11 
+cyan2                 srgb(0,238,238)                               X11 
+cyan3                 srgb(0,205,205)                               X11 
+cyan4                 srgb(0,139,139)                               X11 
+DarkBlue              srgb(0,0,139)                                 SVG X11 
+DarkCyan              srgb(0,139,139)                               SVG X11 
+DarkGoldenrod         srgb(184,134,11)                              SVG X11 XPM 
+DarkGoldenrod1        srgb(255,185,15)                              X11 
+DarkGoldenrod2        srgb(238,173,14)                              X11 
+DarkGoldenrod3        srgb(205,149,12)                              X11 
+DarkGoldenrod4        srgb(139,101,8)                               X11 
+DarkGray              srgb(169,169,169)                             SVG X11 
+DarkGreen             srgb(0,100,0)                                 SVG X11 XPM 
+DarkGrey              srgb(169,169,169)                             SVG X11 
+DarkKhaki             srgb(189,183,107)                             SVG X11 XPM 
+DarkMagenta           srgb(139,0,139)                               SVG X11 
+DarkOliveGreen        srgb(85,107,47)                               SVG X11 XPM 
+DarkOliveGreen1       srgb(202,255,112)                             X11 
+DarkOliveGreen2       srgb(188,238,104)                             X11 
+DarkOliveGreen3       srgb(162,205,90)                              X11 
+DarkOliveGreen4       srgb(110,139,61)                              X11 
+DarkOrange            srgb(255,140,0)                               SVG X11 XPM 
+DarkOrange1           srgb(255,127,0)                               X11 
+DarkOrange2           srgb(238,118,0)                               X11 
+DarkOrange3           srgb(205,102,0)                               X11 
+DarkOrange4           srgb(139,69,0)                                X11 
+DarkOrchid            srgb(153,50,204)                              SVG X11 XPM 
+DarkOrchid1           srgb(191,62,255)                              X11 
+DarkOrchid2           srgb(178,58,238)                              X11 
+DarkOrchid3           srgb(154,50,205)                              X11 
+DarkOrchid4           srgb(104,34,139)                              X11 
+DarkRed               srgb(139,0,0)                                 SVG X11 
+DarkSalmon            srgb(233,150,122)                             SVG X11 XPM 
+DarkSeaGreen          srgb(143,188,143)                             SVG X11 XPM 
+DarkSeaGreen1         srgb(193,255,193)                             X11 
+DarkSeaGreen2         srgb(180,238,180)                             X11 
+DarkSeaGreen3         srgb(155,205,155)                             X11 
+DarkSeaGreen4         srgb(105,139,105)                             X11 
+DarkSlateBlue         srgb(72,61,139)                               SVG X11 XPM 
+DarkSlateGray         srgb(47,79,79)                                SVG X11 XPM 
+DarkSlateGray1        srgb(151,255,255)                             X11 
+DarkSlateGray2        srgb(141,238,238)                             X11 
+DarkSlateGray3        srgb(121,205,205)                             X11 
+DarkSlateGray4        srgb(82,139,139)                              X11 
+DarkSlateGrey         srgb(47,79,79)                                SVG X11 
+DarkTurquoise         srgb(0,206,209)                               SVG X11 XPM 
+DarkViolet            srgb(148,0,211)                               SVG X11 XPM 
+DeepPink              srgb(255,20,147)                              SVG X11 XPM 
+DeepPink1             srgb(255,20,147)                              X11 
+DeepPink2             srgb(238,18,137)                              X11 
+DeepPink3             srgb(205,16,118)                              X11 
+DeepPink4             srgb(139,10,80)                               X11 
+DeepSkyBlue           srgb(0,191,255)                               SVG X11 XPM 
+DeepSkyBlue1          srgb(0,191,255)                               X11 
+DeepSkyBlue2          srgb(0,178,238)                               X11 
+DeepSkyBlue3          srgb(0,154,205)                               X11 
+DeepSkyBlue4          srgb(0,104,139)                               X11 
+DimGray               srgb(105,105,105)                             SVG X11 XPM 
+DimGrey               srgb(105,105,105)                             SVG X11 
+DodgerBlue            srgb(30,144,255)                              SVG X11 XPM 
+DodgerBlue1           srgb(30,144,255)                              X11 
+DodgerBlue2           srgb(28,134,238)                              X11 
+DodgerBlue3           srgb(24,116,205)                              X11 
+DodgerBlue4           srgb(16,78,139)                               X11 
+firebrick             srgb(178,34,34)                               SVG X11 XPM 
+firebrick1            srgb(255,48,48)                               X11 
+firebrick2            srgb(238,44,44)                               X11 
+firebrick3            srgb(205,38,38)                               X11 
+firebrick4            srgb(139,26,26)                               X11 
+FloralWhite           srgb(255,250,240)                             SVG X11 XPM 
+ForestGreen           srgb(34,139,34)                               SVG X11 XPM 
+fractal               srgb(128,128,128)                             SVG 
+freeze                srgb(0,0,0)                                   SVG 
+fuchsia               srgb(255,0,255)                               SVG 
+gainsboro             srgb(220,220,220)                             SVG X11 XPM 
+GhostWhite            srgb(248,248,255)                             SVG X11 XPM 
+gold                  srgb(255,215,0)                               SVG X11 XPM 
+gold1                 srgb(255,215,0)                               X11 
+gold2                 srgb(238,201,0)                               X11 
+gold3                 srgb(205,173,0)                               X11 
+gold4                 srgb(139,117,0)                               X11 
+goldenrod             srgb(218,165,32)                              SVG X11 XPM 
+goldenrod1            srgb(255,193,37)                              X11 
+goldenrod2            srgb(238,180,34)                              X11 
+goldenrod3            srgb(205,155,29)                              X11 
+goldenrod4            srgb(139,105,20)                              X11 
+gray                  srgb(126,126,126)                             SVG 
+gray                  srgb(190,190,190)                             X11 XPM 
+gray0                 srgb(0,0,0)                                   X11 XPM 
+gray1                 srgb(3,3,3)                                   X11 XPM 
+gray10                srgb(26,26,26)                                X11 XPM 
+gray100               srgb(255,255,255)                             X11 XPM 
+gray100               srgb(255,255,255)                             X11 XPM 
+gray11                srgb(28,28,28)                                X11 XPM 
+gray12                srgb(31,31,31)                                X11 XPM 
+gray13                srgb(33,33,33)                                X11 XPM 
+gray14                srgb(36,36,36)                                X11 XPM 
+gray15                srgb(38,38,38)                                X11 XPM 
+gray16                srgb(41,41,41)                                X11 XPM 
+gray17                srgb(43,43,43)                                X11 XPM 
+gray18                srgb(46,46,46)                                X11 XPM 
+gray19                srgb(48,48,48)                                X11 XPM 
+gray2                 srgb(5,5,5)                                   X11 XPM 
+gray20                srgb(51,51,51)                                X11 XPM 
+gray21                srgb(54,54,54)                                X11 XPM 
+gray22                srgb(56,56,56)                                X11 XPM 
+gray23                srgb(59,59,59)                                X11 XPM 
+gray24                srgb(61,61,61)                                X11 XPM 
+gray25                srgb(64,64,64)                                X11 XPM 
+gray26                srgb(66,66,66)                                X11 XPM 
+gray27                srgb(69,69,69)                                X11 XPM 
+gray28                srgb(71,71,71)                                X11 XPM 
+gray29                srgb(74,74,74)                                X11 XPM 
+gray3                 srgb(8,8,8)                                   X11 XPM 
+gray30                srgb(77,77,77)                                X11 XPM 
+gray31                srgb(79,79,79)                                X11 XPM 
+gray32                srgb(82,82,82)                                X11 XPM 
+gray33                srgb(84,84,84)                                X11 XPM 
+gray34                srgb(87,87,87)                                X11 XPM 
+gray35                srgb(89,89,89)                                X11 XPM 
+gray36                srgb(92,92,92)                                X11 XPM 
+gray37                srgb(94,94,94)                                X11 XPM 
+gray38                srgb(97,97,97)                                X11 XPM 
+gray39                srgb(99,99,99)                                X11 XPM 
+gray4                 srgb(10,10,10)                                X11 XPM 
+gray40                srgb(102,102,102)                             X11 XPM 
+gray41                srgb(105,105,105)                             X11 XPM 
+gray42                srgb(107,107,107)                             X11 XPM 
+gray43                srgb(110,110,110)                             X11 XPM 
+gray44                srgb(112,112,112)                             X11 XPM 
+gray45                srgb(115,115,115)                             X11 XPM 
+gray46                srgb(117,117,117)                             X11 XPM 
+gray47                srgb(120,120,120)                             X11 XPM 
+gray48                srgb(122,122,122)                             X11 XPM 
+gray49                srgb(125,125,125)                             X11 XPM 
+gray5                 srgb(13,13,13)                                X11 XPM 
+gray50                srgb(127,127,127)                             X11 XPM 
+gray51                srgb(130,130,130)                             X11 XPM 
+gray52                srgb(133,133,133)                             X11 XPM 
+gray53                srgb(135,135,135)                             X11 XPM 
+gray54                srgb(138,138,138)                             X11 XPM 
+gray55                srgb(140,140,140)                             X11 XPM 
+gray56                srgb(143,143,143)                             X11 XPM 
+gray57                srgb(145,145,145)                             X11 XPM 
+gray58                srgb(148,148,148)                             X11 XPM 
+gray59                srgb(150,150,150)                             X11 XPM 
+gray6                 srgb(15,15,15)                                X11 XPM 
+gray60                srgb(153,153,153)                             X11 XPM 
+gray61                srgb(156,156,156)                             X11 XPM 
+gray62                srgb(158,158,158)                             X11 XPM 
+gray63                srgb(161,161,161)                             X11 XPM 
+gray64                srgb(163,163,163)                             X11 XPM 
+gray65                srgb(166,166,166)                             X11 XPM 
+gray66                srgb(168,168,168)                             X11 XPM 
+gray67                srgb(171,171,171)                             X11 XPM 
+gray68                srgb(173,173,173)                             X11 XPM 
+gray69                srgb(176,176,176)                             X11 XPM 
+gray7                 srgb(18,18,18)                                X11 XPM 
+gray70                srgb(179,179,179)                             X11 XPM 
+gray71                srgb(181,181,181)                             X11 XPM 
+gray72                srgb(184,184,184)                             X11 XPM 
+gray73                srgb(186,186,186)                             X11 XPM 
+gray74                srgb(189,189,189)                             X11 XPM 
+gray75                srgb(191,191,191)                             X11 XPM 
+gray76                srgb(194,194,194)                             X11 XPM 
+gray77                srgb(196,196,196)                             X11 XPM 
+gray78                srgb(199,199,199)                             X11 XPM 
+gray79                srgb(201,201,201)                             X11 XPM 
+gray8                 srgb(20,20,20)                                X11 XPM 
+gray80                srgb(204,204,204)                             X11 XPM 
+gray81                srgb(207,207,207)                             X11 XPM 
+gray82                srgb(209,209,209)                             X11 XPM 
+gray83                srgb(212,212,212)                             X11 XPM 
+gray84                srgb(214,214,214)                             X11 XPM 
+gray85                srgb(217,217,217)                             X11 XPM 
+gray86                srgb(219,219,219)                             X11 XPM 
+gray87                srgb(222,222,222)                             X11 XPM 
+gray88                srgb(224,224,224)                             X11 XPM 
+gray89                srgb(227,227,227)                             X11 XPM 
+gray9                 srgb(23,23,23)                                X11 XPM 
+gray90                srgb(229,229,229)                             X11 XPM 
+gray91                srgb(232,232,232)                             X11 XPM 
+gray92                srgb(235,235,235)                             X11 XPM 
+gray93                srgb(237,237,237)                             X11 XPM 
+gray94                srgb(240,240,240)                             X11 XPM 
+gray95                srgb(242,242,242)                             X11 XPM 
+gray96                srgb(245,245,245)                             X11 XPM 
+gray97                srgb(247,247,247)                             X11 XPM 
+gray98                srgb(250,250,250)                             X11 XPM 
+gray99                srgb(252,252,252)                             X11 XPM 
+green                 srgb(0,128,0)                                 SVG 
+green                 srgb(0,255,0)                                 X11 XPM 
+green1                srgb(0,255,0)                                 X11 
+green2                srgb(0,238,0)                                 X11 
+green3                srgb(0,205,0)                                 X11 
+green4                srgb(0,139,0)                                 X11 
+GreenYellow           srgb(173,255,47)                              X11 XPM 
+grey                  srgb(190,190,190)                             SVG X11 
+grey0                 srgb(0,0,0)                                   SVG X11 
+grey1                 srgb(3,3,3)                                   SVG X11 
+grey10                srgb(26,26,26)                                SVG X11 
+grey100               srgb(255,255,255)                             SVG X11 
+grey11                srgb(28,28,28)                                SVG X11 
+grey12                srgb(31,31,31)                                SVG X11 
+grey13                srgb(33,33,33)                                SVG X11 
+grey14                srgb(36,36,36)                                SVG X11 
+grey15                srgb(38,38,38)                                SVG X11 
+grey16                srgb(41,41,41)                                SVG X11 
+grey17                srgb(43,43,43)                                SVG X11 
+grey18                srgb(46,46,46)                                SVG X11 
+grey19                srgb(48,48,48)                                SVG X11 
+grey2                 srgb(5,5,5)                                   SVG X11 
+grey20                srgb(51,51,51)                                SVG X11 
+grey21                srgb(54,54,54)                                SVG X11 
+grey22                srgb(56,56,56)                                SVG X11 
+grey23                srgb(59,59,59)                                SVG X11 
+grey24                srgb(61,61,61)                                SVG X11 
+grey25                srgb(64,64,64)                                SVG X11 
+grey26                srgb(66,66,66)                                SVG X11 
+grey27                srgb(69,69,69)                                SVG X11 
+grey28                srgb(71,71,71)                                SVG X11 
+grey29                srgb(74,74,74)                                SVG X11 
+grey3                 srgb(8,8,8)                                   SVG X11 
+grey30                srgb(77,77,77)                                SVG X11 
+grey31                srgb(79,79,79)                                SVG X11 
+grey32                srgb(82,82,82)                                SVG X11 
+grey33                srgb(84,84,84)                                SVG X11 
+grey34                srgb(87,87,87)                                SVG X11 
+grey35                srgb(89,89,89)                                SVG X11 
+grey36                srgb(92,92,92)                                SVG X11 
+grey37                srgb(94,94,94)                                SVG X11 
+grey38                srgb(97,97,97)                                SVG X11 
+grey39                srgb(99,99,99)                                SVG X11 
+grey4                 srgb(10,10,10)                                SVG X11 
+grey40                srgb(102,102,102)                             SVG X11 
+grey41                srgb(105,105,105)                             SVG X11 
+grey42                srgb(107,107,107)                             SVG X11 
+grey43                srgb(110,110,110)                             SVG X11 
+grey44                srgb(112,112,112)                             SVG X11 
+grey45                srgb(115,115,115)                             SVG X11 
+grey46                srgb(117,117,117)                             SVG X11 
+grey47                srgb(120,120,120)                             SVG X11 
+grey48                srgb(122,122,122)                             SVG X11 
+grey49                srgb(125,125,125)                             SVG X11 
+grey5                 srgb(13,13,13)                                SVG X11 
+grey50                srgb(127,127,127)                             SVG X11 
+grey51                srgb(130,130,130)                             SVG X11 
+grey52                srgb(133,133,133)                             SVG X11 
+grey53                srgb(135,135,135)                             SVG X11 
+grey54                srgb(138,138,138)                             SVG X11 
+grey55                srgb(140,140,140)                             SVG X11 
+grey56                srgb(143,143,143)                             SVG X11 
+grey57                srgb(145,145,145)                             SVG X11 
+grey58                srgb(148,148,148)                             SVG X11 
+grey59                srgb(150,150,150)                             SVG X11 
+grey6                 srgb(15,15,15)                                SVG X11 
+grey60                srgb(153,153,153)                             SVG X11 
+grey61                srgb(156,156,156)                             SVG X11 
+grey62                srgb(158,158,158)                             SVG X11 
+grey63                srgb(161,161,161)                             SVG X11 
+grey64                srgb(163,163,163)                             SVG X11 
+grey65                srgb(166,166,166)                             SVG X11 
+grey66                srgb(168,168,168)                             SVG X11 
+grey67                srgb(171,171,171)                             SVG X11 
+grey68                srgb(173,173,173)                             SVG X11 
+grey69                srgb(176,176,176)                             SVG X11 
+grey7                 srgb(18,18,18)                                SVG X11 
+grey70                srgb(179,179,179)                             SVG X11 
+grey71                srgb(181,181,181)                             SVG X11 
+grey72                srgb(184,184,184)                             SVG X11 
+grey73                srgb(186,186,186)                             SVG X11 
+grey74                srgb(189,189,189)                             SVG X11 
+grey75                srgb(191,191,191)                             SVG X11 
+grey76                srgb(194,194,194)                             SVG X11 
+grey77                srgb(196,196,196)                             SVG X11 
+grey78                srgb(199,199,199)                             SVG X11 
+grey79                srgb(201,201,201)                             SVG X11 
+grey8                 srgb(20,20,20)                                SVG X11 
+grey80                srgb(204,204,204)                             SVG X11 
+grey81                srgb(207,207,207)                             SVG X11 
+grey82                srgb(209,209,209)                             SVG X11 
+grey83                srgb(212,212,212)                             SVG X11 
+grey84                srgb(214,214,214)                             SVG X11 
+grey85                srgb(217,217,217)                             SVG X11 
+grey86                srgb(219,219,219)                             SVG X11 
+grey87                srgb(222,222,222)                             SVG X11 
+grey88                srgb(224,224,224)                             SVG X11 
+grey89                srgb(227,227,227)                             SVG X11 
+grey9                 srgb(23,23,23)                                SVG X11 
+grey90                srgb(229,229,229)                             SVG X11 
+grey91                srgb(232,232,232)                             SVG X11 
+grey92                srgb(235,235,235)                             SVG X11 
+grey93                srgb(237,237,237)                             SVG X11 
+grey94                srgb(240,240,240)                             SVG X11 
+grey95                srgb(242,242,242)                             SVG X11 
+grey96                srgb(245,245,245)                             SVG X11 
+grey97                srgb(247,247,247)                             SVG X11 
+grey98                srgb(250,250,250)                             SVG X11 
+grey99                srgb(252,252,252)                             SVG X11 
+honeydew              srgb(240,255,240)                             SVG X11 XPM 
+honeydew1             srgb(240,255,240)                             X11 
+honeydew2             srgb(224,238,224)                             X11 
+honeydew3             srgb(193,205,193)                             X11 
+honeydew4             srgb(131,139,131)                             X11 
+HotPink               srgb(255,105,180)                             SVG X11 XPM 
+HotPink1              srgb(255,110,180)                             X11 
+HotPink2              srgb(238,106,167)                             X11 
+HotPink3              srgb(205,96,144)                              X11 
+HotPink4              srgb(139,58,98)                               X11 
+IndianRed             srgb(205,92,92)                               SVG X11 XPM 
+IndianRed1            srgb(255,106,106)                             X11 
+IndianRed2            srgb(238,99,99)                               X11 
+IndianRed3            srgb(205,85,85)                               X11 
+IndianRed4            srgb(139,58,58)                               X11 
+indigo                srgb(75,0,130)                                SVG 
+ivory                 srgb(255,255,240)                             SVG X11 XPM 
+ivory1                srgb(255,255,240)                             X11 
+ivory2                srgb(238,238,224)                             X11 
+ivory3                srgb(205,205,193)                             X11 
+ivory4                srgb(139,139,131)                             X11 
+khaki                 srgb(240,230,140)                             SVG X11 XPM 
+khaki1                srgb(255,246,143)                             X11 
+khaki2                srgb(238,230,133)                             X11 
+khaki3                srgb(205,198,115)                             X11 
+khaki4                srgb(139,134,78)                              X11 
+lavender              srgb(230,230,250)                             SVG X11 XPM 
+LavenderBlush         srgb(255,240,245)                             SVG X11 XPM 
+LavenderBlush1        srgb(255,240,245)                             X11 
+LavenderBlush2        srgb(238,224,229)                             X11 
+LavenderBlush3        srgb(205,193,197)                             X11 
+LavenderBlush4        srgb(139,131,134)                             X11 
+LawnGreen             srgb(124,252,0)                               SVG X11 XPM 
+LemonChiffon          srgb(255,250,205)                             SVG X11 XPM 
+LemonChiffon1         srgb(255,250,205)                             X11 
+LemonChiffon2         srgb(238,233,191)                             X11 
+LemonChiffon3         srgb(205,201,165)                             X11 
+LemonChiffon4         srgb(139,137,112)                             X11 
+LightBlue             srgb(173,216,230)                             SVG X11 XPM 
+LightBlue1            srgb(191,239,255)                             X11 
+LightBlue2            srgb(178,223,238)                             X11 
+LightBlue3            srgb(154,192,205)                             X11 
+LightBlue4            srgb(104,131,139)                             X11 
+LightCoral            srgb(240,128,128)                             SVG X11 XPM 
+LightCyan             srgb(224,255,255)                             SVG X11 XPM 
+LightCyan1            srgb(224,255,255)                             X11 
+LightCyan2            srgb(209,238,238)                             X11 
+LightCyan3            srgb(180,205,205)                             X11 
+LightCyan4            srgb(122,139,139)                             X11 
+LightGoldenrod        srgb(238,221,130)                             X11 XPM 
+LightGoldenrod1       srgb(255,236,139)                             X11 
+LightGoldenrod2       srgb(238,220,130)                             X11 
+LightGoldenrod3       srgb(205,190,112)                             X11 
+LightGoldenrod4       srgb(139,129,76)                              X11 
+LightGoldenrodYellow  srgb(250,250,210)                             SVG X11 XPM 
+LightGray             srgb(211,211,211)                             SVG X11 XPM 
+LightGreen            srgb(144,238,144)                             SVG X11 
+LightGrey             srgb(211,211,211)                             SVG X11 
+LightPink             srgb(255,182,193)                             SVG X11 XPM 
+LightPink1            srgb(255,174,185)                             X11 
+LightPink2            srgb(238,162,173)                             X11 
+LightPink3            srgb(205,140,149)                             X11 
+LightPink4            srgb(139,95,101)                              X11 
+LightSalmon           srgb(255,160,122)                             SVG X11 XPM 
+LightSalmon1          srgb(255,160,122)                             X11 
+LightSalmon2          srgb(238,149,114)                             X11 
+LightSalmon3          srgb(205,129,98)                              X11 
+LightSalmon4          srgb(139,87,66)                               X11 
+LightSeaGreen         srgb(32,178,170)                              SVG X11 XPM 
+LightSkyBlue          srgb(135,206,250)                             SVG X11 XPM 
+LightSkyBlue1         srgb(176,226,255)                             X11 
+LightSkyBlue2         srgb(164,211,238)                             X11 
+LightSkyBlue3         srgb(141,182,205)                             X11 
+LightSkyBlue4         srgb(96,123,139)                              X11 
+LightSlateBlue        srgb(132,112,255)                             X11 XPM 
+LightSlateGray        srgb(119,136,153)                             SVG X11 XPM 
+LightSlateGrey        srgb(119,136,153)                             SVG X11 
+LightSteelBlue        srgb(176,196,222)                             SVG X11 XPM 
+LightSteelBlue1       srgb(202,225,255)                             X11 
+LightSteelBlue2       srgb(188,210,238)                             X11 
+LightSteelBlue3       srgb(162,181,205)                             X11 
+LightSteelBlue4       srgb(110,123,139)                             X11 
+LightYellow           srgb(255,255,224)                             SVG X11 XPM 
+LightYellow1          srgb(255,255,224)                             X11 
+LightYellow2          srgb(238,238,209)                             X11 
+LightYellow3          srgb(205,205,180)                             X11 
+LightYellow4          srgb(139,139,122)                             X11 
+lime                  srgb(0,255,0)                                 SVG 
+LimeGreen             srgb(50,205,50)                               SVG X11 XPM 
+linen                 srgb(250,240,230)                             SVG X11 XPM 
+magenta               srgb(255,0,255)                               SVG X11 XPM 
+magenta1              srgb(255,0,255)                               X11 
+magenta2              srgb(238,0,238)                               X11 
+magenta3              srgb(205,0,205)                               X11 
+magenta4              srgb(139,0,139)                               X11 
+maroon                srgb(128,0,0)                                 SVG 
+maroon                srgb(176,48,96)                               X11 XPM 
+maroon1               srgb(255,52,179)                              X11 
+maroon2               srgb(238,48,167)                              X11 
+maroon3               srgb(205,41,144)                              X11 
+maroon4               srgb(139,28,98)                               X11 
+matte                 srgb(0,0,0)                                   SVG 
+MediumAquamarine      srgb(102,205,170)                             SVG X11 XPM 
+MediumBlue            srgb(0,0,205)                                 SVG X11 XPM 
+MediumForestGreen     srgb(50,129,75)                               X11 XPM 
+MediumGoldenRod       srgb(209,193,102)                             X11 XPM 
+MediumOrchid          srgb(186,85,211)                              SVG X11 XPM 
+MediumOrchid1         srgb(224,102,255)                             X11 
+MediumOrchid2         srgb(209,95,238)                              X11 
+MediumOrchid3         srgb(180,82,205)                              X11 
+MediumOrchid4         srgb(122,55,139)                              X11 
+MediumPurple          srgb(147,112,219)                             SVG X11 XPM 
+MediumPurple1         srgb(171,130,255)                             X11 
+MediumPurple2         srgb(159,121,238)                             X11 
+MediumPurple3         srgb(137,104,205)                             X11 
+MediumPurple4         srgb(93,71,139)                               X11 
+MediumSeaGreen        srgb(60,179,113)                              SVG X11 XPM 
+MediumSlateBlue       srgb(123,104,238)                             SVG X11 XPM 
+MediumSpringGreen     srgb(0,250,154)                               SVG X11 XPM 
+MediumTurquoise       srgb(72,209,204)                              SVG X11 XPM 
+MediumVioletRed       srgb(199,21,133)                              SVG X11 XPM 
+MidnightBlue          srgb(25,25,112)                               SVG X11 XPM 
+MintCream             srgb(245,255,250)                             SVG X11 XPM 
+MistyRose             srgb(255,228,225)                             SVG X11 XPM 
+MistyRose1            srgb(255,228,225)                             X11 
+MistyRose2            srgb(238,213,210)                             X11 
+MistyRose3            srgb(205,183,181)                             X11 
+MistyRose4            srgb(139,125,123)                             X11 
+moccasin              srgb(255,228,181)                             SVG X11 XPM 
+NavajoWhite           srgb(255,222,173)                             SVG X11 XPM 
+NavajoWhite1          srgb(255,222,173)                             X11 
+NavajoWhite2          srgb(238,207,161)                             X11 
+NavajoWhite3          srgb(205,179,139)                             X11 
+NavajoWhite4          srgb(139,121,94)                              X11 
+navy                  srgb(0,0,128)                                 SVG X11 XPM 
+NavyBlue              srgb(0,0,128)                                 X11 XPM 
+none                  srgb(0,0,0)                                   SVG XPM 
+OldLace               srgb(253,245,230)                             SVG X11 XPM 
+olive                 srgb(128,128,0)                               SVG 
+OliveDrab             srgb(107,142,35)                              SVG X11 XPM 
+OliveDrab1            srgb(192,255,62)                              X11 
+OliveDrab2            srgb(179,238,58)                              X11 
+OliveDrab3            srgb(154,205,50)                              X11 
+OliveDrab4            srgb(105,139,34)                              X11 
+opaque                srgb(0,0,0)                                   SVG 
+orange                srgb(255,165,0)                               SVG X11 XPM 
+orange1               srgb(255,165,0)                               X11 
+orange2               srgb(238,154,0)                               X11 
+orange3               srgb(205,133,0)                               X11 
+orange4               srgb(139,90,0)                                X11 
+OrangeRed             srgb(255,69,0)                                SVG X11 XPM 
+OrangeRed1            srgb(255,69,0)                                X11 
+OrangeRed2            srgb(238,64,0)                                X11 
+OrangeRed3            srgb(205,55,0)                                X11 
+OrangeRed4            srgb(139,37,0)                                X11 
+orchid                srgb(218,112,214)                             SVG X11 XPM 
+orchid1               srgb(255,131,250)                             X11 
+orchid2               srgb(238,122,233)                             X11 
+orchid3               srgb(205,105,201)                             X11 
+orchid4               srgb(139,71,137)                              X11 
+PaleGoldenrod         srgb(238,232,170)                             SVG X11 XPM 
+PaleGreen             srgb(152,251,152)                             SVG X11 XPM 
+PaleGreen1            srgb(154,255,154)                             X11 
+PaleGreen2            srgb(144,238,144)                             X11 
+PaleGreen3            srgb(124,205,124)                             X11 
+PaleGreen4            srgb(84,139,84)                               X11 
+PaleTurquoise         srgb(175,238,238)                             SVG X11 XPM 
+PaleTurquoise1        srgb(187,255,255)                             X11 
+PaleTurquoise2        srgb(174,238,238)                             X11 
+PaleTurquoise3        srgb(150,205,205)                             X11 
+PaleTurquoise4        srgb(102,139,139)                             X11 
+PaleVioletRed         srgb(219,112,147)                             SVG X11 XPM 
+PaleVioletRed1        srgb(255,130,171)                             X11 
+PaleVioletRed2        srgb(238,121,159)                             X11 
+PaleVioletRed3        srgb(205,104,137)                             X11 
+PaleVioletRed4        srgb(139,71,93)                               X11 
+PapayaWhip            srgb(255,239,213)                             SVG X11 XPM 
+PeachPuff             srgb(255,218,185)                             SVG X11 XPM 
+PeachPuff1            srgb(255,218,185)                             X11 
+PeachPuff2            srgb(238,203,173)                             X11 
+PeachPuff3            srgb(205,175,149)                             X11 
+PeachPuff4            srgb(139,119,101)                             X11 
+peru                  srgb(205,133,63)                              SVG X11 XPM 
+pink                  srgb(255,192,203)                             SVG X11 XPM 
+pink1                 srgb(255,181,197)                             X11 
+pink2                 srgb(238,169,184)                             X11 
+pink3                 srgb(205,145,158)                             X11 
+pink4                 srgb(139,99,108)                              X11 
+plum                  srgb(221,160,221)                             SVG X11 XPM 
+plum1                 srgb(255,187,255)                             X11 
+plum2                 srgb(238,174,238)                             X11 
+plum3                 srgb(205,150,205)                             X11 
+plum4                 srgb(139,102,139)                             X11 
+PowderBlue            srgb(176,224,230)                             SVG X11 XPM 
+purple                srgb(128,0,128)                               SVG 
+purple                srgb(160,32,240)                              X11 XPM 
+purple1               srgb(155,48,255)                              X11 
+purple2               srgb(145,44,238)                              X11 
+purple3               srgb(125,38,205)                              X11 
+purple4               srgb(85,26,139)                               X11 
+red                   srgb(255,0,0)                                 SVG X11 XPM 
+red1                  srgb(255,0,0)                                 X11 
+red2                  srgb(238,0,0)                                 X11 
+red3                  srgb(205,0,0)                                 X11 
+red4                  srgb(139,0,0)                                 X11 
+RosyBrown             srgb(188,143,143)                             SVG X11 XPM 
+RosyBrown1            srgb(255,193,193)                             X11 
+RosyBrown2            srgb(238,180,180)                             X11 
+RosyBrown3            srgb(205,155,155)                             X11 
+RosyBrown4            srgb(139,105,105)                             X11 
+RoyalBlue             srgb(65,105,225)                              SVG X11 XPM 
+RoyalBlue1            srgb(72,118,255)                              X11 
+RoyalBlue2            srgb(67,110,238)                              X11 
+RoyalBlue3            srgb(58,95,205)                               X11 
+RoyalBlue4            srgb(39,64,139)                               X11 
+SaddleBrown           srgb(139,69,19)                               SVG X11 XPM 
+salmon                srgb(250,128,114)                             SVG X11 XPM 
+salmon1               srgb(255,140,105)                             X11 
+salmon2               srgb(238,130,98)                              X11 
+salmon3               srgb(205,112,84)                              X11 
+salmon4               srgb(139,76,57)                               X11 
+SandyBrown            srgb(244,164,96)                              SVG X11 XPM 
+SeaGreen              srgb(46,139,87)                               SVG X11 XPM 
+SeaGreen1             srgb(84,255,159)                              X11 
+SeaGreen2             srgb(78,238,148)                              X11 
+SeaGreen3             srgb(67,205,128)                              X11 
+SeaGreen4             srgb(46,139,87)                               X11 
+seashell              srgb(255,245,238)                             SVG X11 XPM 
+seashell1             srgb(255,245,238)                             X11 
+seashell2             srgb(238,229,222)                             X11 
+seashell3             srgb(205,197,191)                             X11 
+seashell4             srgb(139,134,130)                             X11 
+sienna                srgb(160,82,45)                               SVG X11 XPM 
+sienna1               srgb(255,130,71)                              X11 
+sienna2               srgb(238,121,66)                              X11 
+sienna3               srgb(205,104,57)                              X11 
+sienna4               srgb(139,71,38)                               X11 
+silver                srgb(192,192,192)                             SVG 
+SkyBlue               srgb(135,206,235)                             SVG X11 XPM 
+SkyBlue1              srgb(135,206,255)                             X11 
+SkyBlue2              srgb(126,192,238)                             X11 
+SkyBlue3              srgb(108,166,205)                             X11 
+SkyBlue4              srgb(74,112,139)                              X11 
+SlateBlue             srgb(106,90,205)                              SVG X11 XPM 
+SlateBlue1            srgb(131,111,255)                             X11 
+SlateBlue2            srgb(122,103,238)                             X11 
+SlateBlue3            srgb(105,89,205)                              X11 
+SlateBlue4            srgb(71,60,139)                               X11 
+SlateGray             srgb(112,128,144)                             SVG X11 XPM 
+SlateGray1            srgb(198,226,255)                             X11 
+SlateGray2            srgb(185,211,238)                             X11 
+SlateGray3            srgb(159,182,205)                             X11 
+SlateGray4            srgb(108,123,139)                             X11 
+SlateGrey             srgb(112,128,144)                             SVG X11 
+snow                  srgb(255,250,250)                             SVG X11 XPM 
+snow1                 srgb(255,250,250)                             X11 
+snow2                 srgb(238,233,233)                             X11 
+snow3                 srgb(205,201,201)                             X11 
+snow4                 srgb(139,137,137)                             X11 
+SpringGreen           srgb(0,255,127)                               SVG X11 XPM 
+SpringGreen1          srgb(0,255,127)                               X11 
+SpringGreen2          srgb(0,238,118)                               X11 
+SpringGreen3          srgb(0,205,102)                               X11 
+SpringGreen4          srgb(0,139,69)                                X11 
+SteelBlue             srgb(70,130,180)                              SVG X11 XPM 
+SteelBlue1            srgb(99,184,255)                              X11 
+SteelBlue2            srgb(92,172,238)                              X11 
+SteelBlue3            srgb(79,148,205)                              X11 
+SteelBlue4            srgb(54,100,139)                              X11 
+tan                   srgb(210,180,140)                             SVG X11 XPM 
+tan1                  srgb(255,165,79)                              X11 
+tan2                  srgb(238,154,73)                              X11 
+tan3                  srgb(205,133,63)                              X11 
+tan4                  srgb(139,90,43)                               X11 
+teal                  srgb(0,128,128)                               SVG 
+thistle               srgb(216,191,216)                             SVG X11 XPM 
+thistle1              srgb(255,225,255)                             X11 
+thistle2              srgb(238,210,238)                             X11 
+thistle3              srgb(205,181,205)                             X11 
+thistle4              srgb(139,123,139)                             X11 
+tomato                srgb(255,99,71)                               SVG X11 XPM 
+tomato1               srgb(255,99,71)                               X11 
+tomato2               srgb(238,92,66)                               X11 
+tomato3               srgb(205,79,57)                               X11 
+tomato4               srgb(139,54,38)                               X11 
+transparent           srgb(0,0,0)                                   SVG 
+turquoise             srgb(64,224,208)                              SVG X11 XPM 
+turquoise1            srgb(0,245,255)                               X11 
+turquoise2            srgb(0,229,238)                               X11 
+turquoise3            srgb(0,197,205)                               X11 
+turquoise4            srgb(0,134,139)                               X11 
+violet                srgb(238,130,238)                             SVG X11 XPM 
+VioletRed             srgb(208,32,144)                              X11 XPM 
+VioletRed1            srgb(255,62,150)                              X11 
+VioletRed2            srgb(238,58,140)                              X11 
+VioletRed3            srgb(205,50,120)                              X11 
+VioletRed4            srgb(139,34,82)                               X11 
+wheat                 srgb(245,222,179)                             SVG X11 XPM 
+wheat1                srgb(255,231,186)                             X11 
+wheat2                srgb(238,216,174)                             X11 
+wheat3                srgb(205,186,150)                             X11 
+wheat4                srgb(139,126,102)                             X11 
+white                 srgb(255,255,255)                             SVG X11 XPM 
+WhiteSmoke            srgb(245,245,245)                             SVG X11 XPM 
+yellow                srgb(255,255,0)                               SVG X11 XPM 
+yellow1               srgb(255,255,0)                               X11 
+yellow2               srgb(238,238,0)                               X11 
+yellow3               srgb(205,205,0)                               X11 
+yellow4               srgb(139,139,0)                               X11 
+YellowGreen           srgb(154,205,50)                              SVG X11 XPM 
