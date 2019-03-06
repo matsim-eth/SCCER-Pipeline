@@ -19,7 +19,7 @@ from premailer import premailer
 
 from generation.process_data import build_mode_bar_chart, build_externality_barchart
 
-language = 'de'
+language = 'en_GB'
 locale = Locale(language)
 import gettext
 lang_de = gettext.translation('generation', localedir="generation/locale", languages=[language])
@@ -77,7 +77,7 @@ norms.set_index('leg_mode', inplace=True)
 mode_values = leg_ext.groupby(['leg_mode'])[['distance', 'health', 'environment', 'co2', 'congestion', 'total']].sum()
 
 
-ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', locale=locale))
+ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', u'#,##0.00 ¤', locale=locale))
 
 mode_bar_chart = build_mode_bar_chart(mode_values, norms, locale)
 

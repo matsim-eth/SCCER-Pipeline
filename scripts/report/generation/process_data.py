@@ -106,6 +106,13 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
         mode_bar_chart[mode]['mode_image_src'] = get_mode_image_src(mode)
 
+        if abs(distance - my_average) / my_average > 0.4 :
+            mode_bar_chart[mode]['my_norm_image_src'] = 'images/arrows/{}.png'.format("up_right" if distance > my_average else "down_right")
+
+        if abs(distance - pop_average) / pop_average > 0.4 :
+            mode_bar_chart[mode]['cluster_norm_image_src'] = 'images/arrows/{}.png'.format("thumbs_down" if distance > pop_average else "thumbs_up")
+
+
         mode_bar_chart[mode]['distance_pc'] = int(distance / total_dist * 100)
         mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", "short", locale=locale)
 
@@ -177,7 +184,7 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
         mode_bar_chart[mode]['externalitiy_bars'] = bars
 
         mode_bar_chart[mode]['total_external_cost_str'] = \
-            format_currency(right_total_value + modes_df.loc[mode, 'health'], "CHF", locale=locale)
+            format_currency(right_total_value + modes_df.loc[mode, 'health'], "CHF", u'#,##0.00 ¤', locale=locale)
 
     return (mode_bar_chart)
 
