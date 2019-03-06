@@ -89,7 +89,10 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
-    max_val = modes_df['distance'].max() * 1.1
+    max_val = max(modes_df['distance'].max(),
+                  norms_df['cluster_distance'].max(),
+                  norms_df['my_distance'].max()) * 1.1
+
     barchart_width = 60
 
 
@@ -185,7 +188,14 @@ def build_externality_barchart(mode_values_df, norms_df, locale):
     norms_df_summed = norms_df.sum()
 
     extern_labels = ["health", 'co2', 'environment', 'congestion']
-    max_val = max([mode_values_df[k].sum() for k in extern_labels]) * 1.1
+    max_val_modes = max([mode_values_df[k].sum() for k in extern_labels])
+    max_val_my_norm = max([norms_df['my_'+k].sum() for k in extern_labels])
+    max_val_cluster_norm = max([norms_df['cluster_'+k].sum() for k in extern_labels])
+
+    max_val = max(max_val_modes,
+                  max_val_my_norm,
+                  max_val_cluster_norm) * 1.1
+
     barchar_width = 60
 
     for k in extern_labels:

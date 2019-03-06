@@ -121,7 +121,7 @@ td.max_val {
 td.my_average {
     border-right-color: #8b0000;
     border-right-style: solid;
-    border-right-width: 2px;
+    border-right-width: 5px;
 
 }
 
@@ -130,7 +130,7 @@ td.pop_average {
 
     border-right-color: #336699;
     border-right-style: solid;
-    border-right-width: 2px;
+    border-right-width: 5px;
 
 }
 
