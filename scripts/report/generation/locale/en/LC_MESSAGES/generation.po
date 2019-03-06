@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Emissions Feedback Generator 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-05 12:51+0100\n"
+"POT-Creation-Date: 2019-03-06 10:32+0100\n"
 "PO-Revision-Date: 2019-02-07 12:40+0100\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: en\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: generation/generate_report.py:92
+#: generation/generate_report.py:99
 msgid "report_title"
 msgstr "Report Title"
 
@@ -32,8 +32,8 @@ msgid "Mobility Report"
 msgstr "Mobility Report"
 
 #: generation/templates/control.html:190
-msgid "your_report_for_the_week_of"
-msgstr "Mobility Report for the week of "
+msgid "your_report_for_the_week_of {week_start_date}"
+msgstr "Mobility Report for the week starting on {week_start_date}"
 
 #: generation/templates/control.html:194
 msgid "greeting_male"
@@ -49,61 +49,73 @@ msgid ""
 "{week_ordinal} of the study, there are only {remaining_weeks} to go"
 msgstr ""
 
-#: generation/templates/control.html:204
+#: generation/templates/control.html:206
 msgid ""
 "Your use of different travel modes and their external costs are displayed"
 " below"
 msgstr ""
 
-#: generation/templates/control.html:232
+#: generation/templates/control.html:234
 msgid "Breakdown by transport mode"
 msgstr ""
 
-#: generation/templates/control.html:260 generation/templates/control.html:436
-msgid "People similar to you"
+#: generation/templates/control.html:245
+msgid "Distance Travelled"
 msgstr ""
 
-#: generation/templates/control.html:265 generation/templates/control.html:441
-msgid "My Average"
+#: generation/templates/control.html:246
+msgid "Your Trend"
 msgstr ""
 
-#: generation/templates/control.html:297
+#: generation/templates/control.html:247
+msgid "Compared to other participants"
+msgstr ""
+
+#: generation/templates/control.html:301
 msgid "What are external costs?"
 msgstr ""
 
-#: generation/templates/control.html:334
+#: generation/templates/control.html:338
 msgid "Externalities by transport mode"
 msgstr ""
 
-#: generation/templates/control.html:368
+#: generation/templates/control.html:372
 msgid "Health"
 msgstr ""
 
-#: generation/templates/control.html:370
+#: generation/templates/control.html:374
 msgid "Co2"
 msgstr ""
 
-#: generation/templates/control.html:372
+#: generation/templates/control.html:376
 msgid "Environment"
 msgstr ""
 
-#: generation/templates/control.html:374
+#: generation/templates/control.html:378
 msgid "Congestion"
 msgstr ""
 
-#: generation/templates/control.html:406
+#: generation/templates/control.html:410
 msgid "Externalities by type"
 msgstr ""
 
-#: generation/templates/control.html:471
+#: generation/templates/control.html:441
+msgid "Average of my previous weeks"
+msgstr ""
+
+#: generation/templates/control.html:446
+msgid "Average of other participants"
+msgstr ""
+
+#: generation/templates/control.html:476
 msgid "Is this report wrong?"
 msgstr ""
 
-#: generation/templates/control.html:473
+#: generation/templates/control.html:478
 msgid "Click here to suggest corrections"
 msgstr ""
 
-#: generation/templates/control.html:501
+#: generation/templates/control.html:506
 msgid "click here for assistance"
 msgstr ""
 
@@ -153,5 +165,11 @@ msgstr ""
 #~ msgstr ""
 
 #~ msgid "co2"
+#~ msgstr ""
+
+#~ msgid "People similar to you"
+#~ msgstr ""
+
+#~ msgid "My Average"
 #~ msgstr ""
 

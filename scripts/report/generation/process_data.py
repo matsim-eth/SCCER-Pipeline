@@ -114,7 +114,7 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
 
         mode_bar_chart[mode]['distance_pc'] = int(distance / total_dist * 100)
-        mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", "short", locale=locale)
+        mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", 'short', format=u'##', locale=locale)
 
         values = sorted([("0", 0), ("distance", distance),
                          ("pop_average", pop_average), ("my_average", my_average),

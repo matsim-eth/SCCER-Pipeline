@@ -8,7 +8,7 @@ msgid ""
 msgstr ""
 "Project-Id-Version: Emissions Feedback Generator 0.1\n"
 "Report-Msgid-Bugs-To: EMAIL@ADDRESS\n"
-"POT-Creation-Date: 2019-03-05 12:51+0100\n"
+"POT-Creation-Date: 2019-03-06 10:32+0100\n"
 "PO-Revision-Date: 2018-10-02 14:02+0200\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language: de\n"
@@ -19,7 +19,7 @@ msgstr ""
 "Content-Transfer-Encoding: 8bit\n"
 "Generated-By: Babel 2.6.0\n"
 
-#: generation/generate_report.py:92
+#: generation/generate_report.py:99
 msgid "report_title"
 msgstr "Das Title"
 
@@ -32,7 +32,9 @@ msgid "Mobility Report"
 msgstr ""
 
 #: generation/templates/control.html:190
-msgid "your_report_for_the_week_of"
+#, fuzzy
+#| msgid "your_report_for_the_week_of"
+msgid "your_report_for_the_week_of {week_start_date}"
 msgstr "Mobilitätsbericht für die Woche"
 
 #: generation/templates/control.html:194
@@ -51,7 +53,7 @@ msgstr ""
 "Vielen Dank fürs teilnehmen der MOBIS Studie. Diese woche war die "
 "{week_ordinal} Woche der Studie, es gibt noch {remaining_weeks} Wochen"
 
-#: generation/templates/control.html:204
+#: generation/templates/control.html:206
 msgid ""
 "Your use of different travel modes and their external costs are displayed"
 " below"
@@ -59,55 +61,67 @@ msgstr ""
 "Ihre Nutzung der verschiedenen Verkehrsmittels und die externe Kosten "
 "davon sind unten dargestellt"
 
-#: generation/templates/control.html:232
+#: generation/templates/control.html:234
 msgid "Breakdown by transport mode"
 msgstr "Verteilung nach Verkehrsmittel"
 
-#: generation/templates/control.html:260 generation/templates/control.html:436
-msgid "People similar to you"
-msgstr "Durchschnitt der anderen Teilnehmer"
+#: generation/templates/control.html:245
+msgid "Distance Travelled"
+msgstr ""
 
-#: generation/templates/control.html:265 generation/templates/control.html:441
-msgid "My Average"
-msgstr "Meine bisherige wöchenliche Durchschnitt"
+#: generation/templates/control.html:246
+msgid "Your Trend"
+msgstr ""
 
-#: generation/templates/control.html:297
+#: generation/templates/control.html:247
+msgid "Compared to other participants"
+msgstr ""
+
+#: generation/templates/control.html:301
 msgid "What are external costs?"
 msgstr "Was sind externe Kosten?"
 
-#: generation/templates/control.html:334
+#: generation/templates/control.html:338
 msgid "Externalities by transport mode"
 msgstr "Externe Kosten nach Verkehrsmittel"
 
-#: generation/templates/control.html:368
+#: generation/templates/control.html:372
 msgid "Health"
 msgstr "Gesundheit"
 
-#: generation/templates/control.html:370
+#: generation/templates/control.html:374
 msgid "Co2"
 msgstr "CO2"
 
-#: generation/templates/control.html:372
+#: generation/templates/control.html:376
 msgid "Environment"
 msgstr "Umwelt"
 
-#: generation/templates/control.html:374
+#: generation/templates/control.html:378
 msgid "Congestion"
 msgstr "Stau"
 
-#: generation/templates/control.html:406
+#: generation/templates/control.html:410
 msgid "Externalities by type"
 msgstr "Externe Kosten nach art"
 
-#: generation/templates/control.html:471
+#: generation/templates/control.html:441
+msgid "Average of my previous weeks"
+msgstr ""
+
+#: generation/templates/control.html:446
+msgid "Average of other participants"
+msgstr ""
+
+#: generation/templates/control.html:476
 msgid "Is this report wrong?"
 msgstr "Gibt es etwas in diesem Bericht, der nicht stimmt?"
 
-#: generation/templates/control.html:473
+#: generation/templates/control.html:478
 msgid "Click here to suggest corrections"
 msgstr "Hier klicken, Korrekturen vorzuschalgen"
 
-#: generation/templates/control.html:501
+#: generation/templates/control.html:506
 msgid "click here for assistance"
 msgstr "Für Hilfe, hier klicken"
 
@@ -116,4 +130,10 @@ msgstr "Für Hilfe, hier klicken"
 
 #~ msgid "CO2"
 #~ msgstr "CO2"
+
+#~ msgid "People similar to you"
+#~ msgstr "Durchschnitt der anderen Teilnehmer"
+
+#~ msgid "My Average"
+#~ msgstr "Meine bisherige wöchenliche Durchschnitt"
 
