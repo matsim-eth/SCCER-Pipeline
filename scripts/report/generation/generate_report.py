@@ -8,7 +8,7 @@ import numpy as np
 import pandas as pd
 from os import path
 import psycopg2 as pg
-import pandas.io.sql as psql
+from datetime import date
 
 from babel.units import format_unit
 from babel.numbers import format_currency
@@ -28,14 +28,15 @@ lang_de = gettext.translation('generation', localedir="generation/locale", langu
 lang_de.install()
 
 
-to_datetime = lambda d: datetime.strptime(d, '%Y-%m-%d')
-
 person_id = '1649'
 week_number = 1
 study_length = 8
 
 report_details = {}
-report_details['week_start_date'] = '2016-30-11'
+report_details['week_start_date'] = date(2016, 11, 30)
+report_details['report_date_str'] = format_date(report_details['week_start_date'], 'dd MMM', locale=locale)
+
+report_details['week'] = week_number
 report_details['week_ordinal'] = num2words(week_number, ordinal=True, lang=language)
 report_details['remaining_weeks'] = num2words(study_length, lang=language)
 
@@ -52,41 +53,38 @@ leg_in_list = ','.join(map(str, leg_details['leg_id']))
 leg_ext = pd.read_sql_query("SELECT * FROM wide_externalities where leg_id in ({})".format(leg_in_list), connection)
 
 norms_sql = '''
-select leg_mode, avg(health) as health, avg (distance) as distance, 
-    avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
-from (
+with ll as (
 	select EXTRACT(WEEK FROM leg_date) as week, leg_mode, sum(health) as health, sum (distance) as distance, 
 	 sum(co2) as co2, sum(congestion) as congestion, sum(total) as total
 	from wide_externalities
 	where {} = {}
 	group by week, leg_mode
-) as ll
+) 
+
+select leg_mode, avg(health) as health, avg (distance) as distance, 
+    avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
+from ll
 group by leg_mode
-order by leg_mode
+union 
+select 'Total' as leg_mode, avg(health) as health, avg (distance) as distance, 
+    avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
+from ll
 '''
 
-norms_person = pd.read_sql_query(norms_sql.format('person_id', "'{}'".format(person_id)), connection)
-norms_cluster = pd.read_sql_query(norms_sql.format('cluster_id', person_details['cluster_id']), connection)
+norms_person = pd.read_sql_query(norms_sql.format('person_id', "'{}'".format(person_id)), connection).set_index('leg_mode')
+norms_group = pd.read_sql_query('select * from externality_norms', connection).set_index('quintile')
 
-norms = pd.DataFrame()
-norms['leg_mode'] = norms_person['leg_mode']
-for col in ['distance', "health", 'co2', 'congestion', 'total']:
-    norms['my_'+col] = norms_person[col]
-    norms['cluster_'+col] = norms_cluster[col]
 
 mode_index = ['Car', 'Train', 'PT', 'Bicycle', 'Walk']
-norms = norms.set_index('leg_mode').reindex(mode_index).fillna(0)
-
-
 mode_values = leg_ext.groupby(['leg_mode'])[['distance', 'health', 'co2', 'congestion', 'total']].sum()
-mode_values = mode_values.reindex(mode_index).fillna(0)
+mode_values = mode_values[mode_values.index.isin(mode_index)].reindex(mode_index).fillna(0)
 
 
 ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', u'¤ ###,##0.00', locale=locale))
 
-mode_bar_chart = build_mode_bar_chart(mode_values, norms, locale)
+mode_bar_chart = build_mode_bar_chart(mode_values, norms_person, locale)
 
-externality_bar_chart = build_externality_barchart(mode_values, norms, locale)
+externality_bar_chart = build_externality_barchart(mode_values, norms_person, norms_group, locale)
 
 #ext_summary = mode_values.sum()
 

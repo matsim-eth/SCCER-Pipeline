@@ -166,7 +166,7 @@
                     </td>
                     <td bgcolor="#ffffff" align="right" valign="top"
                         style="padding: 40px 20px 20px 20px; border-radius: 4px 4px 0px 0px; color: #111111; font-family: Helvetica, Arial, sans-serif; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
-                        <h2 style="font-weight: 400; margin: 0;">${_('Report')} | 1 April</h2>
+                        <h2 style="font-weight: 400; margin: 0;">${_('Report')} | ${report_details['report_date_str']}</h2>
                     </td>
                 </tr>
             </table>
@@ -200,7 +200,7 @@
                         </p>
                         <p>
                             ${_("Thank you for participanting in the MOBIS study. "
-                            "This week was the {week_ordinal} of the study.").format_map(report_details)}
+                            "This week was the {week_ordinal} week of the study.").format_map(report_details)}
                         </p>
                         <p>
                             ${_("Your use of different travel modes and their external costs are displayed below.")}
@@ -284,66 +284,6 @@
             <![endif]-->
         </td>
     </tr>
-
-
-
-
-
-    <!-- BASIC INFORMATION CALLOUT -->
-    <tr>
-        <td bgcolor="#f4f4f4" align="center" style="padding: 30px 10px 0px 10px;">
-            <!--[if (gte mso 9)|(IE)]>
-            <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
-            <tr>
-            <td align="center" valign="top" width="600">
-            <![endif]-->
-            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
-
-                <tr>
-                    <td class="cellbox" bgcolor="#ffffff" align="left">
-
-                        <h2> ${_("What are external costs?")}</h2>
-                         <p> Each of us, when we travel, has an impact on our fellow citizens and the environment.
-                         These are called externalities, and include environmental, health and Congestion costs. </p>
-
-                        %if person['group'] != 'control':
-
-                            <table cellpadding="10px">
-                                <tr>
-                                    <td><img src="images/smilies/happy.png"></td>
-                                    <td><p>Congratulations. Compared to your previous weeks, you are reducing/increasing your externalities!</p></td>
-                                </tr>
-
-                                <tr>
-                                    <td><img src="images/smilies/sad.png"></td>
-                                    <td>
-                                        <p>
-                                        Compared to other participants in the study,
-                                        your total external costs are better/worse!
-                                        </p>
-                                    </td>
-                                </tr>
-                            </table>
-
-
-                            <p>
-                            The following diagrams also indicate how your travelling compares to both your
-                            previous travels during the study and that of other particpants.
-                            </p>
-                        %endif
-
-                    </td>
-                </tr>
-       </table>
-            <!--[if (gte mso 9)|(IE)]>
-            </td>
-            </tr>
-            </table>
-            <![endif]-->
-        </td>
-    </tr>
-
-
 
           <!-- Externalities CALLOUT -->
     <tr>
@@ -461,7 +401,7 @@
                                                 % for bar in bars['bar_widths']:
                                                     <td class="${externality} ${bar[0]}" style="width:${bar[1]}%"></td>
                                                 % endfor
-                                                <th style="width:20%; text-align: right ">
+                                                <th style="width:25%; text-align: right ">
                                                     ${ext_totals[externality]}
                                                 </th>
                                             </tr>
@@ -476,7 +416,7 @@
                                                 <td class="${externality} max_val clear"
                                                     style="width:${bars['norm_padding']}%"></td>
 
-                                                <th style="width:20%; text-align: right ">
+                                                <th style="width:25%; text-align: right ">
                                                 </th>
                                             </tr>
                                             <tr>
@@ -488,6 +428,20 @@
                                     % endfor
 
                                 </td>
+
+                                <td width="20%">
+                                    <table cellpadding="0" cellspacing="0" style="width:100%">
+                                        <tbody>
+                                            % for externality, bars in externality_bar_chart.items():
+                                                <tr>
+                                                    <th class="row_labels"><img align="center" width="30px" src=${bars['emoji_src']}></th>
+                                                </tr>
+                                            % endfor
+
+                                        </tbody>
+                                    </table>
+                                </td>
+
                             </tr>
                             </tbody>
                         </table>
@@ -509,6 +463,15 @@
                                 <td style="width:22%; border-right: lightgrey solid 10px">&nbsp;</td>
                                 <td class="legend">${_("Average of other participants")}</td>
                             </tr>
+                            <tr>
+                                <td colspan="2" style="padding-top:8px"></td>
+                            </tr>
+                            <tr align="left">
+                                <td style="text-align: right">
+                                    <img align="center" width="13px" src="images/smilies/happy.png">
+                                </td>
+                                <td class="legend" style="padding-left: 10px">${_("Your performance relative to other participants")}</td>
+                            </tr>
                             </tbody>
                         </table>
 
@@ -522,6 +485,46 @@
             <![endif]-->
         </td>
     </tr>
+
+
+
+%if report_details['week'] == 1:
+    <!-- BASIC INFORMATION CALLOUT -->
+    <tr>
+        <td bgcolor="#f4f4f4" align="center" style="padding: 30px 10px 0px 10px;">
+            <!--[if (gte mso 9)|(IE)]>
+            <table align="center" border="0" cellspacing="0" cellpadding="0" width="600">
+            <tr>
+            <td align="center" valign="top" width="600">
+            <![endif]-->
+            <table border="0" cellpadding="0" cellspacing="0" width="100%" style="max-width: 600px;">
+
+                <tr>
+                    <td class="cellbox" bgcolor="#ffffff" align="left">
+
+                        <h2> ${_("What are external costs?")}</h2>
+                         <p> Each of us, when we travel, has an impact on our fellow citizens and the environment.
+                         These are called externalities, and include environmental, health and Congestion costs. </p>
+
+                        %if person['group'] != 'control':
+
+                            <p>
+                            The above diagrams also indicate how your travelling compares to both your
+                            previous travels during the study and that of other particpants.
+                            </p>
+                        %endif
+
+                    </td>
+                </tr>
+       </table>
+            <!--[if (gte mso 9)|(IE)]>
+            </td>
+            </tr>
+            </table>
+            <![endif]-->
+        </td>
+    </tr>
+%endif
 
 
     <!-- SUPPORT CALLOUT -->

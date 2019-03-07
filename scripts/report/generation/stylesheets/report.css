@@ -234,13 +234,9 @@ table.bar-chart.externalities td.left_border {
 }
 
 .co2 {
-    background-color: lightsalmon;
+    background-color: lightskyblue;
 }
 
-.environment {
-     background-color: lightskyblue;
-
-}
 
 .congestion {
     background-color: orange;

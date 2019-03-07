@@ -89,47 +89,6 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
-    max_val = max(modes_df['distance'].max(),
-                  norms_df['cluster_distance'].max(),
-                  norms_df['my_distance'].max()) * 1.1
-
-    barchart_width = 60
-
-
-    for mode in mode_names:
-        mode_bar_chart[mode] = {}
-
-        pop_average = norms_df.loc[mode, 'cluster_distance']
-        my_average = norms_df.loc[mode, 'my_distance']
-
-        distance = modes_df.loc[mode, 'distance']
-
-        mode_bar_chart[mode]['mode_image_src'] = get_mode_image_src(mode)
-
-        if abs(distance - my_average) / my_average > 0.4 :
-            mode_bar_chart[mode]['my_norm_image_src'] = 'images/arrows/{}.png'.format("up_right" if distance > my_average else "down_right")
-
-        if abs(distance - pop_average) / pop_average > 0.4 :
-            mode_bar_chart[mode]['cluster_norm_image_src'] = 'images/arrows/{}.png'.format("thumbs_down" if distance > pop_average else "thumbs_up")
-
-
-        mode_bar_chart[mode]['distance_pc'] = int(distance / total_dist * 100)
-        mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", 'short', format=u'##', locale=locale)
-
-        values = sorted([("0", 0), ("distance", distance),
-                         ("pop_average", pop_average), ("my_average", my_average),
-                         ("max_val", max_val+10)], key=lambda x: x[1])
-        values = [(k + " clear" if v > distance else k, v) for k,v in values]
-
-
-
-        classes, values1 = zip(*values)
-        bar_widths = list(zip(classes[1:], np.diff(values1)))
-
-        mode_bar_chart[mode]['distance_bars'] = [(k, max(round(w / max_val * barchart_width), 1)) for k, w in bar_widths]
-        mode_bar_chart[mode]['distance_bars'][-1] = (mode_bar_chart[mode]['distance_bars'][-1][0],
-                           barchart_width - sum([v[1] for v in mode_bar_chart[mode]['distance_bars'][:-1]]))
-        print(mode_bar_chart[mode]['distance_bars'])
 
     max_total = modes_df['total'].max() * 1.1
     min_health = abs(modes_df['health'].min())
@@ -141,7 +100,25 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     right_width_pc = total_table_width_pc - left_width_pc
 
     for mode in mode_names:
+#########distance
+        mode_bar_chart[mode] = {}
 
+        my_average = norms_df.loc[mode, 'distance']
+
+        distance = modes_df.loc[mode, 'distance']
+
+        mode_bar_chart[mode]['mode_image_src'] = get_mode_image_src(mode)
+
+        if abs(distance - my_average) / my_average > 0.4:
+            mode_bar_chart[mode]['my_norm_image_src'] = 'images/arrows/{}.png'.format(
+                "up_right" if distance > my_average else "down_right")
+
+        mode_bar_chart[mode]['distance_pc'] = int(distance / total_dist * 100)
+        mode_bar_chart[mode]['distance_str'] = format_unit(round(distance / 1000, 2), "kilometer", 'short',
+                                                           format=u'##', locale=locale)
+
+
+############externalities
         right_total_value = (max(modes_df.loc[mode, 'health'], 0) +
                              modes_df.loc[mode, 'co2'] +
                              modes_df.loc[mode, 'congestion'])
@@ -186,26 +163,24 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     return (mode_bar_chart)
 
 
-def build_externality_barchart(mode_values_df, norms_df, locale):
+def build_externality_barchart(mode_values_df, norms_person, norms_group_df, locale):
     ext_bars = {}
-
-    norms_df_summed = norms_df.sum()
 
     extern_labels = ["health", 'co2', 'congestion']
     max_val_modes = max([mode_values_df[k].sum() for k in extern_labels])
-    max_val_my_norm = max([norms_df['my_'+k].sum() for k in extern_labels])
-    max_val_cluster_norm = max([norms_df['cluster_'+k].sum() for k in extern_labels])
+    max_val_my_norm = max([norms_person.loc['Total', k] for k in extern_labels])
+    max_val_cluster_norm = max([norms_group_df.loc['3', k] for k in extern_labels])
 
     max_val = max(max_val_modes,
                   max_val_my_norm,
-                  max_val_cluster_norm) * 1.1
+                  max_val_cluster_norm)
 
-    barchar_width = 60
+    barchar_width = 75
 
     for k in extern_labels:
         ext_v = abs(mode_values_df[k].sum())
-        social_norm = norms_df_summed['cluster_'+k]
-        my_norm = norms_df_summed['my_'+k]
+        social_norm = norms_group_df.loc['3', k]
+        my_norm = norms_person.loc['Total', k]
 
         values = sorted([("0", 0), ("externality", ext_v),
                          ("my_average", my_norm),
@@ -223,6 +198,17 @@ def build_externality_barchart(mode_values_df, norms_df, locale):
         ext_bars[k]["bar_widths"][-1][1] = barchar_width - sum([v[1] for v in ext_bars[k]["bar_widths"][:-1]])
         ext_bars[k]["norm_width"] = norm_width
         ext_bars[k]["norm_padding"] = norm_padding
+
+        if ext_v > norms_group_df.loc['4', k]:
+            ext_bars[k]["emoji_src"] = "images/smilies/verysad.png"
+        elif ext_v > norms_group_df.loc['3', k]:
+            ext_bars[k]["emoji_src"] = "images/smilies/sad.png"
+        elif ext_v > norms_group_df.loc['2', k]:
+            ext_bars[k]["emoji_src"] = "images/smilies/neutral.png"
+        elif ext_v > norms_group_df.loc['1', k]:
+            ext_bars[k]["emoji_src"] = "images/smilies/happy.png"
+        else:
+            ext_bars[k]["emoji_src"] = "images/smilies/veryhappy.png"
 
         print(ext_bars[k])
 
