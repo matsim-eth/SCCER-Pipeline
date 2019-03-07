@@ -53,10 +53,10 @@ leg_ext = pd.read_sql_query("SELECT * FROM wide_externalities where leg_id in ({
 
 norms_sql = '''
 select leg_mode, avg(health) as health, avg (distance) as distance, 
-    avg(environment) as environment, avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
+    avg(co2) as co2, avg(congestion) as congestion, avg(total) as total
 from (
 	select EXTRACT(WEEK FROM leg_date) as week, leg_mode, sum(health) as health, sum (distance) as distance, 
-	sum(environment) as environment, sum(co2) as co2, sum(congestion) as congestion, sum(total) as total
+	 sum(co2) as co2, sum(congestion) as congestion, sum(total) as total
 	from wide_externalities
 	where {} = {}
 	group by week, leg_mode
@@ -70,16 +70,19 @@ norms_cluster = pd.read_sql_query(norms_sql.format('cluster_id', person_details[
 
 norms = pd.DataFrame()
 norms['leg_mode'] = norms_person['leg_mode']
-for col in ['distance', "health", 'co2', 'environment', 'congestion', 'total']:
+for col in ['distance', "health", 'co2', 'congestion', 'total']:
     norms['my_'+col] = norms_person[col]
     norms['cluster_'+col] = norms_cluster[col]
 
-norms.set_index('leg_mode', inplace=True)
+mode_index = ['Car', 'Train', 'PT', 'Bicycle', 'Walk']
+norms = norms.set_index('leg_mode').reindex(mode_index).fillna(0)
 
-mode_values = leg_ext.groupby(['leg_mode'])[['distance', 'health', 'environment', 'co2', 'congestion', 'total']].sum()
+
+mode_values = leg_ext.groupby(['leg_mode'])[['distance', 'health', 'co2', 'congestion', 'total']].sum()
+mode_values = mode_values.reindex(mode_index).fillna(0)
 
 
-ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', u'#,##0.00 ¤', locale=locale))
+ext_totals = mode_values.sum().apply(lambda v : format_currency(v, 'CHF', u'¤ ###,##0.00', locale=locale))
 
 mode_bar_chart = build_mode_bar_chart(mode_values, norms, locale)
 

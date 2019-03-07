@@ -37,11 +37,11 @@ msgstr "Mobility Report for the week starting on {week_start_date}"
 
 #: generation/templates/control.html:194
 msgid "greeting_male"
-msgstr "Dear"
+msgstr "Dear Mr"
 
 #: generation/templates/control.html:196
 msgid "greeting_female"
-msgstr "Dear"
+msgstr "Dear Ms"
 
 #: generation/templates/control.html:201
 msgid ""

@@ -85,7 +85,7 @@ def structure_externality_information(modes_df, locale):
 
 
 def build_mode_bar_chart(modes_df, norms_df, locale):
-    mode_names = ['Car', 'Train', 'Bicycle', 'Walk']
+    mode_names = ['Car', 'Train', 'PT', 'Bicycle', 'Walk']
 
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
@@ -181,7 +181,7 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
         mode_bar_chart[mode]['externalitiy_bars'] = bars
 
         mode_bar_chart[mode]['total_external_cost_str'] = \
-            format_currency(right_total_value + modes_df.loc[mode, 'health'], "CHF", u'#,##0.00 ¤', locale=locale)
+            format_currency(right_total_value + modes_df.loc[mode, 'health'], "CHF", u'¤ #,##0.00; ¤ -#,##0.00', locale=locale)
 
     return (mode_bar_chart)
 
