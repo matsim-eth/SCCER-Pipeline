@@ -71,6 +71,14 @@ table.bar-chart td {
 
 }
 
+table.double-bar-chart td {
+
+    text-align: center;
+    line-height: 13px;
+    height: 13px;
+
+}
+
 tr.even {
     background-color: #e1faea;
 }
@@ -110,6 +118,10 @@ table.bar-chart td.clear {
 
 }
 
+td.gray {
+    background-color: lightgrey;
+}
+
 td.distance {
 
 }
@@ -119,9 +131,9 @@ td.max_val {
 }
 
 td.my_average {
-    border-right-color: #8b0000;
+    border-right-color: #000000;
     border-right-style: solid;
-    border-right-width: 5px;
+    border-right-width: 3px;
 
 }
 

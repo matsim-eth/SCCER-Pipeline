@@ -1,5 +1,7 @@
 import pprint
 import random
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from types import SimpleNamespace
 
 import numpy as np
@@ -131,3 +133,27 @@ with open("generation/test_report.html", "w", encoding="utf8") as file:
 #write to webserver
 with open("M:/htdocs/test_report.html", "w", encoding="utf8") as file:
     file.write(new_html_email_text)
+
+import smtplib
+
+try:
+    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+    server.ehlo()
+    server.login("ivtmobistest", "emailtesting")
+
+    me = "ivtmobistest@gmail.com"
+    you = "ivtmobistest@gmail.com"
+
+    # Create message container - the correct MIME type is multipart/alternative.
+    msg = MIMEMultipart('alternative')
+    msg['Subject'] = "Link"
+    msg['From'] = me
+    msg['To'] = you
+
+    part2 = MIMEText(new_html_email_text, 'html')
+
+    msg.attach(part2)
+    server.sendmail(me, you, msg.as_string())
+
+except :
+    print ('Something went wrong...')

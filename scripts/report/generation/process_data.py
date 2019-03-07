@@ -144,7 +144,6 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
         right_total_value = (max(modes_df.loc[mode, 'health'], 0) +
                              modes_df.loc[mode, 'co2'] +
-                             modes_df.loc[mode, 'environment'] +
                              modes_df.loc[mode, 'congestion'])
 
 
@@ -153,10 +152,9 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
 
 
         co2_pc = math.ceil(abs(modes_df.loc[mode,  'co2']) / max_total * right_width_pc)
-        environment_pc = math.ceil(abs(modes_df.loc[mode, 'environment']) / max_total * right_width_pc)
         congestion_pc = math.ceil(abs(modes_df.loc[mode, 'congestion']) / max_total * right_width_pc)
 
-        right_padding_pc = right_width_pc - co2_pc - environment_pc - congestion_pc
+        right_padding_pc = right_width_pc - co2_pc - congestion_pc
 
 
         if modes_df.loc[mode, 'health'] < 0:
@@ -174,7 +172,6 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
         bars = [(left_padding_class, left_padding_pc),
                 (health_class, health_pc),
                 ("co2", co2_pc),
-                ("environment", environment_pc),
                 ("congestion", congestion_pc),
                 ("clear", right_padding_pc)]
 
@@ -194,7 +191,7 @@ def build_externality_barchart(mode_values_df, norms_df, locale):
 
     norms_df_summed = norms_df.sum()
 
-    extern_labels = ["health", 'co2', 'environment', 'congestion']
+    extern_labels = ["health", 'co2', 'congestion']
     max_val_modes = max([mode_values_df[k].sum() for k in extern_labels])
     max_val_my_norm = max([norms_df['my_'+k].sum() for k in extern_labels])
     max_val_cluster_norm = max([norms_df['cluster_'+k].sum() for k in extern_labels])
@@ -211,18 +208,22 @@ def build_externality_barchart(mode_values_df, norms_df, locale):
         my_norm = norms_df_summed['my_'+k]
 
         values = sorted([("0", 0), ("externality", ext_v),
-                         ("pop_average", social_norm), ("my_average", my_norm),
+                         ("my_average", my_norm),
                          ("max_val", max_val)], key=lambda x: x[1])
         values = [(k + " clear" if v > ext_v else k, v) for k, v in values]
 
         classes, values1 = zip(*values)
         bar_widths = zip(classes[1:], np.diff(values1))
 
-        ext_bars[k] = [(k, max(round(w / max_val * barchar_width), 1)) for k, w in bar_widths]
-        ext_bars[k][-1] = (ext_bars[k][-1][0],
-                           barchar_width - sum([v[1] for v in ext_bars[k][:-1]]))
 
-        print(sum([v[1] for v in ext_bars[k]]))
+        norm_width = max(round(social_norm / max_val * barchar_width), 1)
+        norm_padding = barchar_width - norm_width
+
+        ext_bars[k] = {"bar_widths": [[k1, max(round(w / max_val * barchar_width), 1)] for k1, w in bar_widths]}
+        ext_bars[k]["bar_widths"][-1][1] = barchar_width - sum([v[1] for v in ext_bars[k]["bar_widths"][:-1]])
+        ext_bars[k]["norm_width"] = norm_width
+        ext_bars[k]["norm_padding"] = norm_padding
+
         print(ext_bars[k])
 
     return ext_bars
