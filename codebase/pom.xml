@@ -135,11 +135,6 @@
 	  </dependency>
 	  <dependency>
 		  <groupId>org.matsim.contrib</groupId>
-		  <artifactId>socnetgen</artifactId>
-		  <version>${matsim.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>org.matsim.contrib</groupId>
 		  <artifactId>locationchoice</artifactId>
 		  <version>${matsim.version}</version>
 	  </dependency>
