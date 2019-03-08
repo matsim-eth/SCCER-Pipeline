@@ -24,26 +24,30 @@ public class MeasureAggregateCongestionFromScenario {
     private final MatsimEventsReader reader;
     private CongestionHandler congestionHandler;
     private CongestionAggregator congestionAggregator;
+    private double congestionThresholdRatio;
 
     public static void main(String[] args) throws IOException {
         String configPath = args[0];
-        double binSize = Double.parseDouble(args[1]); // aggregation time bin size in seconds
-        String eventFile = args[2];
-        String outputDirectory = args[3];
+        String eventFile = args[1];
+        String outputDirectory = args[2];
+        double binSize = Double.parseDouble(args[3]); // aggregation time bin size in seconds
+//        double congestionThresholdRatio = Double.parseDouble(args[4]); // ratio of freeflow speed under which it is considered congestion
+        double congestionThresholdRatio = 0.65;
 
         // load config file
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // process MATSim events and write congestion data to file
-        MeasureAggregateCongestionFromScenario runner = new MeasureAggregateCongestionFromScenario(scenario, binSize);
+        MeasureAggregateCongestionFromScenario runner = new MeasureAggregateCongestionFromScenario(scenario, binSize, congestionThresholdRatio);
         runner.process(eventFile);
         runner.write(outputDirectory);
     }
 
-    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize) {
+    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize, double congestionThresholdRatio) {
         this.scenario = scenario;
         this.binSize = binSize;
+        this.congestionThresholdRatio = congestionThresholdRatio;
 
         // set up event manager
         this.eventsManager = new EventsManagerImpl();
@@ -55,7 +59,7 @@ public class MeasureAggregateCongestionFromScenario {
 
         // add congestion handler and aggregator
         this.congestionHandler = new CongestionHandlerImplV3(this.eventsManager, scenario, v2deh);
-        this.congestionAggregator = new CongestionAggregator(scenario, v2deh, this.binSize);
+        this.congestionAggregator = new CongestionAggregator(scenario, v2deh, this.binSize, this.congestionThresholdRatio);
         this.eventsManager.addHandler(congestionHandler);
         this.eventsManager.addHandler(congestionAggregator);
     }
