@@ -4,16 +4,12 @@ import ethz.ivt.externalities.counters.CarExternalityCounter;
 import ethz.ivt.externalities.counters.CongestionCounter;
 import ethz.ivt.externalities.counters.ExternalityCostCalculator;
 import ethz.ivt.externalities.counters.ExternalityCounter;
-import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
 import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
@@ -24,17 +20,12 @@ import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
-import org.matsim.vehicles.Vehicle;
-import org.matsim.vehicles.VehicleType;
-import org.matsim.vehicles.VehicleUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.time.LocalDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.Map;
-import java.util.Random;
 
 
 /**
@@ -45,9 +36,6 @@ public class MeasureExternalitiesFromTraceEvents {
     private final MatsimEventsReader reader;
     private final Scenario scenario;
     private final ExternalityCostCalculator ecc;
-
-    private String CONGESTION_FILE; // = "aggregate/congestion/aggregate_delay.csv";
-    private String NOISE_FILE; // = "aggregate/noise/marginal_damages_link_car_merged_xyt1t2t3etc.csv";
 
     private EventsManagerImpl eventsManager;
     private final ExternalityCounter externalityCounter;
@@ -62,21 +50,6 @@ public class MeasureExternalitiesFromTraceEvents {
         String costValuesPath = args[4];
         String vehicleCompositionPath = args[5];
         String outputPath = args[6];
-
-//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/defaultIVTConfig_w_emissions.xml";
-//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/800.events.xml.gz";
-//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
-//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/zurich_1pct/scenario/output/";
-
-//        String configPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/switzerland_config_w_emissions.xml";
-//        String eventPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/20.events.xml.gz";
-//        String congestionPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/aggregate/congestion/aggregate_delay_per_link_per_time.csv";
-//        String costValuesPath = "/home/ctchervenkov/git/java/SCCER-Pipeline/codebase/src/test/resources/NISTRA_reference_values.txt";
-//        String vehicleCompositionPath = "/home/ctchervenkov/Documents/projects/road_pricing/car_fleet.csv";
-//        String outputPath = "/home/ctchervenkov/Documents/projects/road_pricing/switzerland_10pct/output/";
-
 
         // load config file
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
@@ -156,8 +129,6 @@ public class MeasureExternalitiesFromTraceEvents {
 
     }
 
-
-
     public void write(Path folder) {
         Path outputFolder = folder.resolve(date.format(DateTimeFormatter.ISO_DATE));
         externalityCounter.writeCsvFile(outputFolder);
@@ -167,62 +138,6 @@ public class MeasureExternalitiesFromTraceEvents {
         for (Link l : network.getLinks().values()) {
             NetworkUtils.setType(l, (String) l.getAttributes().getAttribute("osm:way:highway"));
         }
-    }
-
-    public static void addVehicleTypes(Scenario scenario) {
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
-        car.setMaximumVelocity(100.0 / 3.6);
-        car.setPcuEquivalents(1.0);
-        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC P Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car);
-
-        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
-        car_diesel.setMaximumVelocity(100.0 / 3.6);
-        car_diesel.setPcuEquivalents(1.0);
-        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
-        scenario.getVehicles().addVehicleType(car_diesel);
-
-        //hybrids are only coming in hbefa vresion 4.
-
-    }
-
-    public static void setUpVehicles(Scenario scenario, double shareDiesel) {
-        //householdid, #autos, auto1, auto2, auto3
-        //get household id of person. Assign next vehicle from household.
-
-        Id<VehicleType> carIdBenzin = Id.create("Benzin", VehicleType.class);
-        Id<VehicleType> carIdDiesel = Id.create("Diesel", VehicleType.class);
-
-        if (!scenario.getVehicles().getVehicleTypes().containsKey(carIdBenzin) || !scenario.getVehicles().getVehicleTypes().containsKey(carIdDiesel)) {
-            addVehicleTypes(scenario);
-        }
-
-        VehicleType carBenzin = scenario.getVehicles().getVehicleTypes().get(carIdBenzin);
-        VehicleType carDiesel = scenario.getVehicles().getVehicleTypes().get(carIdDiesel);
-
-        // generate share of diesel cars
-        Random randomGenerator = new Random();
-
-        for (Id<Person> pid : scenario.getPopulation().getPersons().keySet()) {
-            Id<Vehicle> vid = Id.createVehicleId(pid);
-
-            //add petrol or diesel vehicles according to share
-            double percent = randomGenerator.nextDouble();
-            if (percent < shareDiesel) {
-                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, carDiesel);
-                scenario.getVehicles().addVehicle(v);
-            } else {
-                Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, carBenzin);
-                scenario.getVehicles().addVehicle(v);
-            }
-
-            //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
-        }
-
-
     }
 
 }
