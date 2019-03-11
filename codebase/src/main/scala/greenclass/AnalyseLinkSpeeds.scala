@@ -29,7 +29,7 @@ object AnalyseLinkSpeeds {
   def main(args: Array[String]) {
 
     Logger.getLogger(classOf[WarmEmissionAnalysisModule]).setLevel(Level.ERROR)
-    Logger.getLogger(classOf[WarmEmissionHandler]).setLevel(Level.ERROR)
+//    Logger.getLogger(classOf[WarmEmissionHandler]).setLevel(Level.ERROR)
     Logger.getLogger(classOf[EventsManagerImpl]).setLevel(Level.ERROR)
 
     val runner = new AnalyseLinkSpeeds()

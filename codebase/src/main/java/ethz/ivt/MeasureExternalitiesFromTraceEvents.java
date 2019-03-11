@@ -11,8 +11,6 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -95,9 +93,9 @@ public class MeasureExternalitiesFromTraceEvents {
         log.info("load emissions module");
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
 
-        //add Hbefa mappings to the network
-        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
-        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
+//        //add Hbefa mappings to the network
+//        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
+//        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
@@ -138,6 +136,26 @@ public class MeasureExternalitiesFromTraceEvents {
         for (Link l : network.getLinks().values()) {
             NetworkUtils.setType(l, (String) l.getAttributes().getAttribute("osm:way:highway"));
         }
+    }
+
+    public static void addVehicleTypes(Scenario scenario) {
+        //householdid, #autos, auto1, auto2, auto3
+        //get household id of person. Assign next vehicle from household.
+
+        VehicleType car = VehicleUtils.getFactory().createVehicleType(Id.create("Benzin", VehicleType.class));
+        car.setMaximumVelocity(100.0 / 3.6);
+        car.setPcuEquivalents(1.0);
+        car.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;petrol (4S);1,4-<2L;PC P Euro-4END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(car);
+
+        VehicleType car_diesel = VehicleUtils.getFactory().createVehicleType(Id.create("Diesel", VehicleType.class));
+        car_diesel.setMaximumVelocity(100.0 / 3.6);
+        car_diesel.setPcuEquivalents(1.0);
+        car_diesel.setDescription("BEGIN_EMISSIONSPASSENGER_CAR;diesel;1,4-<2L;PC D Euro-4END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(car_diesel);
+
+        //hybrids are only coming in hbefa vresion 4.
+
     }
 
 }
