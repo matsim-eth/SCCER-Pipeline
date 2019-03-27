@@ -269,10 +269,19 @@
                             </tr>
                             </tbody>
                         </table>
-                        <p>
-                        <img style="width:20px" src="images/arrows/up_right.png"> </img>
-
-                        ${_("Increase/decrease in travel distance since last week")}</p>
+                        <table>
+                            <tbody>
+                            <tr><td colspan="2" style="padding-top:8px"></td> </tr>
+                            <tr>
+                                <td>
+                                   <img style="width:20px" src="images/arrows/up_right.png"> </img>
+                                </td>
+                                <td style="padding-left:8px">
+                                    <p>${_("Increase/decrease in travel distance since last week")}</p>
+                                </td>
+                            </tr>
+                            </tbody>
+                        </table>
 
                     </td>
                 </tr>
@@ -310,7 +319,7 @@
                                 <tbody>
 
                                 <tr align="left" style="line-height: 1.3">
-                                    <td width="100" style="max-width:100px!important; padding:3px">
+                                    <td width="55px" style="max-width:55px!important; padding:3px">
                                         <img class="mode" src="${mode_bar_chart[mode]['mode_image_src']}"> </img>
                                     </td>
                                     % for bar in mode_bar_chart[mode]['externalitiy_bars']:
@@ -469,6 +478,7 @@
                             <tr align="left">
                                 <td style="text-align: right">
                                     <img align="center" width="13px" src="images/smilies/happy.png">
+                                    <img align="center" width="13px" src="images/smilies/sad.png">
                                 </td>
                                 <td class="legend" style="padding-left: 10px">${_("Your performance relative to other participants")}</td>
                             </tr>
@@ -503,16 +513,42 @@
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
                         <h2> ${_("What are external costs?")}</h2>
-                         <p> Each of us, when we travel, has an impact on our fellow citizens and the environment.
-                         These are called externalities, and include environmental, health and Congestion costs. </p>
 
-                        %if person['group'] != 'control':
+                        <p>Each of us, when we travel, generates costs.
+                        Some of these costs are paid for by ourselves and are therefore called
+                        “internal”. Examples include maintaining a car, purchasing fuel,
+                        paying for a train ticket and the value of our own time spent traveling.
+                        </p>
+                        <p>
+                        However, we also impose costs on others in the form of changes to the
+                        environment, public health and congestion (a time loss to other drivers).
+                        These costs are called “external” because they are not borne by ourselves
+                        but by society as a whole.
+                        </p>
 
+                        %if person['group'] != 'nudging':
                             <p>
-                            The above diagrams also indicate how your travelling compares to both your
-                            previous travels during the study and that of other particpants.
+                                The figures below illustrate the external costs associated with
+                                your travel behavior last week.
                             </p>
                         %endif
+
+
+                        %if person['group'] == 'nudging':
+                            <p>
+                                The figures below illustrate the external costs that you
+                                imposed on others last week. They also show how these
+                                relate to your previous average (lines),
+                                and the average of other study participants (bars).
+
+                            </p>
+                        %endif
+
+                        <p>
+                            To learn more about the methodology we used to
+                            compute the external costs, please see
+                            <a href="#">link to methodology</a>.
+                        </p>
 
                     </td>
                 </tr>

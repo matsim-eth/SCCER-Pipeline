@@ -90,7 +90,7 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
 
-    max_total = modes_df['total'].max() * 1.1
+    max_total = np.ceil(modes_df['total']).max()+1
     min_health = abs(modes_df['health'].min())
 
     left_total_value = max(min_health, 0.1* max_total)
