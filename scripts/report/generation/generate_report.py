@@ -56,6 +56,8 @@ for person_id in person_ids:
         file.write(new_html_email_text)
 
 
-send_mail("joseph.molloy@ivt.baug.ethz.ch", "Welcome to MOBIS", welcome_email)
-send_mail("joseph.molloy@ivt.baug.ethz.ch", "MOBIS week 1 report", new_html_email_text)
+#send_mail("joseph.molloy@ivt.baug.ethz.ch", "Welcome to MOBIS", welcome_email)
+#send_mail("joseph.molloy@ivt.baug.ethz.ch", "MOBIS week 1 report", new_html_email_text)
 
+send_mail("ivtmobistest@gmail.com", "Welcome to MOBIS", welcome_email)
+send_mail("ivtmobistest@gmail.com", "MOBIS week 1 report", new_html_email_text)
