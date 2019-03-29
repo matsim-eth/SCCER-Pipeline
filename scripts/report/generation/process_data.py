@@ -164,13 +164,17 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     return (mode_bar_chart)
 
 
-def build_externality_barchart(mode_values_df, norms_person, norms_group_df, locale):
+def build_externality_barchart(mode_values_df, norms_person, norms_group_df, show_norms, locale):
     ext_bars = {}
 
     extern_labels = ["health", 'co2', 'congestion']
     max_val_modes = max([mode_values_df[k].sum() for k in extern_labels])
-    max_val_my_norm = max([norms_person.loc['Total', k] for k in extern_labels])
-    max_val_cluster_norm = max([norms_group_df.loc['3', k] for k in extern_labels])
+    if show_norms:
+        max_val_my_norm = max([norms_person.loc['Total', k] for k in extern_labels])
+        max_val_cluster_norm = max([norms_group_df.loc['3', k] for k in extern_labels])
+    else:
+        max_val_my_norm = np.nan
+        max_val_cluster_norm = np.nan
 
     max_val = max(max_val_modes,
                   max_val_my_norm,
@@ -181,35 +185,36 @@ def build_externality_barchart(mode_values_df, norms_person, norms_group_df, loc
     for k in extern_labels:
         ext_v = abs(mode_values_df[k].sum())
         social_norm = norms_group_df.loc['3', k]
-        my_norm = norms_person.loc['Total', k]
+        my_norm = norms_person.loc['Total', k] if show_norms else np.nan
 
         values = sorted([("0", 0), ("externality", ext_v),
                          ("my_average", my_norm),
                          ("max_val", max_val)], key=lambda x: x[1])
-        values = [(k + " clear" if v > ext_v else k, v) for k, v in values]
+        values = [(k + " clear" if v > ext_v else k, v) for k, v in values if not np.isnan(v) ]
 
         classes, values1 = zip(*values)
         bar_widths = zip(classes[1:], np.diff(values1))
 
-
-        norm_width = max(round(social_norm / max_val * barchar_width), 1)
-        norm_padding = barchar_width - norm_width
-
         ext_bars[k] = {"bar_widths": [[k1, max(round(w / max_val * barchar_width), 1)] for k1, w in bar_widths]}
         ext_bars[k]["bar_widths"][-1][1] = barchar_width - sum([v[1] for v in ext_bars[k]["bar_widths"][:-1]])
-        ext_bars[k]["norm_width"] = norm_width
-        ext_bars[k]["norm_padding"] = norm_padding
 
-        if ext_v > norms_group_df.loc['4', k]:
-            ext_bars[k]["emoji_src"] = "images/smilies/verysad.png"
-        elif ext_v > norms_group_df.loc['3', k]:
-            ext_bars[k]["emoji_src"] = "images/smilies/sad.png"
-        elif ext_v > norms_group_df.loc['2', k]:
-            ext_bars[k]["emoji_src"] = "images/smilies/neutral.png"
-        elif ext_v > norms_group_df.loc['1', k]:
-            ext_bars[k]["emoji_src"] = "images/smilies/happy.png"
-        else:
-            ext_bars[k]["emoji_src"] = "images/smilies/veryhappy.png"
+        if show_norms:
+            norm_width = max(round(social_norm / max_val * barchar_width), 1)
+            norm_padding = barchar_width - norm_width
+
+            ext_bars[k]["norm_width"] = norm_width
+            ext_bars[k]["norm_padding"] = norm_padding
+
+            if ext_v > norms_group_df.loc['4', k]:
+                ext_bars[k]["emoji_src"] = "images/smilies/verysad.png"
+            elif ext_v > norms_group_df.loc['3', k]:
+                ext_bars[k]["emoji_src"] = "images/smilies/sad.png"
+            elif ext_v > norms_group_df.loc['2', k]:
+                ext_bars[k]["emoji_src"] = "images/smilies/neutral.png"
+            elif ext_v > norms_group_df.loc['1', k]:
+                ext_bars[k]["emoji_src"] = "images/smilies/happy.png"
+            else:
+                ext_bars[k]["emoji_src"] = "images/smilies/veryhappy.png"
 
         print(ext_bars[k])
 
@@ -270,7 +275,8 @@ def build_email( report_details, language, connection):
 
     mode_bar_chart = build_mode_bar_chart(mode_values, norms_person, locale)
 
-    externality_bar_chart = build_externality_barchart(mode_values, norms_person, norms_group, locale)
+    show_norms = person_details['treatment'] == 'Nudging'
+    externality_bar_chart = build_externality_barchart(mode_values, norms_person, norms_group, show_norms, locale)
 
     # ext_summary = mode_values.sum()
 
