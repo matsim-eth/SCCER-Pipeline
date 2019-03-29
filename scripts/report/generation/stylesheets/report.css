@@ -80,11 +80,19 @@ th.row_labels {
 
 }
 
-table.double-bar-chart td {
+table.Nudging-bar-chart td {
 
     text-align: center;
     line-height: 13px;
     height: 13px;
+
+}
+
+table.Control-bar-chart td {
+
+    text-align: center;
+    line-height: 33px;
+    height: 33px;
 
 }
 
