@@ -97,8 +97,8 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     left_total_value = max(min_health, 0.1* max_total)
 
     total_table_width_pc = 70
-    left_width_pc = round(left_total_value/(left_total_value + max_total)*total_table_width_pc)
-    right_width_pc = total_table_width_pc - left_width_pc
+    left_width_pc = 100
+    right_width_pc = 80
 
     for mode in mode_names:
 #########distance
@@ -140,23 +140,27 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
             left_padding = left_total_value + modes_df.loc[mode, 'health']
             left_padding_pc = left_width_pc - health_pc
             health_class += " right_border"
+
+            bars_left = [(left_padding_class, left_padding_pc), (health_class, health_pc)]
+            bars_right = []
         else:
             left_padding_pc = left_width_pc
             health_pc = math.ceil(abs(modes_df.loc[mode, 'health']) / max_total * right_width_pc)
             left_padding_class += " right_border"
             right_padding_pc -= health_pc
 
-
-        bars = [(left_padding_class, left_padding_pc),
-                (health_class, health_pc),
-                ("co2", co2_pc),
-                ("congestion", congestion_pc),
-                ("clear", right_padding_pc)]
-
-        bars = [(c, v) for c,v in bars if v > 0 or 'left_padding' in c] # remove bars with zero width
+            bars_left = [(left_padding_class, left_padding_pc)]
+            bars_right = [(health_class, health_pc)]
 
 
-        mode_bar_chart[mode]['externalitiy_bars'] = bars
+        bars_right += [("co2", co2_pc), ("congestion", congestion_pc), ("clear", right_padding_pc)]
+
+
+        bars_right = [(c, v) for c,v in bars_right if v > 0] # remove bars with zero width
+
+
+        mode_bar_chart[mode]['externalitiy_bars_right'] = bars_right
+        mode_bar_chart[mode]['externalitiy_bars_left'] = bars_left
 
         mode_bar_chart[mode]['total_external_cost_str'] = \
             format_currency(right_total_value + modes_df.loc[mode, 'health'], "CHF", u'¤ #,##0.00; ¤ -#,##0.00', locale=locale)
@@ -299,6 +303,10 @@ def build_email( report_details, language, connection):
                                  output_encoding='utf-8')
     except:
         print(exceptions.text_error_template().render())
+
+    import logging
+    import cssutils
+    cssutils.log.setLevel(logging.ERROR)
 
     # , disable_basic_attributes=["width", "height", "valign", "align"]
     inlined_html = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/",
