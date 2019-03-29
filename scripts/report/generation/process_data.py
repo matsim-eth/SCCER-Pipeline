@@ -284,7 +284,7 @@ def build_email( report_details, language, connection):
 
     template_lookup = TemplateLookup(directories=['generation/templates'], strict_undefined=True)
 
-    mytemplate = template_lookup.get_template("control.html")
+    mytemplate = template_lookup.get_template("treatment_template.html")
 
     from mako import exceptions
 
