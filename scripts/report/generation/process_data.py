@@ -1,5 +1,7 @@
 import pprint
 import random
+from email.mime.multipart import MIMEMultipart
+from email.mime.text import MIMEText
 from types import SimpleNamespace
 import math
 
@@ -91,13 +93,13 @@ def build_mode_bar_chart(modes_df, norms_df, locale):
     total_dist = modes_df['distance'].sum()
     mode_bar_chart = {}
 
-    max_total = np.ceil(modes_df['total']).max()+1
+    max_total = np.ceil(modes_df['total']).max()
     min_health = abs(modes_df['health'].min())
 
     left_total_value = max(min_health, 0.1* max_total)
 
     total_table_width_pc = 70
-    left_width_pc = 100
+    left_width_pc = 50
     right_width_pc = 80
 
     for mode in mode_names:
@@ -326,3 +328,80 @@ def build_email( report_details, language, connection):
         click_tracking=True, open_tracking=True, configuration=configuration)
 
     return new_html_email_text
+
+
+def generate_welcome_email(person_id, language, connection):
+
+    locale = Locale(language)
+    import gettext
+    lang_de = gettext.translation('generation', localedir="generation/locale", languages=[language])
+    lang_de.install()
+
+    person_details = \
+    pd.read_sql_query("SELECT * FROM participants where person_id = '{}'".format(person_id), connection).to_dict(
+        'records')[0]
+
+    template_lookup = TemplateLookup(directories=['generation/templates'], strict_undefined=True)
+
+    mytemplate = template_lookup.get_template("welcome.html")
+
+    from mako import exceptions
+
+    try:
+        html = mytemplate.render(title=_('report_title'),
+                                 person=person_details,
+                                 output_encoding='utf-8')
+    except:
+        print(exceptions.text_error_template().render())
+
+    import logging
+    import cssutils
+    cssutils.log.setLevel(logging.ERROR)
+
+    # , disable_basic_attributes=["width", "height", "valign", "align"]
+    inlined_html = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/",
+                                       strip_important=False).transform()
+
+    import pytracking
+    from pytracking.html import adapt_html
+
+    configuration = pytracking.Configuration(
+        base_open_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
+        base_click_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
+        webhook_url="https://www.ivtmobis.ethz.ch/engagement_webhook",
+        include_webhook_url=False)
+
+    new_html_email_text = adapt_html(
+        inlined_html, extra_metadata={"partipant_id": person_details['person_id'], "report_id": "welcome",
+                                      "sent_at": datetime.now().isoformat()},
+        click_tracking=True, open_tracking=True, configuration=configuration)
+
+    return new_html_email_text
+
+
+import smtplib
+
+
+def send_mail(receiver, subject, html_email_text):
+    try:
+        server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
+        server.ehlo()
+        server.login("ivtmobistest", "emailtesting")
+
+        me = "ivtmobistest@gmail.com"
+        you = receiver
+
+        # Create message container - the correct MIME type is multipart/alternative.
+        msg = MIMEMultipart('alternative')
+        msg['Subject'] = subject
+        msg['From'] = me
+        msg['To'] = you
+
+        part2 = MIMEText(html_email_text, 'html')
+
+        msg.attach(part2)
+        server.sendmail(me, you, msg.as_string())
+
+    except Exception  as e:
+        print('Something went wrong...')
+        print(e)

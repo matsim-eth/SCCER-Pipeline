@@ -19,7 +19,8 @@ from num2words import num2words
 from mako.lookup import TemplateLookup
 from premailer import premailer
 
-from generation.process_data import build_mode_bar_chart, build_externality_barchart, build_email
+from generation.process_data import build_mode_bar_chart, build_externality_barchart, build_email, \
+    generate_welcome_email, send_mail
 
 language = 'en_GB'
 
@@ -37,6 +38,12 @@ for person_id in person_ids:
         'week_start_date' : date(2016, 11, 30)
     }
 
+    welcome_email = generate_welcome_email(person_id, language, connection)
+    with open("M:/htdocs/reports/{}_welcome_email.html".format(person_id), "w", encoding="utf8") as file:
+        file.write(welcome_email)
+
+
+
     new_html_email_text = build_email(report_details, language, connection)
     with open("M:/htdocs/reports/{}_report_week1.html".format(person_id), "w", encoding="utf8") as file:
         file.write(new_html_email_text)
@@ -49,27 +56,6 @@ for person_id in person_ids:
         file.write(new_html_email_text)
 
 
+send_mail("joseph.molloy@ivt.baug.ethz.ch", "Welcome to MOBIS", welcome_email)
+send_mail("joseph.molloy@ivt.baug.ethz.ch", "MOBIS week 1 report", new_html_email_text)
 
-import smtplib
-
-try:
-    server = smtplib.SMTP_SSL('smtp.gmail.com', 465)
-    server.ehlo()
-    server.login("ivtmobistest", "emailtesting")
-
-    me = "ivtmobistest@gmail.com"
-    you = "ivtmobistest@gmail.com"
-
-    # Create message container - the correct MIME type is multipart/alternative.
-    msg = MIMEMultipart('alternative')
-    msg['Subject'] = "Link"
-    msg['From'] = me
-    msg['To'] = you
-
-    part2 = MIMEText(new_html_email_text, 'html')
-
-    msg.attach(part2)
-    server.sendmail(me, you, msg.as_string())
-
-except :
-    print ('Something went wrong...')
