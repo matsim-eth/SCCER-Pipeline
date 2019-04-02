@@ -39,25 +39,25 @@ for person_id in person_ids:
     }
 
     welcome_email = generate_welcome_email(person_id, language, connection)
-    with open("M:/htdocs/reports/{}_welcome_email.html".format(person_id), "w", encoding="utf8") as file:
+    with open("M:/htdocs/treatment/{}_welcome_email.html".format(person_id), "w", encoding="utf8") as file:
         file.write(welcome_email)
 
 
 
     new_html_email_text = build_email(report_details, language, connection)
-    with open("M:/htdocs/reports/{}_report_week1.html".format(person_id), "w", encoding="utf8") as file:
+    with open("M:/htdocs/treatment/{}_report_week1.html".format(person_id), "w", encoding="utf8") as file:
         file.write(new_html_email_text)
 
     #write to webserver
     report_details['week_number'] = 2
     report_details['week_start_date'] += timedelta(weeks=1)
     new_html_email_text = build_email(report_details, language, connection)
-    with open("M:/htdocs/reports/{}_report.html".format(person_id), "w", encoding="utf8") as file:
+    with open("M:/htdocs/treatment/{}_report.html".format(person_id), "w", encoding="utf8") as file:
         file.write(new_html_email_text)
 
 
-send_mail("joseph.molloy@ivt.baug.ethz.ch", "Welcome to MOBIS", welcome_email)
-send_mail("joseph.molloy@ivt.baug.ethz.ch", "MOBIS week 1 report", new_html_email_text)
+#send_mail("joseph.molloy@ivt.baug.ethz.ch", "Welcome to MOBIS", welcome_email)
+#send_mail("joseph.molloy@ivt.baug.ethz.ch", "MOBIS week 1 report", new_html_email_text)
 
-#send_mail("ivtmobistest@gmail.com", "Welcome to MOBIS", welcome_email)
-#send_mail("ivtmobistest@gmail.com", "MOBIS week 1 report", new_html_email_text)
+send_mail("ivtmobistest@gmail.com", "Welcome to MOBIS", welcome_email)
+send_mail("ivtmobistest@gmail.com", "MOBIS week 1 report", new_html_email_text)

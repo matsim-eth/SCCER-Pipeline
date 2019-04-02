@@ -19,6 +19,15 @@ from mako.lookup import TemplateLookup
 from num2words import num2words
 from premailer import premailer
 
+import pytracking
+from pytracking.html import adapt_html
+
+configuration = pytracking.Configuration(
+    base_open_tracking_url="https://www.ivtmobis.ethz.ch/open/",
+    base_click_tracking_url="https://www.ivtmobis.ethz.ch/click/",
+    webhook_url="https://www.ivtmobis.ethz.ch/engagement_webhook",
+    include_webhook_url=False)
+
 
 def get_date(fname):
     location = path.split(fname)[0]
@@ -314,17 +323,8 @@ def build_email( report_details, language, connection):
     inlined_html = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/",
                                        strip_important=False).transform()
 
-    import pytracking
-    from pytracking.html import adapt_html
-
-    configuration = pytracking.Configuration(
-        base_open_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
-        base_click_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
-        webhook_url="https://www.ivtmobis.ethz.ch/engagement_webhook",
-        include_webhook_url=False)
-
     new_html_email_text = adapt_html(
-        inlined_html, extra_metadata={"partipant_id": person_id, "report_id": report_details['week'], "sent_at": datetime.now().isoformat()},
+        inlined_html, extra_metadata={"partipant_id": person_id, "report_id": "report_{}".format(report_details['week']), "sent_at": datetime.now().isoformat()},
         click_tracking=True, open_tracking=True, configuration=configuration)
 
     return new_html_email_text
@@ -362,14 +362,6 @@ def generate_welcome_email(person_id, language, connection):
     inlined_html = premailer.Premailer(html, base_url="https://www.ivtmobis.ethz.ch/",
                                        strip_important=False).transform()
 
-    import pytracking
-    from pytracking.html import adapt_html
-
-    configuration = pytracking.Configuration(
-        base_open_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
-        base_click_tracking_url="https://www.ivtmobis.ethz.ch/engagement/",
-        webhook_url="https://www.ivtmobis.ethz.ch/engagement_webhook",
-        include_webhook_url=False)
 
     new_html_email_text = adapt_html(
         inlined_html, extra_metadata={"partipant_id": person_details['person_id'], "report_id": "welcome",
