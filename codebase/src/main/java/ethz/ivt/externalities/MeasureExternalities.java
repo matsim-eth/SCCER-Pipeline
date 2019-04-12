@@ -2,9 +2,7 @@ package ethz.ivt.externalities;
 
 import ethz.ivt.JITvehicleCreator;
 import ethz.ivt.externalities.counters.*;
-import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -13,8 +11,6 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.HbefaRoadTypeMapping;
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
@@ -24,11 +20,8 @@ import org.matsim.vehicles.VehicleType;
 import org.matsim.vehicles.VehicleUtils;
 
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
-import java.util.Map;
 import java.util.Random;
 
 

@@ -80,7 +80,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize, 1.0);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -185,7 +185,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize, 1.0);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -303,7 +303,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize, 1.0);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -418,7 +418,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize, 1.0);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 
@@ -517,7 +517,7 @@ public class MeasureAggregateCongestionFromEventsTest {
         eventsManager.addHandler(v2deh);
 
         CongestionHandler congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize);
+        CongestionAggregator congestionAggregator = new CongestionAggregator(scenario, v2deh, binSize, 1.0);
         eventsManager.addHandler(congestionHandler);
         eventsManager.addHandler(congestionAggregator);
 

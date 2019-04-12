@@ -7,7 +7,6 @@ import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
@@ -53,7 +52,7 @@ public class MeasureAggregateEmissionsFromScenario {
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         //add mappings to network
-        OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork());
+//        OsmHbefaMapping.build().addHbefaMappings(scenario.getNetwork());
 
         setUpVehicles(scenario);
 
@@ -66,7 +65,7 @@ public class MeasureAggregateEmissionsFromScenario {
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
         EmissionsAggregator emissionsAggregator = new EmissionsAggregator(scenario, v2deh);
         emissionModule.getEmissionEventsManager().addHandler(emissionsAggregator);
-        
+
         // read MATSim events
         MatsimEventsReader reader = new MatsimEventsReader(eventsManager);
         reader.readFile(RUN_FOLDER + EVENTS_FILE);

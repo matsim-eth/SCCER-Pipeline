@@ -1,7 +1,6 @@
 package ethz.ivt.externalities.roadTypeMatching;
 
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.network.io.MatsimNetworkReader;
 
@@ -30,7 +29,7 @@ public class printRoadTypes {
         reader.readFile(args[0]);
 
 
-        OsmHbefaMapping osmmap = OsmHbefaMapping.build();
+//        OsmHbefaMapping osmmap = OsmHbefaMapping.build();
 
         try {
             PrintWriter pw = new PrintWriter(new FileWriter(new File("links.csv")));

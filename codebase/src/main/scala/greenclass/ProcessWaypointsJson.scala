@@ -22,7 +22,8 @@ import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
-import org.matsim.contrib.emissions.utils.{EmissionUtils, EmissionsConfigGroup}
+import org.matsim.contrib.emissions.EmissionUtils
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
@@ -41,7 +42,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping
+import org.matsim.contrib.emissions.OsmHbefaMapping
 import org.matsim.core.network.NetworkUtils
 
 import scala.concurrent.duration._
@@ -87,8 +88,8 @@ object ProcessWaypointsJson {
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
-    val roadTypeMapping = OsmHbefaMapping.build()
-    roadTypeMapping.addHbefaMappings(scenario.getNetwork)
+//    val roadTypeMapping = OsmHbefaMapping.build()
+//    roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
     Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
