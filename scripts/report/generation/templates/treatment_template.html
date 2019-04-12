@@ -107,7 +107,14 @@
         div[style*="margin: 16px 0;"] {
             margin: 0 !important;
         }
+
+
     </style>
+    <!--[if mso]>
+        <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+        </style>
+    <![endif]-->
 
 
     <link rel="stylesheet" type="text/css" href="generation/stylesheets/report.css">
@@ -132,14 +139,14 @@
                 <tr>
                     <th>
 
-                        <img class="float-center" src="images/eth_logo.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="80%" height="auto" align="middle">
+                        <img class="float-center" src="images/eth_logo.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="125" align="middle">
                     </th>
                     <th>
 
-                        <img class="float-center" src="images/unibas_logo.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="80%" height="auto" align="middle">
+                        <img class="float-center" src="images/unibas_logo.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="125"  align="middle">
                     </th>
                     <th>
-                        <img class="float-center" src="images/zhaw_logo_bw.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="80%" height="auto" align="middle">
+                        <img class="float-center" src="images/zhaw_logo_bw.gif" style="-ms-interpolation-mode:bicubic; border:0; height:auto; line-height:100%; outline:none; text-decoration:none" width="125" align="middle">
 
                     </th>
                 </tr>
@@ -164,8 +171,7 @@
                     <td bgcolor="#ffffff" class="cellbox">
                         <img alt="mobis logo" src="images/mobis_logo.png">
                     </td>
-                    <td bgcolor="#ffffff" align="right" valign="top"
-                        style="padding: 40px 20px 20px 20px; border-radius: 4px 4px 0px 0px; color: #111111; font-family: Helvetica, Arial, sans-serif; font-weight: 400; letter-spacing: 4px; line-height: 48px;">
+                    <td bgcolor="#ffffff" class="cellbox" align="right" valign="top">
                         <h2 style="font-weight: 400; margin: 0;">${_('Report')} | ${report_details['report_date_str']}</h2>
                     </td>
                 </tr>
@@ -196,6 +202,8 @@
                             %else :
                                 ${_('greeting_female')}
                             %endif
+                    ${person['first_name']}
+
                     ${person['last_name']}
                         </p>
                         <p>
@@ -204,7 +212,7 @@
                         </p>
                         <p>
                             ${_("Your use of different travel modes and their external costs are displayed below.")}
-
+                        </p>
                     </td>
                 </tr>
        </table>
@@ -240,7 +248,7 @@
 
                         <table class="bar-chart" cellpadding="0" cellspacing="0" width="100%">
                             <tbody>
-                            <tr align="left" style="line-height: 1.3">
+                            <tr align="center" style="line-height: 1.3">
 ##                                 <th></th>
                                 % for mode in mode_bar_chart:
                                     <td class="td-image">
@@ -248,7 +256,7 @@
                                     </td>
                                 % endfor
                             </tr>
-                            <tr align="left" style="line-height: 1.3">
+                            <tr align="center" style="line-height: 1.3">
 
 ##                                <th>${_("Distance")}</th>
                                 % for mode in mode_bar_chart:
@@ -257,22 +265,38 @@
                                     </th>
                                 % endfor
                             </tr>
-                            <tr align="left" style="line-height: 1.3">
-##                                <th>${_("Trend")}</th>
-                                % for mode in mode_bar_chart:
-                                    <td class="td-image">
-                                        %if "my_norm_image_src" in mode_bar_chart[mode]:
-                                            <img class="mode" src="${mode_bar_chart[mode]['my_norm_image_src']}"> </img>
-                                        %endif
-                                    </td>
-                                % endfor
+                        %if report_details['week'] > 1:
+
+                                <tr align="center" style="line-height: 1.3">
+    ##                                <th>${_("Trend")}</th>
+                                    % for mode in mode_bar_chart:
+                                        <td class="td-image">
+                                            %if "my_norm_image_src" in mode_bar_chart[mode]:
+                                                <img class="mode" src="${mode_bar_chart[mode]['my_norm_image_src']}"> </img>
+                                            %endif
+                                        </td>
+                                    % endfor
+                                </tr>
+                        %endif
+                            </tbody>
+                        </table>
+                    %if report_details['week'] > 1:
+
+                        <table>
+                            <tbody>
+                            <tr><td colspan="2" style="padding-top:8px"></td> </tr>
+                            <tr>
+                                <td>
+                                   <img style="width:20px" src="images/arrows/up_right.png"> </img>
+                                </td>
+                                <td style="padding-left:8px">
+                                    <p>${_("Increase/decrease in travel distance since last week")}</p>
+                                </td>
                             </tr>
                             </tbody>
                         </table>
-                        <p>
-                        <img style="width:20px" src="images/arrows/up_right.png"> </img>
+                    %endif
 
-                        ${_("Increase/decrease in travel distance since last week")}</p>
 
                     </td>
                 </tr>
@@ -298,33 +322,65 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Externalities by transport mode")}</h2>
+                        <h2> ${_("External costs by transport mode")}</h2>
                     </td>
                 </tr>
 
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        % for mode in mode_bar_chart:
-                            <table class="bar-chart externalities" cellpadding="0" cellspacing="0" width="100%">
-                                <tbody>
+                        <table border="0" cellpadding="0" cellspacing="0" width="100%">
+                            <tbody>
+                                <tr>
+                                    <td style="width:15%; line-height:13px">
 
-                                <tr align="left" style="line-height: 1.3">
-                                    <td width="100" style="max-width:100px!important; padding:3px">
-                                        <img class="mode" src="${mode_bar_chart[mode]['mode_image_src']}"> </img>
+                                        % for mode in mode_bar_chart:
+                                            <table class="bar-chart externalities" border="0" cellpadding="0" cellspacing="0" width="100%" style="border-collapse: collapse;">
+                                                <tbody>
+
+                                                <tr align="left">
+                                                    <td style="width:50%; height:44px">
+                                                        <img class="mode" src="${mode_bar_chart[mode]['mode_image_src']}"> </img>
+                                                    </td>
+                                                    % for bar in mode_bar_chart[mode]['externalitiy_bars_left']:
+                                                           <td class="${bar[0]}" style="width:${bar[1]}%">
+                                                               &nbsp;
+                                                           </td>
+                                                    % endfor
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        % endfor
+
                                     </td>
-                                    % for bar in mode_bar_chart[mode]['externalitiy_bars']:
-                                           <td class="${bar[0]}" style="width:${bar[1]}%">
-                                               &nbsp;
-                                           </td>
-                                    % endfor
-                                    <th style="width:20%; padding-left: 5px; text-align: right">
-                                        ${mode_bar_chart[mode]['total_external_cost_str']}
-                                    </th>
+
+                                    <td  style="width:85%; line-height:13px">
+
+                                        % for mode in mode_bar_chart:
+                                            <table class="bar-chart right externalities" border="0" cellpadding="0" cellspacing="0" width="100%">
+                                                <tbody>
+
+                                                <tr align="left" style="line-height: 1.3">
+                                                    % for bar in mode_bar_chart[mode]['externalitiy_bars_right']:
+                                                           <td class="${bar[0]}" style="width:${bar[1]}%">
+                                                               &nbsp;
+                                                           </td>
+                                                    % endfor
+                                                    <th style="width:20%; padding-left: 5px; text-align: right">
+                                                        ${mode_bar_chart[mode]['total_external_cost_str']}
+                                                    </th>
+                                                </tr>
+                                                </tbody>
+                                            </table>
+                                        % endfor
+
+                                    </td>
+
                                 </tr>
-                                </tbody>
-                            </table>
-                        % endfor
+                            </tbody>
+                        </table>
+
+
                     <table cellpadding="0" cellspacing="0" width="100%">
                         <tbody>
                         <tr><td colspan="2" style="padding-top:8px"></td> </tr>
@@ -353,9 +409,6 @@
     </tr>
 
 
-           <!-- Externalities CALLOUT -->
-
-
     <tr>
         <td bgcolor="#f4f4f4" align="center" style="padding: 30px 10px 0px 10px;">
             <!--[if (gte mso 9)|(IE)]>
@@ -368,7 +421,7 @@
                 <tr>
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
-                        <h2> ${_("Externalities by type")}</h2>
+                        <h2> ${_("External costs by type")}</h2>
                     </td>
                 </tr>
 
@@ -378,7 +431,7 @@
                         <table>
                             <tbody>
                             <tr>
-                                <td width="20%">
+                                <td  style="width:100px">
                                     <table class="double-bar-chart" cellpadding="0" cellspacing="0" style="width:100%">
                                         <tbody>
                                             % for externality, bars in externality_bar_chart.items():
@@ -390,11 +443,11 @@
                                         </tbody>
                                     </table>
                                 </td>
-                                <td width="100%">
+                                <td  style="width:400px">
 
                                     % for externality, bars in externality_bar_chart.items():
 
-                                        <table class="double-bar-chart" cellpadding="0" cellspacing="0" width="100%">
+                                        <table class="${person['treatment']}-bar-chart" cellpadding="0" cellspacing="0" width="100%">
                                             <tbody>
 
                                             <tr align="left" style="line-height: 1.3">
@@ -407,15 +460,19 @@
                                             </tr>
                                             </tbody>
                                         </table>
-                                        <table class="double-bar-chart" cellpadding="0" cellspacing="0" width="100%">
+
+                                        <table class="Nudging-bar-chart" cellpadding="0" cellspacing="0" width="100%">
                                             <tbody>
 
                                             <tr align="left" style="line-height: 1.3">
+            %if person['treatment'] == 'Nudging':
+
                                                 <td class="${externality} gray"
                                                     style="width:${bars['norm_width']}%"></td>
                                                 <td class="${externality} max_val clear"
                                                     style="width:${bars['norm_padding']}%"></td>
 
+            %endif
                                                 <th style="width:25%; text-align: right ">
                                                 </th>
                                             </tr>
@@ -425,26 +482,34 @@
 
                                             </tbody>
                                         </table>
+
                                     % endfor
 
                                 </td>
 
-                                <td width="20%">
+                                <td style="width:30px">
+
+            %if person['treatment'] == 'Nudging':
+
                                     <table cellpadding="0" cellspacing="0" style="width:100%">
                                         <tbody>
                                             % for externality, bars in externality_bar_chart.items():
                                                 <tr>
-                                                    <th class="row_labels"><img align="center" width="30px" src=${bars['emoji_src']}></th>
+                                                    <th class="row_labels"><img align="center" width="30" src=${bars['emoji_src']}></th>
                                                 </tr>
                                             % endfor
 
                                         </tbody>
                                     </table>
+
+            %endif
                                 </td>
 
                             </tr>
                             </tbody>
                         </table>
+
+            %if person['treatment'] == 'Nudging':
 
                         <table cellpadding="0" cellspacing="0" style="width:100%">
                             <tbody>
@@ -463,17 +528,25 @@
                                 <td style="width:22%; border-right: lightgrey solid 10px">&nbsp;</td>
                                 <td class="legend">${_("Average of other participants")}</td>
                             </tr>
+
+
                             <tr>
                                 <td colspan="2" style="padding-top:8px"></td>
                             </tr>
                             <tr align="left">
                                 <td style="text-align: right">
-                                    <img align="center" width="13px" src="images/smilies/happy.png">
+
+                                    <img align="center" width="13" src="images/smilies/happy.png">
+                                    <img align="center" width="13" src="images/smilies/sad.png">
                                 </td>
                                 <td class="legend" style="padding-left: 10px">${_("Your performance relative to other participants")}</td>
                             </tr>
+
                             </tbody>
                         </table>
+
+                  %endif
+
 
                     </td>
                 </tr>
@@ -485,7 +558,6 @@
             <![endif]-->
         </td>
     </tr>
-
 
 
 %if report_details['week'] == 1:
@@ -503,16 +575,40 @@
                     <td class="cellbox" bgcolor="#ffffff" align="left">
 
                         <h2> ${_("What are external costs?")}</h2>
-                         <p> Each of us, when we travel, has an impact on our fellow citizens and the environment.
-                         These are called externalities, and include environmental, health and Congestion costs. </p>
 
-                        %if person['group'] != 'control':
+                        <p>Each of us, when we travel, generates costs.
+                        Some of these costs are paid for by ourselves and are therefore called
+                        “internal”. Examples include maintaining a car, purchasing fuel,
+                        paying for a train ticket and the value of our own time spent traveling.
+                        </p>
+                        <p>
+                        However, we also impose costs on others in the form of changes to the
+                        environment, public health and congestion (a time loss to other drivers).
+                        These costs are called “external” because they are not borne by ourselves
+                        but by society as a whole.
+                        </p>
 
+                        %if person['treatment'] != 'Nudging':
                             <p>
-                            The above diagrams also indicate how your travelling compares to both your
-                            previous travels during the study and that of other particpants.
+                                The figures above illustrate the external costs associated with
+                                your travel behavior last week.
+                            </p>
+
+                        %elif person['treatment'] == 'Nudging':
+                            <p>
+                                The figures above illustrate the external costs that you
+                                imposed on others last week. They also show how these
+                                relate to your previous average (lines),
+                                and the average of other study participants (bars).
+
                             </p>
                         %endif
+
+                        <p>
+                            To learn more about the methodology we used to
+                            compute the external costs, please see
+                            <a href="#">link to methodology</a>.
+                        </p>
 
                     </td>
                 </tr>
@@ -525,6 +621,8 @@
         </td>
     </tr>
 %endif
+           <!-- Externalities CALLOUT -->
+
 
 
     <!-- SUPPORT CALLOUT -->
