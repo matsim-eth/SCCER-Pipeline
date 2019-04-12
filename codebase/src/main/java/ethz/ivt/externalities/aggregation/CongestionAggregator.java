@@ -31,6 +31,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
     private final Scenario scenario;
     private final Vehicle2DriverEventHandler drivers;
     private double binSize;
+    private double congestionThresholdRatio;
     private Map<Id<Person>, AgentOnLinkInfo> person2linkinfo = new HashMap<>();
     private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
     private AggregateDataPerTimeImpl<Person> aggregateCongestionDataPerPersonPerTime;

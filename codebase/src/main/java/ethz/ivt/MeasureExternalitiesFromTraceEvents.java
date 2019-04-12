@@ -7,6 +7,7 @@ import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
@@ -18,6 +19,8 @@ import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
+import org.matsim.vehicles.VehicleType;
+import org.matsim.vehicles.VehicleUtils;
 
 import java.io.IOException;
 import java.nio.file.Path;

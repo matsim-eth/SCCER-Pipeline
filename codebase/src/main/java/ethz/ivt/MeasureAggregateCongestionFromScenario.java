@@ -31,11 +31,11 @@ public class MeasureAggregateCongestionFromScenario {
         String eventFile = args[1];
         String outputDirectory = args[2];
         double binSize = Double.parseDouble(args[3]); // aggregation time bin size in seconds
-//        double congestionThresholdRatio = Double.parseDouble(args[4]); // ratio of freeflow speed under which it is considered congestion
-        double congestionThresholdRatio = 0.65;
+        double congestionThresholdRatio = Double.parseDouble(args[4]); // ratio of freeflow speed under which it is considered congestion
+//        double congestionThresholdRatio = 0.65
 
         // load config file
-        Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
+        Config config = ConfigUtils.loadConfig(configPath);
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // process MATSim events and write congestion data to file
