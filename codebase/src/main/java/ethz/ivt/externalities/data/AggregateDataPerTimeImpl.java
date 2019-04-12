@@ -55,7 +55,6 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             log.warn("Attribute " + attribute + " is not valid. Returning 0.");
             return 0.0;
         }
-        log.warn("Id " + id + " is not valid. No value set.");
         return 0.0;
     }
 
@@ -78,7 +77,6 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             log.warn("Attribute " + attribute + " is not valid. No value set.");
             return;
         }
-        log.warn("Id " + id + " is not valid. No value set.");
         return;
     }
 
@@ -169,12 +167,8 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     @Override
     public void writeDataToCsv(String outputPath) {
 
-        File dir = new File(outputPath);
-        dir.mkdirs();
-
-        String fileName = outputPath;
-
-        File file = new File(fileName);
+        (new File(new File(outputPath).getParent())).mkdirs();
+        File file = new File(outputPath);
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -202,7 +196,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             }
 
             bw.close();
-            log.info("Output written to " + fileName);
+            log.info("Output written to " + file.getAbsolutePath());
 
         } catch (IOException e) {
             e.printStackTrace();
