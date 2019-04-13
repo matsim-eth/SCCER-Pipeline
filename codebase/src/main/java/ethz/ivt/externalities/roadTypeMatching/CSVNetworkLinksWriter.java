@@ -38,7 +38,7 @@ public class CSVNetworkLinksWriter {
 
     private String formatHeader() {
         return String.join(";", new String[] {
-                "linkId", "CH_BEZ_D"
+                "LinkId", "Length (m)", "Urbanity-level"
         });
     }
 
@@ -46,6 +46,7 @@ public class CSVNetworkLinksWriter {
         String urbanity =  "Ungebaut".equalsIgnoreCase((String) link.getAttributes().getAttribute("CH_BEZ_D")) ? "rural" : "urban";
         return String.join(";", new String[] {
                 link.getId().toString(),
+                Double.toString(link.getLength()),
                 urbanity
         });
     }
