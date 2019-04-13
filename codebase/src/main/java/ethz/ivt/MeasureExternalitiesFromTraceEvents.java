@@ -72,7 +72,8 @@ public class MeasureExternalitiesFromTraceEvents {
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, LocalDateTime.now(), null);
-        runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
+        runner.write(Paths.get(outputPath, "2018_10pct", "Switzerland"));
+//        runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
     }
 
     public MeasureExternalitiesFromTraceEvents(
@@ -100,7 +101,7 @@ public class MeasureExternalitiesFromTraceEvents {
 //        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
 //        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
+//        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
