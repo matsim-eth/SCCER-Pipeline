@@ -13,9 +13,13 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.emissions.EmissionModule;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
+import org.matsim.core.controler.AbstractModule;
+import org.matsim.core.controler.Injector;
 import org.matsim.core.events.EventsManagerImpl;
+import org.matsim.core.events.EventsUtils;
 import org.matsim.core.events.MatsimEventsReader;
 import org.matsim.core.network.NetworkUtils;
 import org.matsim.core.scenario.ScenarioUtils;
@@ -72,8 +76,7 @@ public class MeasureExternalitiesFromTraceEvents {
 
         MeasureExternalitiesFromTraceEvents runner = new MeasureExternalitiesFromTraceEvents(scenario, aggregateCongestionDataPerLinkPerTime, costValuesPath);
         runner.process(eventPath, LocalDateTime.now(), null);
-        runner.write(Paths.get(outputPath, "2018_10pct", "Switzerland"));
-//        runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
+        runner.write(Paths.get(outputPath, "xxxx", "Switzerland"));
     }
 
     public MeasureExternalitiesFromTraceEvents(
@@ -95,13 +98,20 @@ public class MeasureExternalitiesFromTraceEvents {
 
         // setup externality counters
         log.info("load emissions module");
-        EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
+        EventsManager eventsManager = EventsUtils.createEventsManager();
 
-//        //add Hbefa mappings to the network
-//        HbefaRoadTypeMapping hbefaRoadTypeMapping = OsmHbefaMapping.build();
-//        hbefaRoadTypeMapping.addHbefaMappings(scenario.getNetwork());
+        AbstractModule module = new AbstractModule(){
+            @Override
+            public void install(){
+                bind( Scenario.class ).toInstance( scenario );
+                bind( EventsManager.class ).toInstance( eventsManager );
+                bind( EmissionModule.class ) ;
+            }
+        };;
 
-//        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
+        com.google.inject.Injector injector = Injector.createInjector(scenario.getConfig(), module );
+
+        EmissionModule emissionModule = injector.getInstance(EmissionModule.class);
 
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
