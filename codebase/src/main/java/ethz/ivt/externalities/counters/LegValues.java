@@ -1,6 +1,7 @@
 package ethz.ivt.externalities.counters;
 
 import java.time.LocalDateTime;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Stream;
@@ -63,8 +64,8 @@ public class LegValues {
         return timestamp;
     }
 
-    public Stream<String> keys() {
-        return personId2Leg2Values.keySet().stream();
+    public java.util.Set<String> keys() {
+        return personId2Leg2Values.keySet();
     }
 
     public Long getTriplegId() {

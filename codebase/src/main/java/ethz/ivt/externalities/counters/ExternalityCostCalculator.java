@@ -59,7 +59,7 @@ public class ExternalityCostCalculator {
     }
 
     private Set<String> getAllKeys(Map<Id<Person>, List<LegValues>> emissions) {
-        return emissions.values().stream().flatMap(x->x.stream().flatMap(LegValues::keys)).collect(Collectors.toSet());
+        return emissions.values().stream().flatMap(x->x.stream().flatMap(x1->x1.keys().stream())).collect(Collectors.toSet());
     }
 
     private Map<String,Double> calculateCostsForLeg(LegValues emissions) {

@@ -58,7 +58,7 @@ public class AddTypesToNetwork {
     Map<String, HBFEA> hbfeaMap = new HashMap<>();
     private SpatialIndex index;
     private static int  MAX_SEARCH_DISTANCE = 5000;
-    private static String WORKING_FOLDER = "P:\\Projekte\\SCCER\\switzerland_10pct\\";
+    private static String WORKING_FOLDER = "C:\\Projects\\SCCER_project\\data\\new_swiss\\";
     private Map<Id<Link>, String> linkMatches = new HashMap<>();
 
     /**
@@ -90,7 +90,7 @@ public class AddTypesToNetwork {
         Config config_old = ConfigUtils.createConfig();
         Scenario sc_old = ScenarioUtils.createScenario(config_old);
         MatsimNetworkReader reader = new MatsimNetworkReader(sc_old.getNetwork());
-        reader.readFile(WORKING_FOLDER + "switzerland_network.xml.gz");
+        reader.readFile(WORKING_FOLDER + "switzerland_network_types_landuse.xml");
 
         //load shapefile of OSM network with types
         File osmShapefile = new File("C:\\Users\\molloyj\\Documents\\SCCER\\zurich_1pc\\network_editing\\version2\\new_net_shp_plus\\network_lines.shp");
@@ -102,7 +102,7 @@ public class AddTypesToNetwork {
         Path path = Paths.get(WORKING_FOLDER + "distinct_link_types.txt");
         Files.write(path, osmReference.buildHBEFAlinkTypes(link_types), StandardCharsets.UTF_8);
 
-        new NetworkWriter(sc_old.getNetwork()).writeFileV2(WORKING_FOLDER + "network_switzerland_w_types.xml");
+        new NetworkWriter(sc_old.getNetwork()).writeFileV2(WORKING_FOLDER + "switzerland_network_types2.xml");
 
 
     }

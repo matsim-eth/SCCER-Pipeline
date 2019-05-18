@@ -21,6 +21,9 @@ object ExternalitiesWriterActor {
 
   def buildPostgres(config: HikariConfig): Props
       = Props(new PostgresExtWriter(config))
+
+  def buildMobis(config: HikariConfig): Props
+    = Props(new MobisExtWriter(config))
 }
 
 final case class Externalities(tr : TripRecord, externalitiesCounter : ExternalityCounter)
@@ -70,7 +73,7 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 
             leg_pst.setString(1, pid.toString)
 
-            legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) => {
+            legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) =>
               leg_pst.setTimestamp(2, java.sql.Timestamp.valueOf(leg.getTimestamp))
               leg_pst.setString(3, leg.getMode)
               leg_pst.setDouble(4, leg.getDistance)
@@ -82,17 +85,61 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
               if (!generatedKeys.next()) throw new SQLException("Creating leg failed, no ID obtained.")
               val leg_id = generatedKeys.getInt(1)
 
-              leg.keys().forEach(k => {
+              leg.keys().asScala.foreach{ k =>
+                val v = leg.get(k)
+                externalities_pst.setInt(1, leg_id)
+                externalities_pst.setString(2, k)
+                externalities_pst.setDouble(3, v)
+                externalities_pst.addBatch()
+              }
+            }
+            (pid, externalities_pst.executeBatch())
+          }
+          }.toMap
+          log.info (s"${res.values.map(_.length).sum} added to DB")
+
+
+          res
+        }
+        finally {
+          con.close()
+        }
+      }
+      future pipeTo sender()
+    }
+  }
+}
+
+
+class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
+  val ds = new HikariDataSource(config)
+  val externalities_insert_sql = s"INSERT INTO validation_externalities (leg_id, key, value) values (?, ?, ?);"
+
+  def receive : Receive = {
+    case Externalities(tr, ec) => {
+      log.info(s"writing ${tr.legs.size} legs to mobis db for ${tr.user_id}")
+      val future = Future {
+        val con = ds.getConnection()
+        try {
+          val externalities_pst = con.prepareStatement(externalities_insert_sql)
+
+          val res = ec.getPersonId2Leg().asScala.map { case (pid, legValues) =>
+            val insert_date = LocalDateTime.now()
+
+            legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) =>
+              val leg_id = leg.getTriplegId.toInt
+              leg.keys().asScala.foreach{ k =>
                 val v = leg.get(k)
                 externalities_pst.setInt(1, leg_id)
                 externalities_pst.setString(2, k)
                 externalities_pst.setDouble(3, v)
                 externalities_pst.addBatch()
 
-              })
-            }}
+              }
+            }
             (pid, externalities_pst.executeBatch())
-          }
           }.toMap
           log.info (s"${res.values.map(_.length).sum} added to DB")
 

@@ -29,16 +29,20 @@ package object data {
     def getStartedSeconds: Double = started_at.toLocalTime.toSecondOfDay
     def getFinishedSeconds: Double = finished_at.toLocalTime.toSecondOfDay
 
+    override def toString() = "%d,%s,%s".format(leg_id, started_at, finished_at)
+
+
   }
 
   case class TripRecord(user_id: String, trip_id: Int, date: LocalDate, legs: List[TripLeg]) {
     def getIdentifier = date.toString + " - " + user_id
+    override def toString() = "%d,%s,%s".format(trip_id, date)
 
   }
 
   case class WaypointRecord(lon: Double, lat: Double, time: Long, accuracy : Long) {
 
-    override def toString() = "%f,%f,%d,%d,%d\n".format(lon, lat, time, accuracy)
+    override def toString() = "%f,%f,%d,%d\n".format(lon, lat, time, accuracy)
 
     def toGPX = new GPXEntry(lat, lon, time)
 
