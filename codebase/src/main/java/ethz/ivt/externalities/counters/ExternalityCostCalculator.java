@@ -65,7 +65,7 @@ public class ExternalityCostCalculator {
     private Map<String,Double> calculateCostsForLeg(LegValues emissions) {
         Map<String, Double> costs = new HashMap<>();
 
-        if ("Car".equals(emissions.getMode()) && emissions.get("MappedDistance") == 0.0) {
+        if ("Car".equalsIgnoreCase(emissions.getMode()) && emissions.get("MappedDistance") == 0.0) {
             emissions.setDistance(emissions.get("MappedDistance"));
         }
         addPTEmissions(emissions);
@@ -107,17 +107,18 @@ public class ExternalityCostCalculator {
             costs.put("NOx_costs", NOX_regional);
         }
         //Zinc
-        if ("Car".equals(emissions.getMode())) {
+        if ("Car".equalsIgnoreCase(emissions.getMode())) {
             double zinc_regional = (emissions.get("MappedDistance")) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
             costs.put("Zinc_costs", zinc_regional);
 
             double noise_costs = (emissions.get("MappedDistance")) / 1000 * rv.get("noise.average.cost.adj");
             costs.put("Noise_costs", noise_costs);
         }
-        else if ("Walk".equals(emissions.getMode())) {
+        else if ("walk".equalsIgnoreCase(emissions.getMode())) {
             costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("walking.health.cost"));
         }
-        else if ("Bicycle".equals(emissions.getMode())) {
+        else if ("Bicycle".equalsIgnoreCase(emissions.getMode()) ||
+                "bike".equalsIgnoreCase(emissions.getMode())) {
             costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("cycling.health.cost"));
 
         }
@@ -129,9 +130,11 @@ public class ExternalityCostCalculator {
     private void addPTEmissions(LegValues emissions) {
         String mode = null;
 
-        if ("Train".equals(emissions.getMode())) {
+        if ("Train".equalsIgnoreCase(emissions.getMode())) {
             mode = "sbb.regional_train.";
-        } else if (TransportMode.pt.equals(emissions.getMode())) {
+        } else if (TransportMode.pt.equalsIgnoreCase(emissions.getMode()) ||
+                "bus".equalsIgnoreCase(emissions.getMode()) ||
+                "tram".equalsIgnoreCase(emissions.getMode())) {
             mode = "sbb.bus.";
         }
 

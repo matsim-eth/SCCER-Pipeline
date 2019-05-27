@@ -12,7 +12,7 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import ethz.ivt.externalities.MeasureExternalities
+import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
@@ -41,6 +41,7 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
+import com.esotericsoftware.kryo.io.Input
 import com.vividsolutions.jts.geom.{Geometry, GeometryFactory, LineString}
 import com.vividsolutions.jts.operation.linemerge.LineMerger
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
@@ -89,13 +90,18 @@ object ProcessWaypointsJson {
 
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
+    HelperFunctions.createVehicleTypes(scenario: Scenario)
+    HelperFunctions.loadVehiclesFromDatabase(scenario, dbProps)
+
     val roadTypeMapping = OsmHbefaMapping.build()
     roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
-    Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
+  //  Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
     val processWaypointsJson = new ProcessWaypointsJson(scenario)
+
     val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
 

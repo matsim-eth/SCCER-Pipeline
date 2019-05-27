@@ -1,7 +1,12 @@
 package ethz.ivt.graphhopperMM;
 
 import com.graphhopper.matching.GPXExtension;
+import com.graphhopper.routing.profiles.BooleanEncodedValue;
+import com.graphhopper.routing.profiles.DecimalEncodedValue;
+import com.graphhopper.routing.profiles.EnumEncodedValue;
+import com.graphhopper.routing.profiles.IntEncodedValue;
 import com.graphhopper.routing.util.FlagEncoder;
+import com.graphhopper.storage.IntsRef;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.PointList;
 import org.matsim.api.core.v01.Id;
@@ -27,6 +32,16 @@ class MockEdgeIterator implements EdgeIteratorState {
 
     @Override
     public int getEdge() {
+        return 0;
+    }
+
+    @Override
+    public int getOrigEdgeFirst() {
+        return 0;
+    }
+
+    @Override
+    public int getOrigEdgeLast() {
         return 0;
     }
 
@@ -61,12 +76,12 @@ class MockEdgeIterator implements EdgeIteratorState {
     }
 
     @Override
-    public long getFlags() {
-        return 0;
+    public IntsRef getFlags() {
+        return null;
     }
 
     @Override
-    public EdgeIteratorState setFlags(long flags) {
+    public EdgeIteratorState setFlags(IntsRef edgeFlags) {
         return null;
     }
 
@@ -81,18 +96,83 @@ class MockEdgeIterator implements EdgeIteratorState {
     }
 
     @Override
-    public boolean isForward(FlagEncoder encoder) {
+    public boolean get(BooleanEncodedValue property) {
         return false;
     }
 
     @Override
-    public boolean isBackward(FlagEncoder encoder) {
+    public EdgeIteratorState set(BooleanEncodedValue property, boolean value) {
+        return null;
+    }
+
+    @Override
+    public boolean getReverse(BooleanEncodedValue property) {
         return false;
     }
 
     @Override
-    public boolean getBool(int key, boolean _default) {
-        return false;
+    public EdgeIteratorState setReverse(BooleanEncodedValue property, boolean value) {
+        return null;
+    }
+
+    @Override
+    public int get(IntEncodedValue property) {
+        return 0;
+    }
+
+    @Override
+    public EdgeIteratorState set(IntEncodedValue property, int value) {
+        return null;
+    }
+
+    @Override
+    public int getReverse(IntEncodedValue property) {
+        return 0;
+    }
+
+    @Override
+    public EdgeIteratorState setReverse(IntEncodedValue property, int value) {
+        return null;
+    }
+
+    @Override
+    public double get(DecimalEncodedValue property) {
+        return 0;
+    }
+
+    @Override
+    public EdgeIteratorState set(DecimalEncodedValue property, double value) {
+        return null;
+    }
+
+    @Override
+    public double getReverse(DecimalEncodedValue property) {
+        return 0;
+    }
+
+    @Override
+    public EdgeIteratorState setReverse(DecimalEncodedValue property, double value) {
+        return null;
+    }
+
+    @Override
+    public <T extends Enum> T get(EnumEncodedValue<T> property) {
+        return null;
+    }
+
+    @Override
+    public <T extends Enum> EdgeIteratorState set(EnumEncodedValue<T> property, T value) {
+        return null;
+    }
+
+    @Override
+    public <T extends Enum> T getReverse(EnumEncodedValue<T> property) {
+        return null;
+    }
+
+    @Override
+    public <T extends Enum> EdgeIteratorState setReverse(EnumEncodedValue<T> property, T value) {
+        return null;
     }
 
     @Override
@@ -111,8 +191,9 @@ class MockEdgeIterator implements EdgeIteratorState {
     }
 
     @Override
-    public EdgeIteratorState copyPropertiesTo(EdgeIteratorState e) {
+    public EdgeIteratorState copyPropertiesFrom(EdgeIteratorState e) {
         return null;
     }
+
 }
 

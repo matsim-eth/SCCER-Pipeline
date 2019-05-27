@@ -4,11 +4,10 @@ package ethz.ivt.graphhopperMM;
 import com.graphhopper.reader.DataReader;
 import com.graphhopper.reader.ReaderWay;
 import com.graphhopper.reader.dem.ElevationProvider;
+import com.graphhopper.routing.util.CarFlagEncoder;
 import com.graphhopper.routing.util.EncodingManager;
-import com.graphhopper.storage.Graph;
-import com.graphhopper.storage.GraphHopperStorage;
-import com.graphhopper.storage.GraphStorage;
-import com.graphhopper.storage.NodeAccess;
+import com.graphhopper.routing.util.FlagEncoder;
+import com.graphhopper.storage.*;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.shapes.GHPoint;
 import org.matsim.api.core.v01.Coord;
@@ -137,20 +136,13 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 */
         // TODO we're not using the relation flags
         long relationFlags = 0;
-        long includeWay = 1;
+        EncodingManager.AcceptWay map = new EncodingManager.AcceptWay();
 
-        long wayFlags = encodingManager.handleWayTags(way, includeWay, relationFlags);
-        //      log.info("default speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
-
-        //set link speed to matsim speed, as we don't want to use the OSM defaults
-        wayFlags = encodingManager.getEncoder("car").setSpeed(wayFlags, road.getFreespeed());
-
-        //      log.info("matsim speed" + encodingManager.fetchEdgeEncoders().get(0).getSpeed(wayFlags));
-        if (wayFlags == 0)
-            return;
+        CarFlagEncoder  encoder =  (CarFlagEncoder) encodingManager.getEncoder("car");
+        IntsRef flags = encoder.handleWayTags(encodingManager.createEdgeFlags(), way, encoder.getAccess(way), 0);
 
         edge.setDistance(distance);
-        edge.setFlags(wayFlags);
+        edge.setFlags(flags);
         //    edge.setWayGeometry(pillarNodes);
 
         if (edgeAddedListeners.size() > 0) {
@@ -200,6 +192,11 @@ public class MATSimNetwork2graphhopper implements DataReader  {
 
     @Override
     public DataReader setWayPointMaxDistance(double wayPointMaxDistance) {
+        return this;
+    }
+
+    @Override
+    public DataReader setSmoothElevation(boolean smoothElevation) {
         return this;
     }
 

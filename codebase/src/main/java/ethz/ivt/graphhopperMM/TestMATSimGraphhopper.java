@@ -81,7 +81,7 @@ public class TestMATSimGraphhopper {
                 .setGraphHopperLocation(new File("").getAbsolutePath())
                 .setDataReaderFile(config.network().getInputFile());
         CarFlagEncoder encoder = new CarFlagEncoder();
-        hopper.setEncodingManager(new EncodingManager(encoder));
+        hopper.setEncodingManager(EncodingManager.create(encoder));
         hopper.getCHFactoryDecorator().setEnabled(false);
         hopper.importOrLoad();
 

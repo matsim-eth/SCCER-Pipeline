@@ -42,10 +42,10 @@ class ExternalitiesActor(measureExternalities: MeasureExternalities, writerActor
       //calculate externalities here
       val events : java.util.List[Event] = legs.unzip3._2.flatten.asJava
       val externalities = measureExternalities.process(events, tr.date.atStartOfDay())
-      writerActor ? Externalities(tr, externalities) onComplete {
-        case Failure(e: SQLException) => log.error(e, "Error writing externalities")
-        case _  => log.info("Externalities written successfully")
-      }
+      //writerActor ? Externalities(tr, externalities) onComplete {
+      //  case Failure(e: SQLException) => log.error(e, "Error writing externalities")
+      //  case _  => log.info("Externalities written successfully")
+      //}
 
     }
     case Terminated(writerActor) => context.system.terminate()

@@ -70,7 +70,7 @@ public class MapMatching {
 
     private final Graph graph;
     private final Graph routingGraph;
-    private final LocationIndexMatch locationIndex;
+    private final LocationIndexTree locationIndex;
     private double measurementErrorSigma = 100;
     private int maxDistBetweenPoints = Integer.MAX_VALUE;
     private double transitionProbabilityBeta = 2.0;
@@ -89,8 +89,8 @@ public class MapMatching {
                 Parameters.Routing.HEADING_PENALTY, Parameters.Routing.DEFAULT_HEADING_PENALTY);
         uTurnDistancePenalty = headingTimePenalty * PENALTY_CONVERSION_VELOCITY;
 
-        this.locationIndex = new LocationIndexMatch(hopper.getGraphHopperStorage(),
-                (LocationIndexTree) hopper.getLocationIndex());
+        this.locationIndex = (LocationIndexTree) hopper.getLocationIndex();
+
 
         // create hints from algoOptions, so we can create the algorithm factory        
         HintsMap hints = new HintsMap();
@@ -118,11 +118,6 @@ public class MapMatching {
             hints.setVehicle(vehicle);
         }
 
-        if (!hopper.getEncodingManager().supports(vehicle)) {
-            throw new IllegalArgumentException("Vehicle " + vehicle + " unsupported. "
-                    + "Supported are: " + hopper.getEncodingManager());
-        }
-
         algoFactory = hopper.getAlgorithmFactory(hints);
 
         Weighting weighting;
@@ -147,7 +142,7 @@ public class MapMatching {
         this.graph = hopper.getGraphHopperStorage();
         this.algoOptions = AlgorithmOptions.start(algoOptions).weighting(weighting).build();
         this.nodeCount = routingGraph.getNodes();
-        this.defaultEdgeFilter = new DefaultEdgeFilter(algoOptions.getWeighting().getFlagEncoder());
+        this.defaultEdgeFilter = DefaultEdgeFilter.allEdges(weighting.getFlagEncoder());
     }
 
     public void setDistanceCalc(DistanceCalc distanceCalc) {
@@ -192,7 +187,7 @@ public class MapMatching {
         }
 
         // now find each of the entries in the graph:
-        final EdgeFilter edgeFilter = new DefaultEdgeFilter(algoOptions.getWeighting().getFlagEncoder());
+        final EdgeFilter edgeFilter = DefaultEdgeFilter.allEdges(algoOptions.getWeighting().getFlagEncoder());
 
         List<Collection<QueryResult>> queriesPerEntry =
                 lookupGPXEntries(filteredGPXEntries, edgeFilter);
@@ -482,13 +477,13 @@ public class MapMatching {
         for (GPXExtension from : prevTimeStep.candidates) {
             for (GPXExtension to : timeStep.candidates) {
                 // enforce heading if required:
-                if (from.isDirected()) {
+                if (from.isOnDirectedEdge()) {
                     // Make sure that the path starting at the "from" candidate goes through
                     // the outgoing edge.
                     queryGraph.unfavorVirtualEdgePair(from.getQueryResult().getClosestNode(),
                             from.getIncomingVirtualEdge().getEdge());
                 }
-                if (to.isDirected()) {
+                if (to.isOnDirectedEdge()) {
                     // Make sure that the path ending at "to" candidate goes through
                     // the incoming edge.
                     queryGraph.unfavorVirtualEdgePair(to.getQueryResult().getClosestNode(),
