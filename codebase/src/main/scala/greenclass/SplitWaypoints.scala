@@ -59,7 +59,7 @@ object SplitWaypoints {
         |
         | FROM validation_legs as l
         | where leg_mode_user not in ('???', 'overseas')
-        | and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and full_days >= 7)
+        | and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
         | and id not in (select distinct (leg_id) from validation_externalities)
         |order by person_id, leg_date, leg_id;
         |
