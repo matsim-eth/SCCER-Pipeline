@@ -44,10 +44,11 @@ public class GHtoEvents {
 
         EdgeFilter ef = EdgeFilter.ALL_EDGES;
         QueryResult qr = hopper.getLocationIndex().findClosest(point.lat, point.lon, ef);
-
-        if (qr == null) return null;
-        else {
+        try {
             return Id.createLinkId(qr.getClosestEdge().getName());
+        } catch (NullPointerException ex) {
+            logger.warning("Couldn't match point " + point + "to network");
+            return null;
         }
     }
 
@@ -76,6 +77,9 @@ public class GHtoEvents {
         if (entries.size() < 2) return new ArrayList<>();
         try {
             MatchResult mr = getMatcher().doWork(entries);
+            if (mr.getEdgeMatches().isEmpty()) {
+                return Collections.EMPTY_LIST;
+            }
             List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(mr.getEdgeMatches());
             assert(timed_links.stream().allMatch(l -> l.exitTime > l.entryTime));
             return timed_links;

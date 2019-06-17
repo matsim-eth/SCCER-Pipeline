@@ -41,6 +41,7 @@ import org.slf4j.LoggerFactory;
 
 import java.util.*;
 import java.util.Map.Entry;
+import java.util.stream.Collectors;
 
 /**
  * This class matches real world GPX entries to the digital road network stored
@@ -237,16 +238,23 @@ public class MapMatchingUnlimited extends MapMatching {
         return matchResult;
     }
 
+    private int getNumQueryResults(GPXEntry gpxEntry) {
+        return locationIndex.findNClosest(gpxEntry.lat, gpxEntry.lon, EdgeFilter.ALL_EDGES, measurementErrorSigma).size();
+    }
     /**
      * Filters GPX entries to only those which will be used for map matching (i.e. those which
      * are separated by at least 2 * measurementErrorSigman
+     *
+     * and are matchable on the network
      */
     private List<GPXEntry> filterGPXEntries(List<GPXEntry> gpxList) {
+        //filter points that are not matchable to the road network
+        List<GPXEntry> locatablePoints = gpxList.stream().filter(x -> getNumQueryResults(x) > 0).collect(Collectors.toList());
         List<GPXEntry> filtered = new ArrayList<>();
         GPXEntry prevEntry = null;
-        int last = gpxList.size() - 1;
+        int last = locatablePoints.size() - 1;
         for (int i = 0; i <= last; i++) {
-            GPXEntry gpxEntry = gpxList.get(i);
+            GPXEntry gpxEntry = locatablePoints.get(i);
             if (i == 0 || i == last || distanceCalc.calcDist(
                     prevEntry.getLat(), prevEntry.getLon(),
                     gpxEntry.getLat(), gpxEntry.getLon()) > minDistanceBetweenPoints) {
@@ -397,6 +405,8 @@ public class MapMatchingUnlimited extends MapMatching {
                         timeStep.emissionLogProbabilities, timeStep.transitionLogProbabilities,
                         timeStep.roadPaths);
             }
+
+
             if (viterbi.isBroken()) {
                 String likelyReasonStr = "";
                 if (prevTimeStep != null) {

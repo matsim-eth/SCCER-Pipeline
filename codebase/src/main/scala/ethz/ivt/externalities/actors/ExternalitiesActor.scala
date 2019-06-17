@@ -49,10 +49,14 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
       import collection.JavaConverters._
       //calculate externalities here
       val events : java.util.List[Event] = legs.unzip3._2.flatten.asJava
-      val externalities = measureExternalities.process(events, tr.date.atStartOfDay())
-      writerActor ? Externalities(tr, externalities) onComplete {
-        case Failure(e: SQLException) => log.error(e, "Error writing externalities")
-        case _  => log.info("Externalities written successfully")
+      try {
+        val externalities = measureExternalities.process(events, tr.date.atStartOfDay())
+        writerActor ? Externalities(tr, externalities) onComplete {
+          case Failure(e: SQLException) => log.error(e, "Error writing externalities")
+          case _ => log.info("Externalities written successfully")
+        }
+      } catch {
+        case ex: RuntimeException => log.error(ex, ex.getMessage);
       }
 
     }

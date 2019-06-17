@@ -182,8 +182,17 @@ class ProcessWaypointsJson(scenario: Scenario) {
     tr.legs.toStream
         .filterNot(tl => "Activity".equals(tl.mode))
         .map { tl =>
-          val (events, linestring) = tripLegToEvents(tr, tl)
-          (tl.leg_id, events, linestring)
+          try {
+            val (events, linestring) = tripLegToEvents(tr, tl)
+            logger.info(s"\t\tleg ${tl.leg_id} converted to ${events.size} events")
+            (tl.leg_id, events, linestring)
+          }
+          catch {
+            case ex : Exception => {
+              logger.error(s"Error on leg ${tl.leg_id}: " + ex.getMessage, ex)
+              throw new RuntimeException(ex)
+            }
+          }
         }
         .filterNot(_._2.isEmpty) //remove empty triplegs
 
@@ -241,16 +250,20 @@ class ProcessWaypointsJson(scenario: Scenario) {
                               personId:Id[Person], mappedMode : String,
                               linkEvents : List[Event]) : Seq[Event] = {
 
+
     val departureLink : Id[Link] = linkEvents.headOption.flatMap(getEventLink)
       .getOrElse(gh.getNearestLinkId(tl.start_point.toGPX))
     val arrivalLink : Id[Link] = linkEvents.lastOption.flatMap(getEventLink)
       .getOrElse(gh.getNearestLinkId(tl.finish_point.toGPX))
 
     if (departureLink == null) {
-      logger.error(s"the trip start for ${tl.leg_id} could not be matched to the matsim network")
+      logger.warn(s"the trip start for ${tl.leg_id} could not be matched to the matsim network")
     }
     if (arrivalLink == null) {
-      logger.error(s"the trip end for ${tl.leg_id} could not be matched to the matsim network")
+      logger.warn(s"the trip end for ${tl.leg_id} could not be matched to the matsim network")
+    }
+    if (departureLink == null || arrivalLink == null) {
+      return Nil
     }
 
     val departureEvent = new ExtendedPersonDepartureEvent(tl.getStartedSeconds,
