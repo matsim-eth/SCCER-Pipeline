@@ -72,12 +72,14 @@ public class CarExternalityCounter implements WarmEmissionEventHandler, ColdEmis
         Map<String, Double> pollutants = e.getWarmEmissions();
         for (Map.Entry<String, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey();
+            if (!p.getValue().isNaN() && !p.getValue().isInfinite()) {
 
-            if (pollutant.equals("PM")) {
-                pollutant = addLandUseToEmissionKey(pollutant, e.getLinkId());
+                if (pollutant.equals("PM")) {
+                    pollutant = addLandUseToEmissionKey(pollutant, e.getLinkId());
+                }
+
+                externalityCounterDelegate.incrementTempValueBy(personId, pollutant, p.getValue());
             }
-
-            externalityCounterDelegate.incrementTempValueBy(personId,pollutant, p.getValue());
         }
     }
 

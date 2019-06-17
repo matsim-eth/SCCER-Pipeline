@@ -1,11 +1,13 @@
 package greenclass
 
-import java.io.{File, PrintWriter}
+import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.{Files, Paths}
 import java.sql.{DriverManager, PreparedStatement}
 import java.time.LocalDateTime
 import java.time.format.DateTimeFormatter
+import java.util.Properties
 
+import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import ethz.ivt.externalities.data.{LatLon, TripLeg, TripRecord}
 import ethz.ivt.externalities.data.WaypointRecord
 import org.apache.log4j.{Level, Logger}
@@ -15,7 +17,7 @@ import me.tongfei.progressbar.ProgressBar
 object SplitWaypoints {
 
 
-  Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
+  Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
   // Change to Your Database Config
@@ -25,28 +27,50 @@ object SplitWaypoints {
   properties.put("driver", "org.postgresql.Driver")
   val conn_str = "jdbc:postgresql://id-hdb-psgr-cp50.ethz.ch/mobis_study"
 
+  val waypoints_sql =
+    s"""
+       |  select longitude, latitude,
+       |       extract(epoch from to_timestamp(timestamp/1000)::time) * 1000 as tracked_at_millis,
+       |       accuracy
+       |  from validation_outputtracking
+       |  where id_user = ? and leg_id = ?
+       |  order by timestamp
+      """.stripMargin
 
   // Load the driver
-  classOf[org.postgresql.Driver]
+  Class.forName("org.postgresql.Driver")
 
 
   // Setup the connection
 
-  def getWaypoints(query: PreparedStatement, user_id: String, leg: TripLeg): List[WaypointRecord] = {
+  def getWaypoints(ds: HikariDataSource, user_id: String, leg: TripLeg): List[WaypointRecord] = {
 
-    query.setString(1, user_id)
-    query.setLong(2, leg.leg_id)
+    val conn = ds.getConnection()
+    try {
+      val query = conn.prepareStatement(waypoints_sql)
 
-    val rs = query.executeQuery()
-    val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
-      WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
+      query.setString(1, user_id)
+      query.setLong(2, leg.leg_id)
+
+      val rs = query.executeQuery()
+      val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
+        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
+      }
+      return results.toList
+    } finally {
+      conn.close()
     }
-    results.toList
   }
 
   def main(args: Array[String]) {
 
-    val conn = DriverManager.getConnection(conn_str, properties)
+    val props = new Properties()
+    props.load(new FileInputStream(args(0)))
+    val base_file_location = Paths.get(props.getProperty("base.data.location"))
+    val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
+    val config = new HikariConfig(props.getProperty("database.properties.file"))
+
+    val ds = new HikariDataSource(config)
 
     val triplegs_sql =
       """
@@ -58,31 +82,26 @@ object SplitWaypoints {
         | distance
         |
         | FROM validation_legs as l
-        | where leg_mode_user not in ('???', 'overseas')
+        | where leg_mode_user not in ('???', 'overseas', 'split')
         | and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
         | and id not in (select distinct (leg_id) from validation_externalities)
+        | and person_id = '72396450'
         |order by person_id, leg_date, leg_id;
         |
       """.stripMargin
 
 
-    val waypoints_sql =
-      s"""
-         |  select longitude, latitude,
-         |       extract(epoch from to_timestamp(timestamp/1000)::time) * 1000 as tracked_at_millis,
-         |       accuracy
-         |  from validation_outputtracking
-         |  where id_user = ? and leg_id = ?
-         |  order by timestamp
-      """.stripMargin
-
-    val statement = conn.prepareStatement(waypoints_sql)
-
     val logger = Logger.getLogger(this.getClass)
 
-    val OUTPUT_DIR = args(0)
+    System.out.println(trips_folder)
 
-    new File(OUTPUT_DIR).mkdirs
+    val OUTPUT_DIR = trips_folder
+
+    System.out.println(OUTPUT_DIR.toAbsolutePath)
+
+    if (!Files.exists(OUTPUT_DIR)) {
+      Files.createDirectory(OUTPUT_DIR)
+    }
     val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
 
     case class TripRow(
@@ -99,7 +118,8 @@ object SplitWaypoints {
 
     //val formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss[.SS]")
     //read in user / date / mode / trip leg ids
-    val triplegs_rs = conn.createStatement().executeQuery(triplegs_sql)
+    val conn1 = ds.getConnection()
+    val triplegs_rs = conn1.createStatement().executeQuery(triplegs_sql)
     val triplegs = Iterator.continually(triplegs_rs).takeWhile(_.next()).map { rs =>
       TripRow(rs.getString("person_id"), 0,
         TripLeg(rs.getLong("leg_id"),
@@ -127,6 +147,7 @@ object SplitWaypoints {
 
     logger.info(s"${personday_triplegs.size} trips loaded")
     logger.info(s"${personday_triplegs.map(_.legs.size).sum} triplegs loaded")
+    conn1.close()
 
     /////////// steps:
     // split waypoints into user_id and date
@@ -135,36 +156,35 @@ object SplitWaypoints {
     // assign them to trip legs based on start and end trip_leg time.
     val pb = new ProgressBar("Test", personday_triplegs.size)
     try { // name, initial max
-      personday_triplegs.foreach { tr =>
+      personday_triplegs.par.foreach { tr =>
+
         val date1 = tr.date.format(dateFormatter)
-        val date_dir = Paths.get(s"$OUTPUT_DIR/$date1/")
-        val outFile = Paths.get(date_dir.toString, s"${tr.user_id}.json")
+        val date_dir = OUTPUT_DIR.resolve(date1)
+        val outFile = date_dir.resolve(s"${tr.user_id}.json")
 
-        if (Files.notExists(outFile)) {
-        //  logger.info("Creating:\t " + outFile.toAbsolutePath)
 
-          val updatedLegs = tr.legs.map { leg =>
-            leg.copy(waypoints = getWaypoints(statement, tr.user_id, leg))
+          if (Files.notExists(outFile)) {
+          //  logger.info("Creating:\t " + outFile.toAbsolutePath)
+
+            val updatedLegs = tr.legs.map { leg =>
+              leg.copy(waypoints = getWaypoints(ds, tr.user_id, leg))
+            }
+            val new_tr = List(tr.copy(legs = updatedLegs))
+            val tripsJSON = Serialization.writePretty(new_tr)
+
+            Files.createDirectories(date_dir)
+            val pw = new PrintWriter(outFile.toFile)
+            try {
+              pw.write(tripsJSON)
+            } finally {
+                pw.close()
+            }
           }
-          val new_tr = List(tr.copy(legs = updatedLegs))
-          val tripsJSON = Serialization.writePretty(new_tr)
-
-          Files.createDirectories(date_dir)
-
-          val pw = new PrintWriter(outFile.toFile)
-          pw.write(tripsJSON)
-          pw.close()
-
-        } // else {
-        //  logger.info("Skipping:\t " + outFile.toAbsolutePath)
-
-      //  }
         pb.step(); // step by 1
         pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
-
       }
+
     } finally {
-      conn.close()
       pb.close()
     }
 

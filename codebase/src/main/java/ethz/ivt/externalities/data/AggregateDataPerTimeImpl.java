@@ -11,10 +11,10 @@ import java.util.*;
 public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
     final Class<T> clazz;
-    private double binSize;
-    private int numBins;
-    private Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
-    private List<String> attributes;
+    double binSize;
+    int numBins;
+    Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
+    List<String> attributes;
 
     public AggregateDataPerTimeImpl(double binSize, List<String> attributes,
                                     Class<T> clazz) {

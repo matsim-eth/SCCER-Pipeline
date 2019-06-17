@@ -1,33 +1,34 @@
 /*
  *  Licensed to GraphHopper GmbH under one or more contributor
- *  license agreements. See the NOTICE file distributed with this work for 
+ *  license agreements. See the NOTICE file distributed with this work for
  *  additional information regarding copyright ownership.
- * 
- *  GraphHopper GmbH licenses this file to you under the Apache License, 
- *  Version 2.0 (the "License"); you may not use this file except in 
+ *
+ *  GraphHopper GmbH licenses this file to you under the Apache License,
+ *  Version 2.0 (the "License"); you may not use this file except in
  *  compliance with the License. You may obtain a copy of the License at
- * 
+ *
  *       http://www.apache.org/licenses/LICENSE-2.0
- * 
+ *
  *  Unless required by applicable law or agreed to in writing, software
  *  distributed under the License is distributed on an "AS IS" BASIS,
  *  WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
  *  See the License for the specific language governing permissions and
  *  limitations under the License.
  */
-package com.graphhopper.matching;
+package com.graphhopper;
 
 import com.bmw.hmm.SequenceState;
 import com.bmw.hmm.ViterbiAlgorithm;
-import com.graphhopper.GraphHopper;
+import com.graphhopper.matching.EdgeMatch;
+import com.graphhopper.matching.GPXExtension;
+import com.graphhopper.matching.MapMatching;
+import com.graphhopper.matching.MatchResult;
 import com.graphhopper.matching.util.HmmProbabilities;
 import com.graphhopper.matching.util.TimeStep;
 import com.graphhopper.routing.*;
-import com.graphhopper.routing.ch.CHAlgoFactoryDecorator;
+import com.graphhopper.routing.ch.PreparationWeighting;
 import com.graphhopper.routing.ch.PrepareContractionHierarchies;
-import com.graphhopper.routing.util.DefaultEdgeFilter;
-import com.graphhopper.routing.util.EdgeFilter;
-import com.graphhopper.routing.util.HintsMap;
+import com.graphhopper.routing.util.*;
 import com.graphhopper.routing.weighting.FastestWeighting;
 import com.graphhopper.routing.weighting.Weighting;
 import com.graphhopper.storage.CHGraph;
@@ -35,7 +36,6 @@ import com.graphhopper.storage.Graph;
 import com.graphhopper.storage.index.LocationIndexTree;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.*;
-import com.graphhopper.util.shapes.GHPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -60,7 +60,7 @@ import java.util.Map.Entry;
  * @author Stefan Holder
  * @author kodonnell
  */
-public class MapMatching {
+public class MapMatchingUnlimited extends MapMatching {
 
     private final Logger logger = LoggerFactory.getLogger(getClass());
 
@@ -68,29 +68,27 @@ public class MapMatching {
     // subsequent candidates.
     private double uTurnDistancePenalty;
 
-    private final Graph graph;
     private final Graph routingGraph;
     private final LocationIndexTree locationIndex;
-    private double measurementErrorSigma = 100;
-    private int maxDistBetweenPoints = Integer.MAX_VALUE;
+    private double measurementErrorSigma = 50;
     private double transitionProbabilityBeta = 2.0;
+    private final int maxVisitedNodes;
     private final int nodeCount;
     private DistanceCalc distanceCalc = new DistancePlaneProjection();
-    private final RoutingAlgorithmFactory algoFactory;
-    private final AlgorithmOptions algoOptions;
-    final EdgeFilter defaultEdgeFilter;
+    private final Weighting weighting;
+    private final boolean ch;
 
-    ;
+    private double minDistanceBetweenPoints = 100;
 
-    public MapMatching(GraphHopper hopper, AlgorithmOptions algoOptions) {
+    public MapMatchingUnlimited(GraphHopper graphHopper, AlgorithmOptions algoOptions) {
+        super(graphHopper, algoOptions);
         // Convert heading penalty [s] into U-turn penalty [m]
         final double PENALTY_CONVERSION_VELOCITY = 5;  // [m/s]
         final double headingTimePenalty = algoOptions.getHints().getDouble(
                 Parameters.Routing.HEADING_PENALTY, Parameters.Routing.DEFAULT_HEADING_PENALTY);
         uTurnDistancePenalty = headingTimePenalty * PENALTY_CONVERSION_VELOCITY;
 
-        this.locationIndex = (LocationIndexTree) hopper.getLocationIndex();
-
+        this.locationIndex = (LocationIndexTree) graphHopper.getLocationIndex();
 
         // create hints from algoOptions, so we can create the algorithm factory        
         HintsMap hints = new HintsMap();
@@ -102,7 +100,7 @@ public class MapMatching {
         if (!hints.has(Parameters.CH.DISABLE)) {
             hints.put(Parameters.CH.DISABLE, true);
 
-            if (!hopper.getCHFactoryDecorator().isDisablingAllowed())
+            if (!graphHopper.getCHFactoryDecorator().isDisablingAllowed())
                 throw new IllegalArgumentException("Cannot disable CH. Not allowed on server side");
         }
 
@@ -113,36 +111,25 @@ public class MapMatching {
             if (algoOptions.hasWeighting()) {
                 vehicle = algoOptions.getWeighting().getFlagEncoder().toString();
             } else {
-                vehicle = hopper.getEncodingManager().fetchEdgeEncoders().get(0).toString();
+                vehicle = graphHopper.getEncodingManager().fetchEdgeEncoders().get(0).toString();
             }
             hints.setVehicle(vehicle);
         }
-
-        algoFactory = hopper.getAlgorithmFactory(hints);
-
-        Weighting weighting;
-        CHAlgoFactoryDecorator chFactoryDecorator = hopper.getCHFactoryDecorator();
-        boolean forceFlexibleMode = hints.getBool(Parameters.CH.DISABLE, false);
-        if (chFactoryDecorator.isEnabled() && !forceFlexibleMode) {
-            if (!(algoFactory instanceof PrepareContractionHierarchies)) {
-                throw new IllegalStateException("Although CH was enabled a non-CH algorithm "
-                        + "factory was returned " + algoFactory);
-            }
-
-            weighting = ((PrepareContractionHierarchies) algoFactory).getWeighting();
-            this.routingGraph = hopper.getGraphHopperStorage().getGraph(CHGraph.class, weighting);
+        weighting = new FastestWeighting(graphHopper.getEncodingManager().getEncoder(vehicle), algoOptions.getHints());
+        RoutingAlgorithmFactory routingAlgorithmFactory = graphHopper.getAlgorithmFactory(hints);
+        if (routingAlgorithmFactory instanceof PrepareContractionHierarchies) {
+            ch = true;
+            // I want to use my own instance of FastestWeighting because it uses its own U-Turn-penalty,
+            // but I have to pass a _different_ instance of FastestWeighting to getGraph so it gives me the graph,
+            // (even though this is non-dangerous since it's only about virtual (split) edges (nothing to do with shortcuts),
+            // but it's _still_ a different one than the one which I have to pass to the router itself (see below).
+            routingGraph = graphHopper.getGraphHopperStorage().getGraph(CHGraph.class, ((PrepareContractionHierarchies) routingAlgorithmFactory).getWeighting());
         } else {
-            weighting = algoOptions.hasWeighting()
-                    ? algoOptions.getWeighting()
-                    : new FastestWeighting(hopper.getEncodingManager().getEncoder(vehicle),
-                    algoOptions.getHints());
-            this.routingGraph = hopper.getGraphHopperStorage();
+            ch = false;
+            routingGraph = graphHopper.getGraphHopperStorage();
         }
-
-        this.graph = hopper.getGraphHopperStorage();
-        this.algoOptions = AlgorithmOptions.start(algoOptions).weighting(weighting).build();
         this.nodeCount = routingGraph.getNodes();
-        this.defaultEdgeFilter = DefaultEdgeFilter.allEdges(weighting.getFlagEncoder());
+        this.maxVisitedNodes = algoOptions.getMaxVisitedNodes();
     }
 
     public void setDistanceCalc(DistanceCalc distanceCalc) {
@@ -165,6 +152,10 @@ public class MapMatching {
         this.measurementErrorSigma = measurementErrorSigma;
     }
 
+    public void setMinDistanceBetweenPoints(double minDistanceBetweenPoints) {
+        this.minDistanceBetweenPoints = minDistanceBetweenPoints;
+    }
+
     /**
      * This method does the actual map matching.
      * <p>
@@ -173,31 +164,19 @@ public class MapMatching {
      *                of the graph specified in the constructor
      */
     public MatchResult doWork(List<GPXEntry> gpxList) {
-        if (gpxList.size() < 2) {
-            throw new IllegalArgumentException("Too few coordinates in input file ("
-                    + gpxList.size() + "). Correct format?");
-        }
-
         // filter the entries:
         List<GPXEntry> filteredGPXEntries = filterGPXEntries(gpxList);
-        if (filteredGPXEntries.size() < 2) {
-            throw new IllegalStateException("Only " + filteredGPXEntries.size()
-                    + " filtered GPX entries (from " + gpxList.size()
-                    + "), but two or more are needed");
-        }
 
         // now find each of the entries in the graph:
-        final EdgeFilter edgeFilter = DefaultEdgeFilter.allEdges(algoOptions.getWeighting().getFlagEncoder());
-
-        List<Collection<QueryResult>> queriesPerEntry =
-                lookupGPXEntries(filteredGPXEntries, edgeFilter);
+        List<Collection<QueryResult>> queriesPerEntry = lookupGPXEntries(filteredGPXEntries, DefaultEdgeFilter.allEdges(weighting.getFlagEncoder()));
 
         // Add virtual nodes and edges to the graph so that candidates on edges can be represented
         // by virtual nodes.
-        final QueryGraph queryGraph = new QueryGraph(routingGraph).setUseEdgeExplorerCache(true);
+        QueryGraph queryGraph = new QueryGraph(routingGraph).setUseEdgeExplorerCache(true);
         List<QueryResult> allQueryResults = new ArrayList<>();
-        for (Collection<QueryResult> qrs : queriesPerEntry)
+        for (Collection<QueryResult> qrs : queriesPerEntry) {
             allQueryResults.addAll(qrs);
+        }
         queryGraph.lookup(allQueryResults);
 
         // Different QueryResults can have the same tower node as their closest node.
@@ -236,8 +215,7 @@ public class MapMatching {
         }
 
         // Compute the most likely sequence of map matching candidates:
-        List<SequenceState<GPXExtension, GPXEntry, Path>> seq = computeViterbiSequence(timeSteps,
-                gpxList.size(), queryGraph);
+        List<SequenceState<GPXExtension, GPXEntry, Path>> seq = computeViterbiSequence(timeSteps, gpxList.size(), queryGraph);
 
         logger.debug("=============== Viterbi results =============== ");
         i = 1;
@@ -247,19 +225,15 @@ public class MapMatching {
             i++;
         }
 
-        // finally, extract the result:
-        final EdgeExplorer explorer = queryGraph.createEdgeExplorer(edgeFilter);
-
-        // Needs original gpxList to compute stats.
-        MatchResult matchResult = computeMatchResult(seq, gpxList, queriesPerEntry, explorer);
-
+        final EdgeExplorer explorer = queryGraph.createEdgeExplorer(DefaultEdgeFilter.allEdges(weighting.getFlagEncoder()));
+        final Map<String, EdgeIteratorState> virtualEdgesMap = createVirtualEdgesMap(queriesPerEntry, explorer);
+        MatchResult matchResult = computeMatchResult(seq, virtualEdgesMap, gpxList, queryGraph);
         logger.debug("=============== Matched real edges =============== ");
         i = 1;
         for (EdgeMatch em : matchResult.getEdgeMatches()) {
             logger.debug("{}: {}", i, em.getEdgeState());
             i++;
         }
-
         return matchResult;
     }
 
@@ -275,7 +249,7 @@ public class MapMatching {
             GPXEntry gpxEntry = gpxList.get(i);
             if (i == 0 || i == last || distanceCalc.calcDist(
                     prevEntry.getLat(), prevEntry.getLon(),
-                    gpxEntry.getLat(), gpxEntry.getLon()) > 2 * measurementErrorSigma) {
+                    gpxEntry.getLat(), gpxEntry.getLon()) > minDistanceBetweenPoints) {
                 filtered.add(gpxEntry);
                 prevEntry = gpxEntry;
             } else {
@@ -430,7 +404,7 @@ public class MapMatching {
                     GPXEntry gpxe = timeStep.observation;
                     double dist = distanceCalc.calcDist(prevGPXE.lat, prevGPXE.lon,
                             gpxe.lat, gpxe.lon);
-                    if (dist > maxDistBetweenPoints) {
+                    if (dist > 2000) {
                         likelyReasonStr = "Too long distance to previous measurement? "
                                 + Math.round(dist) + "m, ";
                     }
@@ -443,10 +417,9 @@ public class MapMatching {
                         + getSnappedCandidates(timeStep.candidates)
                         + ". If a match is expected consider increasing max_visited_nodes.");
             }
-            else {
-                timeStepCounter++;
-                prevTimeStep = timeStep;
-            }
+
+            timeStepCounter++;
+            prevTimeStep = timeStep;
         }
 
         return viterbi.computeMostLikelySequence();
@@ -490,10 +463,27 @@ public class MapMatching {
                             to.getOutgoingVirtualEdge().getEdge());
                 }
 
-                // Need to create a new routing algorithm for every routing.
-                RoutingAlgorithm algo = algoFactory.createAlgo(queryGraph, algoOptions);
+                RoutingAlgorithm router;
+                if (ch) {
+                    router = new DijkstraBidirectionCH(queryGraph, new PreparationWeighting(weighting)) {
+                        @Override
+                        protected void initCollections(int size) {
+                            super.initCollections(50);
+                        }
+                    };
+                    ((DijkstraBidirectionCH) router).setEdgeFilter(new LevelEdgeFilter((CHGraph) routingGraph));
+                    router.setMaxVisitedNodes(maxVisitedNodes);
+                } else {
+                    router = new DijkstraBidirectionRef(queryGraph, weighting, TraversalMode.NODE_BASED) {
+                        @Override
+                        protected void initCollections(int size) {
+                            super.initCollections(50);
+                        }
+                    };
+                    router.setMaxVisitedNodes(maxVisitedNodes);
+                }
 
-                final Path path = algo.calcPath(from.getQueryResult().getClosestNode(),
+                final Path path = router.calcPath(from.getQueryResult().getClosestNode(),
                         to.getQueryResult().getClosestNode());
 
                 if (path.isFound()) {
@@ -544,79 +534,112 @@ public class MapMatching {
     }
 
     private MatchResult computeMatchResult(List<SequenceState<GPXExtension, GPXEntry, Path>> seq,
-                                           List<GPXEntry> gpxList,
-                                           List<Collection<QueryResult>> queriesPerEntry,
-                                           EdgeExplorer explorer) {
-        final Map<String, EdgeIteratorState> virtualEdgesMap = createVirtualEdgesMap(
-                queriesPerEntry, explorer);
-        MatchResult matchResult = computeMatchedEdges(seq, virtualEdgesMap);
-        computeGpxStats(gpxList, matchResult);
-
-        return matchResult;
-    }
-
-    private MatchResult computeMatchedEdges(List<SequenceState<GPXExtension, GPXEntry, Path>> seq,
-                                            Map<String, EdgeIteratorState> virtualEdgesMap) {
-        List<EdgeMatch> edgeMatches = new ArrayList<>();
+                                           Map<String, EdgeIteratorState> virtualEdgesMap, List<GPXEntry> gpxList, QueryGraph queryGraph) {
         double distance = 0.0;
         long time = 0;
-        EdgeIteratorState currentEdge = null;
-        List<GPXExtension> gpxExtensions = new ArrayList<>();
-        GPXExtension queryResult = seq.get(0).state;
-        gpxExtensions.add(queryResult);
-        for (int j = 1; j < seq.size(); j++) {
-            queryResult = seq.get(j).state;
-            Path path = seq.get(j).transitionDescriptor;
-            distance += path.getDistance();
-            time += path.getTime();
-            for (EdgeIteratorState edgeIteratorState : path.calcEdges()) {
-                EdgeIteratorState directedRealEdge = resolveToRealEdge(virtualEdgesMap,
-                        edgeIteratorState);
-                if (directedRealEdge == null) {
-                    throw new RuntimeException("Did not find real edge for "
-                            + edgeIteratorState.getEdge());
-                }
-                if (currentEdge == null || !equalEdges(directedRealEdge, currentEdge)) {
-                    if (currentEdge != null) {
-                        EdgeMatch edgeMatch = new EdgeMatch(currentEdge, gpxExtensions);
-                        edgeMatches.add(edgeMatch);
-                        gpxExtensions = new ArrayList<>();
-                    }
-                    currentEdge = directedRealEdge;
-                }
+        for (SequenceState<GPXExtension, GPXEntry, Path> transitionAndState : seq) {
+            if (transitionAndState.transitionDescriptor != null) {
+                distance += transitionAndState.transitionDescriptor.getDistance();
+                time += transitionAndState.transitionDescriptor.getTime();
             }
-            gpxExtensions.add(queryResult);
         }
-        if (edgeMatches.isEmpty()) {
-            throw new IllegalArgumentException("No edge matches found for submitted track. Too short? Sequence size " + seq.size());
+
+        List<EdgeIteratorState> edges = new ArrayList<>();
+        for (SequenceState<GPXExtension, GPXEntry, Path> state : seq) {
+            if (state.transitionDescriptor != null) {
+                edges.addAll(state.transitionDescriptor.calcEdges());
+            }
         }
-        EdgeMatch lastEdgeMatch = edgeMatches.get(edgeMatches.size() - 1);
-        if (!gpxExtensions.isEmpty() && !equalEdges(currentEdge, lastEdgeMatch.getEdgeState())) {
-            edgeMatches.add(new EdgeMatch(currentEdge, gpxExtensions));
-        } else {
-            lastEdgeMatch.getGpxExtensions().addAll(gpxExtensions);
-        }
+        Path mergedPath = new MapMatchedPath(queryGraph.getBaseGraph(), weighting, edges);
+
+        List<EdgeMatch> edgeMatches = computeEdgeMatches(seq, virtualEdgesMap);
         MatchResult matchResult = new MatchResult(edgeMatches);
+        matchResult.setMergedPath(mergedPath);
         matchResult.setMatchMillis(time);
         matchResult.setMatchLength(distance);
+        matchResult.setGPXEntriesMillis(durationMillis(gpxList));
+        matchResult.setGPXEntriesLength(gpxLength(gpxList));
         return matchResult;
     }
 
-    /**
-     * Calculate GPX stats to determine quality of matching.
-     */
-    private void computeGpxStats(List<GPXEntry> gpxList, MatchResult matchResult) {
-        double gpxLength = 0;
-        GPXEntry prevEntry = gpxList.get(0);
-        for (int i = 1; i < gpxList.size(); i++) {
-            GPXEntry entry = gpxList.get(i);
-            gpxLength += distanceCalc.calcDist(prevEntry.lat, prevEntry.lon, entry.lat, entry.lon);
-            prevEntry = entry;
-        }
+    private List<EdgeMatch> computeEdgeMatches(List<SequenceState<GPXExtension, GPXEntry, Path>> seq, Map<String, EdgeIteratorState> virtualEdgesMap) {
+        // This creates a list of directed edges (EdgeIteratorState instances turned the right way),
+        // each associated with 0 or more of the observations.
+        // These directed edges are edges of the real street graph, where nodes are intersections.
+        // So in _this_ representation, the path that you get when you just look at the edges goes from
+        // an intersection to an intersection.
 
-        long gpxMillis = gpxList.get(gpxList.size() - 1).getTime() - gpxList.get(0).getTime();
-        matchResult.setGPXEntriesMillis(gpxMillis);
-        matchResult.setGPXEntriesLength(gpxLength);
+        // Implementation note: We have to look at both states _and_ transitions, since we can have e.g. just one state,
+        // or two states with a transition that is an empty path (observations snapped to the same node in the query graph),
+        // but these states still happen on an edge, and for this representation, we want to have that edge.
+        // (Whereas in the PathWrapper representation, we would just see an empty path.)
+
+        // Note that the result can be empty, even when the input is not. Observations can be on nodes as well as on
+        // edges, and when all observations are on the same node, we get no edge at all.
+        // But apart from that corner case, all observations that go in here are also in the result.
+
+        // (Consider totally forbidding candidate states to be snapped to a point, and make them all be on directed
+        // edges, then that corner case goes away.)
+        List<EdgeMatch> edgeMatches = new ArrayList<>();
+        List<GPXExtension> states = new ArrayList<>();
+        EdgeIteratorState currentDirectedRealEdge = null;
+        for (SequenceState<GPXExtension, GPXEntry, Path> transitionAndState : seq) {
+            // transition (except before the first state)
+            if (transitionAndState.transitionDescriptor != null) {
+                for (EdgeIteratorState edge : transitionAndState.transitionDescriptor.calcEdges()) {
+                    EdgeIteratorState newDirectedRealEdge = resolveToRealEdge(virtualEdgesMap, edge);
+                    if (currentDirectedRealEdge != null) {
+                        if (!equalEdges(currentDirectedRealEdge, newDirectedRealEdge)) {
+                            EdgeMatch edgeMatch = new EdgeMatch(currentDirectedRealEdge, states);
+                            edgeMatches.add(edgeMatch);
+                            states = new ArrayList<>();
+                        }
+                    }
+                    currentDirectedRealEdge = newDirectedRealEdge;
+                }
+            }
+            // state
+            if (transitionAndState.state.isOnDirectedEdge()) { // as opposed to on a node
+                EdgeIteratorState newDirectedRealEdge = resolveToRealEdge(virtualEdgesMap, transitionAndState.state.getOutgoingVirtualEdge());
+                if (currentDirectedRealEdge != null) {
+                    if (!equalEdges(currentDirectedRealEdge, newDirectedRealEdge)) {
+                        EdgeMatch edgeMatch = new EdgeMatch(currentDirectedRealEdge, states);
+                        edgeMatches.add(edgeMatch);
+                        states = new ArrayList<>();
+                    }
+                }
+                currentDirectedRealEdge = newDirectedRealEdge;
+            }
+            states.add(transitionAndState.state);
+        }
+        if (currentDirectedRealEdge != null) {
+            EdgeMatch edgeMatch = new EdgeMatch(currentDirectedRealEdge, states);
+            edgeMatches.add(edgeMatch);
+        }
+        return edgeMatches;
+    }
+
+    private double gpxLength(List<GPXEntry> gpxList) {
+        if (gpxList.isEmpty()) {
+            return 0;
+        } else {
+            double gpxLength = 0;
+            GPXEntry prevEntry = gpxList.get(0);
+            for (int i = 1; i < gpxList.size(); i++) {
+                GPXEntry entry = gpxList.get(i);
+                gpxLength += distanceCalc.calcDist(prevEntry.lat, prevEntry.lon, entry.lat, entry.lon);
+                prevEntry = entry;
+            }
+            return gpxLength;
+        }
+    }
+
+    private long durationMillis(List<GPXEntry> gpxList) {
+        if (gpxList.isEmpty()) {
+            return 0L;
+        } else {
+            return gpxList.get(gpxList.size() - 1).getTime() - gpxList.get(0).getTime();
+        }
     }
 
     private boolean equalEdges(EdgeIteratorState edge1, EdgeIteratorState edge2) {
@@ -706,75 +729,21 @@ public class MapMatching {
         return "[" + str + "]";
     }
 
-    private void printMinDistances(List<TimeStep<GPXExtension, GPXEntry, Path>> timeSteps) {
-        TimeStep<GPXExtension, GPXEntry, Path> prevStep = null;
-        int index = 0;
-        for (TimeStep<GPXExtension, GPXEntry, Path> ts : timeSteps) {
-            if (prevStep != null) {
-                double dist = distanceCalc.calcDist(
-                        prevStep.observation.lat, prevStep.observation.lon,
-                        ts.observation.lat, ts.observation.lon);
-                double minCand = Double.POSITIVE_INFINITY;
-                for (GPXExtension prevGPXE : prevStep.candidates) {
-                    for (GPXExtension gpxe : ts.candidates) {
-                        GHPoint psp = prevGPXE.getQueryResult().getSnappedPoint();
-                        GHPoint sp = gpxe.getQueryResult().getSnappedPoint();
-                        double tmpDist = distanceCalc.calcDist(psp.lat, psp.lon, sp.lat, sp.lon);
-                        if (tmpDist < minCand) {
-                            minCand = tmpDist;
-                        }
-                    }
-                }
-                logger.debug(index + ": " + Math.round(dist) + "m, minimum candidate: "
-                        + Math.round(minCand) + "m");
-                index++;
-            }
-
-            prevStep = ts;
-        }
-    }
-
-    public Optional<EdgeIteratorState> getNearestLink(GPXEntry point) {
-        List<QueryResult> qr = locationIndex.findNClosest(point.lat, point.lon, defaultEdgeFilter, measurementErrorSigma);
-        if (!qr.isEmpty()) {
-            return Optional.of(qr.get(0).getClosestEdge());
-           } else {
-            return Optional.empty();
-        }
-    }
-
     private static class MapMatchedPath extends Path {
-
-        public MapMatchedPath(Graph graph, Weighting weighting) {
+        MapMatchedPath(Graph graph, Weighting weighting, List<EdgeIteratorState> edges) {
             super(graph, weighting);
-        }
-
-        @Override
-        public Path setFromNode(int from) {
-            return super.setFromNode(from);
-        }
-
-        @Override
-        public void processEdge(int edgeId, int adjNode, int prevEdgeId) {
-            super.processEdge(edgeId, adjNode, prevEdgeId);
-        }
-    }
-
-    public Path calcPath(MatchResult mr) {
-        MapMatchedPath p = new MapMatchedPath(graph, algoOptions.getWeighting());
-        if (!mr.getEdgeMatches().isEmpty()) {
             int prevEdge = EdgeIterator.NO_EDGE;
-            p.setFromNode(mr.getEdgeMatches().get(0).getEdgeState().getBaseNode());
-            for (EdgeMatch em : mr.getEdgeMatches()) {
-                p.processEdge(em.getEdgeState().getEdge(), em.getEdgeState().getAdjNode(), prevEdge);
-                prevEdge = em.getEdgeState().getEdge();
+            for (EdgeIteratorState edge : edges) {
+                processEdge(edge.getEdge(), edge.getAdjNode(), prevEdge);
+                prevEdge = edge.getEdge();
             }
-
-            p.setFound(true);
-
-            return p;
-        } else {
-            return p;
+            if (edges.isEmpty()) {
+                setFound(false);
+            } else {
+                setFromNode(edges.get(0).getBaseNode());
+                setFound(true);
+            }
         }
     }
+
 }

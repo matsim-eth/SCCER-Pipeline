@@ -64,17 +64,13 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             Link l = scenario.getNetwork().getLinks().get(event.getLinkId());
             double freespeedTravelTime = l.getLength() / l.getFreespeed();
 
-            double previousClockTime = externalityCounterDelegate.getTempValue(personId, "actual_travel_time");
-            externalityCounterDelegate.putTempValue(personId, "actual_travel_time", previousClockTime + actualLinkTravelTime);
+            externalityCounterDelegate.incrementTempValueBy(personId, "actual_travel_time", actualLinkTravelTime);
 
-            double previous_matsimTime = externalityCounterDelegate.getTempValue(personId,"freespeed_travel_time");
-            externalityCounterDelegate.putTempValue(personId,"freespeed_travel_time", previous_matsimTime + freespeedTravelTime);
-
-            double previous_delay = externalityCounterDelegate.getTempValue(personId,"actual_gps_delay");
+            externalityCounterDelegate.incrementTempValueBy(personId,"freespeed_travel_time", freespeedTravelTime);
 
             // actualLinkTravelTime should be larger than the freespeedTravelTime
             double delay_on_link = Math.max(0, actualLinkTravelTime - freespeedTravelTime); // the delay can't be negative
-            externalityCounterDelegate.putTempValue(personId,"actual_gps_delay", previous_delay + delay_on_link);
+            externalityCounterDelegate.incrementTempValueBy(personId,"actual_gps_delay", delay_on_link);
             this.personLinkEntryTime.put(personId, null);
         }
     }

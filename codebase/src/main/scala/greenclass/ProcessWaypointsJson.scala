@@ -17,7 +17,7 @@ import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
 import ethz.ivt.externalities.counters.{ExtendedPersonDepartureEvent, ExternalityCostCalculator}
-import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl, TripLeg, TripRecord}
+import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl, AggregateDataPerTimeMock, TripLeg, TripRecord}
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, LinkGPXStruct, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
@@ -53,15 +53,17 @@ import scala.util.{Failure, Success}
 
 object ProcessWaypointsJson {
 
-  Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
+  Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
   def main(args: Array[String]) {
 
     //val args = {"P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_config_no_facilities.xml", "C:\\Projects\\spark\\green_class_swiss_triplegs.csv","C:\\Projects\\spark\\green_class_waypoints.csv","C:\\Projects\\SCCER_project\\output_gc"}
+    val props_filename = args(0)
+
 
     val props = new Properties()
-    props.load(new FileInputStream(args(0)))
+    props.load(new FileInputStream(props_filename))
 
     val logger = Logger.getLogger(this.getClass)
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
@@ -71,12 +73,13 @@ object ProcessWaypointsJson {
 
     val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
     val congestion_file = base_file_location.resolve(Paths.get(props.getProperty("congestion.file")))
-    val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
     val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
     val numCores = Option(props.getProperty("num.cores")).map(_.toInt).getOrElse(1)
 
     val events_folder = base_file_location.resolve(Paths.get(props.getProperty("events.folder")))
 
+    val trips_folder =  if (args.length > 1) Paths.get(args(1))
+                        else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
     val _system = ActorSystem("MainEngineActor")
 
@@ -100,7 +103,12 @@ object ProcessWaypointsJson {
 
     val processWaypointsJson = new ProcessWaypointsJson(scenario)
 
-    val congestionAggregator = CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+    val congestionAggregator = if (props_filename.contains("euler")) {
+      CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+    } else {
+      logger.warn("Using mock aggregate congestion values - ie 0.")
+      new AggregateDataPerTimeMock()
+    }
 
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
@@ -121,6 +129,10 @@ object ProcessWaypointsJson {
     val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
+    logger.info("actor system ready")
+    Thread.sleep(5*1000)
+
+    logger.info("processing waypoints in actor system")
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
     jsons.map(JsonFile).foreach(traceProcessors ! _)
 
@@ -141,12 +153,18 @@ class ProcessWaypointsJson(scenario: Scenario) {
   val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
   gh.getMatcher.setMeasurementErrorSigma(500)
+
   val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")
 
   def readJson(p: Path): List[TripRecord] = {
     logger.info(s"parsing $p")
     val json = Source.fromFile(p.toFile).getLines mkString "\n"
-    parse(json).extract[List[TripRecord]]
+    if (json.isEmpty) {
+      Nil
+    }
+    else {
+      parse(json).extract[List[TripRecord]]
+    }
   }
 
 
@@ -154,6 +172,7 @@ class ProcessWaypointsJson(scenario: Scenario) {
     Files.walk(triplegs_folder).iterator().asScala
       .filter(json_matcher.matches(_))
       .toStream
+
   }
 
   def processJson(tr : TripRecord): Stream[(Long, Seq[Event], Geometry)] = {

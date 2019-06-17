@@ -114,9 +114,6 @@ public class MeasureExternalitiesFromTraceEvents {
 
         eventsManager = new EventsManagerImpl();
         reader = new MatsimEventsReader(eventsManager);
-        log.info("add vehicles");
-
-        eventsManager.addHandler(new JITvehicleCreator(scenario));
 
         // setup externality counters
         log.info("load emissions module");

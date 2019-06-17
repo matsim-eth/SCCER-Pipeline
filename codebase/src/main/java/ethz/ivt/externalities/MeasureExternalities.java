@@ -54,7 +54,7 @@ public class MeasureExternalities {
         this.ecc = ecc;
 
         eventsManager = new EventsManagerImpl();
-        eventsManager.addHandler(new JITvehicleCreator(scenario));
+    //    eventsManager.addHandler(new JITvehicleCreator(scenario));
 
         reader = new MatsimEventsReader(eventsManager);
 

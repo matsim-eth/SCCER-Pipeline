@@ -94,7 +94,7 @@ public class NodeTimingTest {
         GraphHopperMATSim hopper = GraphHopperMATSim.build(network, new IdentityTransformation());
 
 
-// create MapMatching object, can and should be shared accross threads
+// create MapMatchingUnlimited object, can and should be shared accross threads
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
         Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));

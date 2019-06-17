@@ -5,6 +5,7 @@ package ethz.ivt.graphhopperMM;
  */
 
 import com.graphhopper.GraphHopper;
+import com.graphhopper.MapMatchingUnlimited;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.routing.AlgorithmOptions;
 import com.graphhopper.routing.util.EncodingManager;
@@ -41,7 +42,7 @@ public class MATSimMMBuilder {
         //TODO: dont just get first encoder, let the searcher specify the transport type
         Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
-        MapMatching mapMatching = new MapMatching(hopper, algoOptions);
+        MapMatching mapMatching = new MapMatchingUnlimited(hopper, algoOptions);
 
         return mapMatching;
     }

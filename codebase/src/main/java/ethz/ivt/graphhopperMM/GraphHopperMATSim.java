@@ -41,6 +41,7 @@ public class GraphHopperMATSim extends GraphHopper {
 
         //TODO: set up multiple encoders
         hopper.setEncodingManager(EncodingManager.create("car"));
+
         hopper.getCHFactoryDecorator().setEnabled(false);
         hopper.setPreciseIndexResolution(1000); //TODO: refactor this so that the index resoltion can be set on startup. but this is needed to find edges on some nodes
         hopper.importOrLoad();

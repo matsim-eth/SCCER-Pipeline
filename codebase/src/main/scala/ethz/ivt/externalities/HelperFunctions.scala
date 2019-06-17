@@ -44,9 +44,13 @@ object HelperFunctions {
   val DIESEL_KEY = "diesel"
   val DESCRIPTION_TEMPLATE = "BEGIN_EMISSIONSPASSENGER_CAR;%s;%s;%sEND_EMISSIONS"
 
+  def createVehicleId(fuelType: String, euro: Int, size: String) : String =  {
+    fuelType+ "_"+euro+"_"+size
+  }
+
   def createEmissionsString(fuelType: String, euro: Int, size: String) : String =  {
 
-    val mappedFuelType = fuelType match {
+    val mappedFuelType = fuelType.toLowerCase match {
       case "diesel" => DIESEL_KEY
       case _ => PETROL_KEY
     }
@@ -54,7 +58,7 @@ object HelperFunctions {
     val mapped_size = size match {
       case "small_car" => "<1,4L"
       case "medium_car" => "1,4-<2L"
-      case "large_car" => ">=2L"
+      case "large_car" => "≥2L"
     }
 
     val mapped_euro = (mappedFuelType match {
@@ -69,7 +73,7 @@ object HelperFunctions {
 
   def createVehicleTypes(scenario: Scenario): Unit = {
     for (mappedFuelType <- PETROL_KEY :: DIESEL_KEY :: Nil) {
-      for (mapped_size <- "<1,4L" :: "1,4-<2L" :: ">=2L" :: Nil) {
+      for (mapped_size <- "<1,4L" :: "1,4-<2L" :: "≥2L" :: Nil) {
         for (euro <- 0 to 6) {
           val mapped_euro = (mappedFuelType match {
             case PETROL_KEY => "PC P Euro-%d"
@@ -101,7 +105,7 @@ object HelperFunctions {
       stmt.execute(vehicles_sql)
       val resultSet = stmt.getResultSet
 
-      val vs = new Iterator[(Id[Vehicle], String)] {
+      val vs = new Iterator[(Id[Vehicle], Id[VehicleType], String)] {
         def hasNext = resultSet.next()
 
 
@@ -111,11 +115,17 @@ object HelperFunctions {
           val euro = resultSet.getInt("euro_standard")
           val size = resultSet.getString("size_category_short")
           val vehicleDescString = createEmissionsString(fuelType, euro, size)
-          (vid, vehicleDescString)
+          val vehicleTypeId = Id.create(createVehicleId(fuelType, euro, size), classOf[VehicleType])
+
+          (vid, vehicleTypeId, vehicleDescString)
         }
-      }.toStream.foreach { case (vid, vehicleDescString) =>
-        val vehicleTypeId = Id.create(vehicleDescString, classOf[VehicleType])
-        val vehicleType = scenario.getVehicles.getFactory.createVehicleType(vehicleTypeId)
+      }.toStream.foreach { case (vid, vehicleTypeId, vehicleDescString) =>
+        if (!scenario.getVehicles.getVehicleTypes.containsKey(vehicleTypeId)) {
+          val vehicleType = scenario.getVehicles.getFactory.createVehicleType(vehicleTypeId)
+          vehicleType.setDescription(vehicleDescString)
+          scenario.getVehicles.addVehicleType(vehicleType)
+        }
+        val vehicleType = scenario.getVehicles.getVehicleTypes.get(vehicleTypeId)
         val v = scenario.getVehicles.getFactory.createVehicle(vid, vehicleType)
         scenario.getVehicles.addVehicle(v)
       }

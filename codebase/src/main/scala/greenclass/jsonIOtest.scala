@@ -12,7 +12,7 @@ package greenclass
 
   object jsonIOtest {
 
-    Logger.getLogger("com.graphhopper.matching.MapMatching").setLevel(Level.WARN)
+    Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
     Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
     val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")

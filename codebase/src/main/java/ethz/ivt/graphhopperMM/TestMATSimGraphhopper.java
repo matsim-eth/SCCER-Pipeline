@@ -85,7 +85,7 @@ public class TestMATSimGraphhopper {
         hopper.getCHFactoryDecorator().setEnabled(false);
         hopper.importOrLoad();
 
-// create MapMatching object, can and should be shared accross threads
+// create MapMatchingUnlimited object, can and should be shared accross threads
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
         weighting = new FastestWeighting(encoder);

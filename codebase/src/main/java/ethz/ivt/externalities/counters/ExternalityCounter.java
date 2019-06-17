@@ -45,7 +45,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
     //basic fields
     protected void initializeFields() {
-        keys.add("StartTime");
+		keys = new LinkedHashSet<>();
+		keys.add("StartTime");
         keys.add("EndTime");
         keys.add("MappedDistance");
 
@@ -141,6 +142,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	public void reset(int iteration) {
 		personId2Leg = new HashMap<>();
 		tempValues = new HashMap<>();
+		initializeFields();
 	}
 
 	public LocalDateTime getDate() {
@@ -162,13 +164,17 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 		return this.tempValues.get(personId).get(key);
 	}
 
-	public void putTempValue(Id<Person> personId, String key, double value) {
+	private void putTempValue(Id<Person> personId, String key, double value) {
 		this.tempValues.get(personId).put(key, value);
 	}
 
 	public void incrementTempValueBy(Id<Person> personId, String key, Double value) {
-    	double oldValue = getTempValue(personId, key);
-		putTempValue(personId, key, oldValue + value);
+		if (value.isNaN() || value.isInfinite()) {
+			log.warn(String.format("Skipping attempt to add NaN or Infinity to key %s for person %s", key, personId));
+		} else {
+			double oldValue = getTempValue(personId, key);
+			putTempValue(personId, key, oldValue + value);
+		}
 
 	}
 
