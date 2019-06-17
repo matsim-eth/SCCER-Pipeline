@@ -82,7 +82,7 @@ object SplitWaypoints {
         | distance
         |
         | FROM validation_legs as l
-        | where leg_mode_user not in ('???', 'overseas', 'split', 'Activity')
+        | where leg_mode_user not in ('???', 'overseas', 'Split', 'Activity')
         | and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
         | and person_id in (select distinct participant_id from vehicle_information)
         | and id not in (select distinct (leg_id) from validation_externalities)
