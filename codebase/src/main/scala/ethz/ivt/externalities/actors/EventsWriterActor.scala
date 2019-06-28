@@ -20,7 +20,8 @@ object EventsWriterActor {
 
 }
 
-class EventsWriterActor (scenario: Scenario, traces_output_dir: Path) extends Actor {
+class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
+  extends Actor with ReaperWatched {
 
   import org.geotools.feature.simple.SimpleFeatureTypeBuilder
 

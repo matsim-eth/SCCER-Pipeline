@@ -7,7 +7,7 @@ import java.nio.file.PathMatcher
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 
-import akka.actor.{ActorRef, ActorSystem, Props}
+import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
@@ -49,7 +49,7 @@ import org.matsim.core.network.NetworkUtils
 import org.matsim.core.utils.geometry.GeometryUtils
 
 import scala.concurrent.duration._
-import scala.util.{Failure, Success}
+import scala.util.{Failure, Success, Try}
 
 object ProcessWaypointsJson {
 
@@ -78,8 +78,8 @@ object ProcessWaypointsJson {
 
     val events_folder = base_file_location.resolve(Paths.get(props.getProperty("events.folder")))
 
-    val trips_folder =  if (args.length > 1) Paths.get(args(1))
-                        else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
+    val trips_folder = if (args.length > 1) Paths.get(args(1))
+    else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
     val _system = ActorSystem("MainEngineActor")
 
@@ -99,7 +99,7 @@ object ProcessWaypointsJson {
     val roadTypeMapping = OsmHbefaMapping.build()
     roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
-  //  Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
+    //  Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
     val processWaypointsJson = new ProcessWaypointsJson(scenario)
 
@@ -111,9 +111,12 @@ object ProcessWaypointsJson {
     }
 
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
+
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
 
     logger.info("Data loaded")
+
+    val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
     val extProps = ExternalitiesActor.props(me, writerActor)
     val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
@@ -130,21 +133,15 @@ object ProcessWaypointsJson {
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     logger.info("actor system ready")
-    Thread.sleep(5*1000)
+    Thread.sleep(5 * 1000)
 
     logger.info("processing waypoints in actor system")
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
     jsons.map(JsonFile).foreach(traceProcessors ! _)
 
-    import akka.pattern.gracefulStop
-    import scala.concurrent.duration._
+    traceProcessors ! PoisonPill
 
-//    gracefulStop(traceProcessors, 3 minutes, logger.info("stopped trace processors"))
-//      .flatMap(_ => gracefulStop(eventsActor, 3 minutes, logger.info("stopped matsim mapmatching actor")))
-//      .flatMap(_ => gracefulStop(externalitiyProcessor, 3 minutes, logger.info("stopped externality processors")))
-//      .onComplete(_ => _system.terminate().onComplete(_ => logger.info("Actor system shut down")))
   }
-
 }
 
 class ProcessWaypointsJson(scenario: Scenario) {
@@ -179,22 +176,18 @@ class ProcessWaypointsJson(scenario: Scenario) {
 
     logger.info(s"\tprocessing ${tr.user_id}, ${tr.date}")
 
-    tr.legs.toStream
+    val futures = tr.legs.toStream
         .filterNot(tl => "Activity".equals(tl.mode))
         .map { tl =>
-          try {
+          Try {
             val (events, linestring) = tripLegToEvents(tr, tl)
             logger.info(s"\t\tleg ${tl.leg_id} converted to ${events.size} events")
             (tl.leg_id, events, linestring)
-          }
-          catch {
-            case ex : Exception => {
-              logger.error(s"Error on leg ${tl.leg_id}: " + ex.getMessage, ex)
-              throw new RuntimeException(ex)
-            }
-          }
+          }.recoverWith { case ex : Throwable => logger.error(s"Error on leg ${tl.leg_id}", ex); Failure(ex) }
         }
-        .filterNot(_._2.isEmpty) //remove empty triplegs
+
+      //return successes
+      futures.flatMap(_.toOption).filterNot(_._2.isEmpty) //remove empty triplegs
 
   }
 

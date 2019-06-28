@@ -28,7 +28,8 @@ object ExternalitiesActor {
 
 }
 
-class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : ActorRef) extends Actor with ActorLogging {
+class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : ActorRef)
+  extends Actor with ActorLogging with ReaperWatched {
 
   import ExternalitiesActor._
   import akka.pattern.ask
@@ -37,9 +38,8 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
 
   var measureExternalities : MeasureExternalities = _
 
-  context.watch(writerActor)
-
   override def preStart() = {
+    super.preStart
     measureExternalities = meCreator() // this takes a few seconds to complete
   }
 
@@ -60,7 +60,6 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
       }
 
     }
-    case Terminated(writerActor) => context.system.terminate()
   }
 
 }

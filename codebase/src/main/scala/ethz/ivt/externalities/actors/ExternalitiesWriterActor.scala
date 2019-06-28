@@ -28,7 +28,7 @@ object ExternalitiesWriterActor {
 
 final case class Externalities(tr : TripRecord, externalitiesCounter : ExternalityCounter)
 
-sealed trait ExternalitiesWriterActor extends Actor with ActorLogging{
+sealed trait ExternalitiesWriterActor extends Actor with ActorLogging  with ReaperWatched {
 
 }
 
@@ -114,8 +114,13 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
-  val ds = new HikariDataSource(config)
+  var ds : HikariDataSource = _
   val externalities_insert_sql = s"INSERT INTO validation_externalities (leg_id, key, value) values (?, ?, ?);"
+
+  override def preStart() = {
+    super.preStart
+    ds = new HikariDataSource(config)
+  }
 
   def receive : Receive = {
     case Externalities(tr, ec) => {
@@ -146,6 +151,12 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 
           res
         }
+          catch {
+            case ex : Exception => {
+              log.error(ex, "Error writing externalities")
+              Future.failed(ex)
+            }
+          }
         finally {
           con.close()
         }

@@ -2,7 +2,8 @@ package ethz.ivt.externalities.actors
 
 import java.nio.file.Path
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
+import akka.routing.Broadcast
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.data.TripRecord
 import greenclass.ProcessWaypointsJson
@@ -18,7 +19,8 @@ object TraceActor {
 
 }
 
-class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef) extends Actor with ActorLogging {
+class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef)
+  extends Actor with ActorLogging with ReaperWatched {
 
 
   override def receive: Receive = {
@@ -36,5 +38,12 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef
     val trList = waypointProcessor.readJson(jsonFile)
     log.info(s"reading path $jsonFile into ${trList.size} trips")
     trList
+  }
+
+  override def postStop(): Unit =  {
+    super.postStop()
+    log.info("Sending poison pill to events Actor")
+    eventsActor ! Broadcast(PoisonPill)
+    eventsActor ! PoisonPill
   }
 }

@@ -86,7 +86,7 @@ object SplitWaypoints {
         | -- and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
         | and person_id in (select distinct participant_id from vehicle_information)
         | and id not in (select distinct (leg_id) from validation_externalities)
-        | -- and person_id = '72396450' and leg_date::date = '2019-06-01'
+        | -- and person_id = '72085680' and leg_date::date = '2019-05-12'
         |
         |order by person_id, leg_date, leg_id;
         |
