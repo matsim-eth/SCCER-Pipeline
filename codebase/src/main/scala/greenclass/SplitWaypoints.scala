@@ -83,10 +83,10 @@ object SplitWaypoints {
         |
         | FROM validation_legs as l
         | where leg_mode_user not in ('???', 'overseas', 'Split', 'Activity')
-        | and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
+        | -- and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
         | and person_id in (select distinct participant_id from vehicle_information)
         | and id not in (select distinct (leg_id) from validation_externalities)
-        | --and person_id = '72396450' and leg_date::date = '2019-06-01'
+        | -- and person_id = '72396450' and leg_date::date = '2019-06-01'
         |
         |order by person_id, leg_date, leg_id;
         |
@@ -161,8 +161,8 @@ object SplitWaypoints {
       personday_triplegs.par.foreach { tr =>
 
         val date1 = tr.date.format(dateFormatter)
-        val date_dir = OUTPUT_DIR.resolve(date1)
-        val outFile = date_dir.resolve(s"${tr.user_id}.json")
+        val sub_dir = OUTPUT_DIR.resolve(tr.user_id)
+        val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
 
 
           if (Files.notExists(outFile)) {
@@ -174,7 +174,7 @@ object SplitWaypoints {
             val new_tr = List(tr.copy(legs = updatedLegs))
             val tripsJSON = Serialization.writePretty(new_tr)
 
-            Files.createDirectories(date_dir)
+            Files.createDirectories(sub_dir)
             val pw = new PrintWriter(outFile.toFile)
             try {
               pw.write(tripsJSON)
