@@ -19,7 +19,7 @@ class EventActor (pwj: ProcessWaypointsJson, externalitiesActor : ActorRef, even
     case tr : TripRecord => {
       try {
         val events = pwj.processJson(tr)
-        externalitiesActor ! EventList(tr, events.take(10))
+        externalitiesActor ! EventList(tr, events)
         eventWriterActor ! EventList(tr, events)
       } catch  {
         case ex : Exception => {

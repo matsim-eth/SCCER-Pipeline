@@ -1,13 +1,13 @@
 package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.EmissionsAggregator;
+import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.EmissionModule;
-import org.matsim.contrib.emissions.roadTypeMapping.OsmHbefaMapping;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;

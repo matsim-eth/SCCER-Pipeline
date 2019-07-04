@@ -1,7 +1,7 @@
 package ethz.ivt.externalities.roadTypeMapping;
 
 import org.matsim.api.core.v01.network.Link;
-import org.matsim.contrib.emissions.utils.EmissionUtils;
+import org.matsim.contrib.emissions.EmissionUtils;
 
 public class LinkHbefaMapping extends HbefaRoadTypeMapping {
     @Override

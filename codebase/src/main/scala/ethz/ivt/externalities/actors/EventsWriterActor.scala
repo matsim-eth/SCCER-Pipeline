@@ -4,11 +4,8 @@ import java.io.File
 import java.nio.file.{Path, Paths}
 
 import akka.actor.{Actor, ActorRef, Props}
-import com.vividsolutions.jts.geom.GeometryFactory
+import org.locationtech.jts.geom.GeometryFactory
 import ethz.ivt.externalities.actors.ExternalitiesActor.EventList
-import ethz.ivt.externalities.data.TripRecord
-import greenclass.ProcessWaypointsJson
-import org.geotools.geojson.feature.FeatureJSON
 import org.geotools.geojson.geom.GeometryJSON
 import org.matsim.api.core.v01.Scenario
 

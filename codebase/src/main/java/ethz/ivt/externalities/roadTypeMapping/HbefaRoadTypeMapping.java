@@ -2,7 +2,7 @@ package ethz.ivt.externalities.roadTypeMapping;
 
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
-import org.matsim.contrib.emissions.utils.EmissionUtils;
+import org.matsim.contrib.emissions.EmissionUtils;
 
 /**
  * Created by molloyj on 01.12.2017.

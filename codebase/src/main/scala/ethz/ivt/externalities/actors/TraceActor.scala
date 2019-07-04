@@ -43,7 +43,6 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef
   override def postStop(): Unit =  {
     super.postStop()
     log.info("Sending poison pill to events Actor")
-    eventsActor ! Broadcast(PoisonPill)
     eventsActor ! PoisonPill
   }
 }

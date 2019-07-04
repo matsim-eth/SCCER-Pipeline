@@ -24,7 +24,7 @@ import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, LinkGPXStruct, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
-import org.matsim.contrib.emissions.utils.{EmissionUtils, EmissionsConfigGroup}
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
@@ -44,8 +44,8 @@ import scala.concurrent.{ExecutionContext, Future}
 import akka.pattern.ask
 import akka.util.Timeout
 import com.esotericsoftware.kryo.io.Input
-import com.vividsolutions.jts.geom.{Geometry, GeometryFactory, LineString}
-import com.vividsolutions.jts.operation.linemerge.LineMerger
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString}
+import org.locationtech.jts.operation.linemerge.LineMerger
 import ethz.ivt.JITvehicleCreator
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
 import org.matsim.contrib.emissions.EmissionModule

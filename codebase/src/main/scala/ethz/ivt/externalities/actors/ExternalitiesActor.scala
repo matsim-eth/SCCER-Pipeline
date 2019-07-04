@@ -5,7 +5,7 @@ import java.time.LocalDate
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
 import akka.util.Timeout
-import com.vividsolutions.jts.geom.Geometry
+import org.locationtech.jts.geom.Geometry
 import ethz.ivt.externalities.MeasureExternalities
 import ethz.ivt.externalities.counters.LegValues
 import ethz.ivt.externalities.data.TripRecord

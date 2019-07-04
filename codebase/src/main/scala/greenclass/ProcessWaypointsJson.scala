@@ -22,7 +22,7 @@ import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, LinkGPXStruct, MATSimMMBuilder}
 import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.{Id, Scenario, TransportMode}
-import org.matsim.contrib.emissions.utils.{EmissionUtils, EmissionsConfigGroup}
+import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.ConfigUtils
 import org.matsim.core.events.algorithms.EventWriterXML
 import org.matsim.core.scenario.ScenarioUtils
@@ -39,11 +39,8 @@ import org.matsim.vehicles.{VehicleReaderV1, VehicleType, VehicleUtils, VehicleW
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import akka.pattern.ask
-import akka.util.Timeout
-import com.esotericsoftware.kryo.io.Input
-import com.vividsolutions.jts.geom.{Geometry, GeometryFactory, LineString}
-import com.vividsolutions.jts.operation.linemerge.LineMerger
+import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString}
+import org.locationtech.jts.operation.linemerge.LineMerger
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.utils.geometry.GeometryUtils
@@ -127,7 +124,7 @@ object ProcessWaypointsJson {
 
 
     val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor, eventWriterActor)
-    val eventsActor = _system.actorOf(eventProps.withRouter(RoundRobinPool(numCores)), name = "EventActor")
+    val eventsActor = _system.actorOf(eventProps, name = "EventActor")
 
     val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
@@ -195,7 +192,7 @@ class ProcessWaypointsJson(scenario: Scenario) {
     val linemerger = new LineMerger()
 
     links.foreach( x => {
-      val ls = GeometryUtils.createGeotoolsLineString(x.getLink)
+      val ls : org.locationtech.jts.geom.LineString = GeometryUtils.createGeotoolsLineString(x.getLink)
       linemerger.add(ls)
     })
     val merged = new GeometryFactory().buildGeometry(linemerger.getMergedLineStrings)
