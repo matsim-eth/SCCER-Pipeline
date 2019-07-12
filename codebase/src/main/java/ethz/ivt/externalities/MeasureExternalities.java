@@ -91,7 +91,19 @@ public class MeasureExternalities {
 
     }
 
+    public ExternalityCounter process(String events, LocalDateTime date) {
+        externalityCounter.setDate(date);
+        eventsManager.initProcessing();
+        reader.readFile(events);
 
+        ecc.addCosts(externalityCounter);
+
+        eventsManager.finishProcessing();
+        ExternalityCounter ecCopy = externalityCounter.copy();
+        eventsManager.resetHandlers(0);
+        return ecCopy;
+
+    }
 
     public void write(Path outputFolder) {
         externalityCounter.writeCsvFile(outputFolder);
