@@ -53,6 +53,7 @@ object ProcessWaypointsJson {
   Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
+
   def main(args: Array[String]) {
 
     //val args = {"P:\\Projekte\\SCCER\\switzerland_10pct\\switzerland_config_no_facilities.xml", "C:\\Projects\\spark\\green_class_swiss_triplegs.csv","C:\\Projects\\spark\\green_class_waypoints.csv","C:\\Projects\\SCCER_project\\output_gc"}
@@ -84,6 +85,8 @@ object ProcessWaypointsJson {
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
     val writerActorProps = ExternalitiesWriterActor.buildMobis(dbProps)
+    //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities.csv"))
+
     val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
 
     implicit val ec: ExecutionContext = _system.dispatcher
