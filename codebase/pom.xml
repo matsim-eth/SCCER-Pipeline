@@ -183,11 +183,13 @@
 		  <version>1.4</version>
 	  </dependency>
 
+	  <!-- https://mvnrepository.com/artifact/com.esotericsoftware/kryo -->
 	  <dependency>
 		  <groupId>com.esotericsoftware</groupId>
 		  <artifactId>kryo</artifactId>
-		  <version>4.0.2</version>
+		  <version>5.0.0-RC4</version>
 	  </dependency>
+
       <dependency>
           <groupId>org.json4s</groupId>
           <artifactId>json4s-native_${scala.version}</artifactId>

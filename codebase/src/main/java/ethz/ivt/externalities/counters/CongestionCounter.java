@@ -1,7 +1,6 @@
 package ethz.ivt.externalities.counters;
 
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -85,13 +84,13 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-        double count = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "count");
+        double count = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "count");
 
         if (count > 0) {
-            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "delay_caused") / count;
-            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "delay_experienced") / count;
-            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "congestion_caused") / count;
-            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.getValue(lid, time, "congestion_experienced") / count;
+            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "delay_caused") / count;
+            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "delay_experienced") / count;
+            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion_caused") / count;
+            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion_experienced") / count;
 
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
             externalityCounterDelegate.incrementTempValueBy(personId, "delay_experienced", delayExperienced);

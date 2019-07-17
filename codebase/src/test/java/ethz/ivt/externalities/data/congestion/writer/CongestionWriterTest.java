@@ -1,12 +1,9 @@
 package ethz.ivt.externalities.data.congestion.writer;
 
-import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionWriter;
 import org.junit.Assert;
-import org.junit.Ignore;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
@@ -32,11 +29,11 @@ public class CongestionWriterTest {
         Random random = new Random(0);
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            aggData.setValue(linkId, bin, "count", random.nextDouble());
-            aggData.setValue(linkId, bin, "delay_caused", random.nextDouble());
-            aggData.setValue(linkId, bin, "delay_experienced", random.nextDouble());
-            aggData.setValue(linkId, bin, "congestion_caused", random.nextDouble());
-            aggData.setValue(linkId, bin, "congestion_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "count", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "delay_caused", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "delay_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "congestion_caused", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "congestion_experienced", random.nextDouble());
         }
 
         CSVCongestionWriter.forLink().write(aggData,"./src/test/java/ethz/ivt/externalities/data/congestion.csv");
@@ -45,11 +42,11 @@ public class CongestionWriterTest {
         AggregateDataPerTimeImpl<Link> actualMap = CSVCongestionReader.forLink().read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            Assert.assertEquals("Counts do not match", aggData.getValue(linkId, bin, "count"), actualMap.getValue(linkId, bin, "count"), 0.0);
-            Assert.assertEquals("Delay caused does not match", aggData.getValue(linkId, bin, "delay_caused"), actualMap.getValue(linkId, bin, "delay_caused"), 0.0);
-            Assert.assertEquals("Delay experienced does not match", aggData.getValue(linkId, bin, "delay_experienced"), actualMap.getValue(linkId, bin, "delay_experienced"), 0.0);
-            Assert.assertEquals("Congestion caused does not match", aggData.getValue(linkId, bin, "congestion_caused"), actualMap.getValue(linkId, bin, "congestion_caused"), 0.0);
-            Assert.assertEquals("Congestion experienced does not match", aggData.getValue(linkId, bin, "congestion_experienced"), actualMap.getValue(linkId, bin, "congestion_experienced"), 0.0);
+            Assert.assertEquals("Counts do not match", aggData.getValueInTimeBin(linkId, bin, "count"), actualMap.getValueInTimeBin(linkId, bin, "count"), 0.0);
+            Assert.assertEquals("Delay caused does not match", aggData.getValueInTimeBin(linkId, bin, "delay_caused"), actualMap.getValueInTimeBin(linkId, bin, "delay_caused"), 0.0);
+            Assert.assertEquals("Delay experienced does not match", aggData.getValueInTimeBin(linkId, bin, "delay_experienced"), actualMap.getValueInTimeBin(linkId, bin, "delay_experienced"), 0.0);
+            Assert.assertEquals("Congestion caused does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_caused"), actualMap.getValueInTimeBin(linkId, bin, "congestion_caused"), 0.0);
+            Assert.assertEquals("Congestion experienced does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_experienced"), actualMap.getValueInTimeBin(linkId, bin, "congestion_experienced"), 0.0);
         }
     }
 
@@ -67,11 +64,11 @@ public class CongestionWriterTest {
 
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            aggData.setValue(person, bin, "count", random.nextDouble());
-            aggData.setValue(person, bin, "delay_caused", random.nextDouble());
-            aggData.setValue(person, bin, "delay_experienced", random.nextDouble());
-            aggData.setValue(person, bin, "congestion_caused", random.nextDouble());
-            aggData.setValue(person, bin, "congestion_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(person, bin, "count", random.nextDouble());
+            aggData.setValueForTimeBin(person, bin, "delay_caused", random.nextDouble());
+            aggData.setValueForTimeBin(person, bin, "delay_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(person, bin, "congestion_caused", random.nextDouble());
+            aggData.setValueForTimeBin(person, bin, "congestion_experienced", random.nextDouble());
         }
 
         CSVCongestionWriter.forPerson().write(aggData,"./src/test/java/ethz/ivt/externalities/data/congestion.csv");
@@ -80,11 +77,11 @@ public class CongestionWriterTest {
         AggregateDataPerTimeImpl<Person> actualMap = CSVCongestionReader.forPerson().read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            Assert.assertEquals("Counts do not match", aggData.getValue(person, bin, "count"), actualMap.getValue(person, bin, "count"), 0.0);
-            Assert.assertEquals("Delay caused does not match",  aggData.getValue(person, bin, "delay_caused"), actualMap.getValue(person, bin, "delay_caused"), 0.0);
-            Assert.assertEquals("Delay experienced does not match",aggData.getValue(person, bin, "delay_experienced"), actualMap.getValue(person, bin, "delay_experienced"), 0.0);
-            Assert.assertEquals("Congestion caused does not match",aggData.getValue(person, bin, "congestion_caused"), actualMap.getValue(person, bin, "congestion_caused"), 0.0);
-            Assert.assertEquals("Congestion experienced does not match",aggData.getValue(person, bin, "congestion_experienced"), actualMap.getValue(person, bin, "congestion_experienced"), 0.0);
+            Assert.assertEquals("Counts do not match", aggData.getValueInTimeBin(person, bin, "count"), actualMap.getValueInTimeBin(person, bin, "count"), 0.0);
+            Assert.assertEquals("Delay caused does not match",  aggData.getValueInTimeBin(person, bin, "delay_caused"), actualMap.getValueInTimeBin(person, bin, "delay_caused"), 0.0);
+            Assert.assertEquals("Delay experienced does not match",aggData.getValueInTimeBin(person, bin, "delay_experienced"), actualMap.getValueInTimeBin(person, bin, "delay_experienced"), 0.0);
+            Assert.assertEquals("Congestion caused does not match",aggData.getValueInTimeBin(person, bin, "congestion_caused"), actualMap.getValueInTimeBin(person, bin, "congestion_caused"), 0.0);
+            Assert.assertEquals("Congestion experienced does not match",aggData.getValueInTimeBin(person, bin, "congestion_experienced"), actualMap.getValueInTimeBin(person, bin, "congestion_experienced"), 0.0);
         }
     }
 
@@ -102,11 +99,11 @@ public class CongestionWriterTest {
         collection.add(linkId);
 
         for (int bin=0; bin<inputMap.getNumBins(); bin++) {
-            inputMap.setValue(linkId, bin, "count", value);
-            inputMap.setValue(linkId, bin, "delay_caused", value);
-            inputMap.setValue(linkId, bin, "delay_experienced", value);
-            inputMap.setValue(linkId, bin, "congestion_caused", value);
-            inputMap.setValue(linkId, bin, "congestion_experienced", value);
+            inputMap.setValueForTimeBin(linkId, bin, "count", value);
+            inputMap.setValueForTimeBin(linkId, bin, "delay_caused", value);
+            inputMap.setValueForTimeBin(linkId, bin, "delay_experienced", value);
+            inputMap.setValueForTimeBin(linkId, bin, "congestion_caused", value);
+            inputMap.setValueForTimeBin(linkId, bin, "congestion_experienced", value);
         }
 
         CSVCongestionWriter.forLink().write(inputMap,"./src/test/java/ethz/ivt/externalities/data/congestion.csv");
@@ -114,11 +111,11 @@ public class CongestionWriterTest {
         AggregateDataPerTimeImpl<Link> actualMap = CSVCongestionReader.forLink().read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", newBinSize);
 
         for (int bin=0; bin<actualMap.getNumBins(); bin++) {
-            Assert.assertEquals("Counts do not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "count"), 0.0);
-            Assert.assertEquals("Delay caused does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "delay_caused"), 0.0);
-            Assert.assertEquals("Delay experienced does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "delay_experienced"), 0.0);
-            Assert.assertEquals("Congestion caused does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "congestion_caused"), 0.0);
-            Assert.assertEquals("Congestion experienced does not match", value * aggregationFactor, actualMap.getValue(linkId, bin, "congestion_experienced"), 0.0);
+            Assert.assertEquals("Counts do not match", value * aggregationFactor, actualMap.getValueInTimeBin(linkId, bin, "count"), 0.0);
+            Assert.assertEquals("Delay caused does not match", value * aggregationFactor, actualMap.getValueInTimeBin(linkId, bin, "delay_caused"), 0.0);
+            Assert.assertEquals("Delay experienced does not match", value * aggregationFactor, actualMap.getValueInTimeBin(linkId, bin, "delay_experienced"), 0.0);
+            Assert.assertEquals("Congestion caused does not match", value * aggregationFactor, actualMap.getValueInTimeBin(linkId, bin, "congestion_caused"), 0.0);
+            Assert.assertEquals("Congestion experienced does not match", value * aggregationFactor, actualMap.getValueInTimeBin(linkId, bin, "congestion_experienced"), 0.0);
         }
     }
 
@@ -138,11 +135,11 @@ public class CongestionWriterTest {
         Random random = new Random(0);
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            aggData.setValue(linkId, bin, "count", random.nextDouble());
-            aggData.setValue(linkId, bin, "delay_caused", random.nextDouble());
-            aggData.setValue(linkId, bin, "delay_experienced", random.nextDouble());
-            aggData.setValue(linkId, bin, "congestion_caused", random.nextDouble());
-            aggData.setValue(linkId, bin, "congestion_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "count", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "delay_caused", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "delay_experienced", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "congestion_caused", random.nextDouble());
+            aggData.setValueForTimeBin(linkId, bin, "congestion_experienced", random.nextDouble());
         }
 
         // set half the entries to zero at random
@@ -151,11 +148,11 @@ public class CongestionWriterTest {
 
             int bin = random.nextInt(numBins - 1);
 
-            aggData.setValue(linkId, bin, "count", 0.0);
-            aggData.setValue(linkId, bin, "delay_caused", 0.0);
-            aggData.setValue(linkId, bin, "delay_experienced", 0.0);
-            aggData.setValue(linkId, bin, "congestion_caused", 0.0);
-            aggData.setValue(linkId, bin, "congestion_experienced", 0.0);
+            aggData.setValueForTimeBin(linkId, bin, "count", 0.0);
+            aggData.setValueForTimeBin(linkId, bin, "delay_caused", 0.0);
+            aggData.setValueForTimeBin(linkId, bin, "delay_experienced", 0.0);
+            aggData.setValueForTimeBin(linkId, bin, "congestion_caused", 0.0);
+            aggData.setValueForTimeBin(linkId, bin, "congestion_experienced", 0.0);
         }
 
         CSVCongestionWriter.forLink().write(aggData,"./src/test/java/ethz/ivt/externalities/data/congestion.csv");
@@ -164,11 +161,11 @@ public class CongestionWriterTest {
         AggregateDataPerTimeImpl<Link> actualMap = CSVCongestionReader.forLink().read("./src/test/java/ethz/ivt/externalities/data/congestion.csv", binSize);
 
         for (int bin=0; bin<aggData.getNumBins(); bin++) {
-            Assert.assertEquals("Counts do not match", aggData.getValue(linkId, bin, "count"), actualMap.getValue(linkId, bin, "count"), 0.0);
-            Assert.assertEquals("Delay caused does not match", aggData.getValue(linkId, bin, "delay_caused"), actualMap.getValue(linkId, bin, "delay_caused"), 0.0);
-            Assert.assertEquals("Delay experienced does not match", aggData.getValue(linkId, bin, "delay_experienced"), actualMap.getValue(linkId, bin, "delay_experienced"), 0.0);
-            Assert.assertEquals("Congestion caused does not match", aggData.getValue(linkId, bin, "congestion_caused"), actualMap.getValue(linkId, bin, "congestion_caused"), 0.0);
-            Assert.assertEquals("Congestion experienced does not match", aggData.getValue(linkId, bin, "congestion_experienced"), actualMap.getValue(linkId, bin, "congestion_experienced"), 0.0);
+            Assert.assertEquals("Counts do not match", aggData.getValueInTimeBin(linkId, bin, "count"), actualMap.getValueInTimeBin(linkId, bin, "count"), 0.0);
+            Assert.assertEquals("Delay caused does not match", aggData.getValueInTimeBin(linkId, bin, "delay_caused"), actualMap.getValueInTimeBin(linkId, bin, "delay_caused"), 0.0);
+            Assert.assertEquals("Delay experienced does not match", aggData.getValueInTimeBin(linkId, bin, "delay_experienced"), actualMap.getValueInTimeBin(linkId, bin, "delay_experienced"), 0.0);
+            Assert.assertEquals("Congestion caused does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_caused"), actualMap.getValueInTimeBin(linkId, bin, "congestion_caused"), 0.0);
+            Assert.assertEquals("Congestion experienced does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_experienced"), actualMap.getValueInTimeBin(linkId, bin, "congestion_experienced"), 0.0);
         }
 
     }
@@ -192,11 +189,11 @@ public class CongestionWriterTest {
                 double probability = randomZeroGenerator.nextDouble();
                 if (probability < 0.5) {
 
-                    aggData.setValue(linkId, bin, "count", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "delay_caused", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "delay_experienced", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "congestion_caused", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "congestion_experienced", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "count", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "delay_caused", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "delay_experienced", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "congestion_caused", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "congestion_experienced", randomValueGenerator.nextDouble());
                 }
             }
 
@@ -217,11 +214,11 @@ public class CongestionWriterTest {
                 double probability = randomZeroGenerator.nextDouble();
 
                 if (probability < 0.5) {
-                    aggData.setValue(linkId, bin, "count", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "delay_caused", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "delay_experienced", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "congestion_caused", randomValueGenerator.nextDouble());
-                    aggData.setValue(linkId, bin, "congestion_experienced", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "count", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "delay_caused", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "delay_experienced", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "congestion_caused", randomValueGenerator.nextDouble());
+                    aggData.setValueForTimeBin(linkId, bin, "congestion_experienced", randomValueGenerator.nextDouble());
                 }
             }
         }
@@ -233,11 +230,11 @@ public class CongestionWriterTest {
         for (Id<Link> linkId : idCollection) {
             for (int bin=0; bin<aggData.getNumBins(); bin++) {
                 if (!linkId.equals(link5Id)) {
-                        Assert.assertEquals("Counts do not match", aggData.getValue(linkId, bin, "count"), actualMap.getValue(linkId, bin, "count"), 0.0);
-                        Assert.assertEquals("Delay caused does not match", aggData.getValue(linkId, bin, "delay_caused"), actualMap.getValue(linkId, bin, "delay_caused"), 0.0);
-                        Assert.assertEquals("Delay experienced does not match", aggData.getValue(linkId, bin, "delay_experienced"), actualMap.getValue(linkId, bin, "delay_experienced"), 0.0);
-                        Assert.assertEquals("Congestion caused does not match", aggData.getValue(linkId, bin, "congestion_caused"), actualMap.getValue(linkId, bin, "congestion_caused"), 0.0);
-                        Assert.assertEquals("Congestion experienced does not match", aggData.getValue(linkId, bin, "congestion_experienced"), actualMap.getValue(linkId, bin, "congestion_experienced"), 0.0);
+                        Assert.assertEquals("Counts do not match", aggData.getValueInTimeBin(linkId, bin, "count"), actualMap.getValueInTimeBin(linkId, bin, "count"), 0.0);
+                        Assert.assertEquals("Delay caused does not match", aggData.getValueInTimeBin(linkId, bin, "delay_caused"), actualMap.getValueInTimeBin(linkId, bin, "delay_caused"), 0.0);
+                        Assert.assertEquals("Delay experienced does not match", aggData.getValueInTimeBin(linkId, bin, "delay_experienced"), actualMap.getValueInTimeBin(linkId, bin, "delay_experienced"), 0.0);
+                        Assert.assertEquals("Congestion caused does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_caused"), actualMap.getValueInTimeBin(linkId, bin, "congestion_caused"), 0.0);
+                        Assert.assertEquals("Congestion experienced does not match", aggData.getValueInTimeBin(linkId, bin, "congestion_experienced"), actualMap.getValueInTimeBin(linkId, bin, "congestion_experienced"), 0.0);
                     }
                 else {
                     Assert.assertNull("lines from Link_5 should not be in actual map", actualMap.getData().get(link5Id));

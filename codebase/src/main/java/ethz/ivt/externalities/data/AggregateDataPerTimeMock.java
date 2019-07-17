@@ -1,13 +1,10 @@
 package ethz.ivt.externalities.data;
 
-import com.opencsv.CSVReader;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
-import java.io.*;
 import java.util.ArrayList;
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -32,27 +29,27 @@ public class AggregateDataPerTimeMock extends AggregateDataPerTimeImpl<Link>{
         return null;
     }
 
-    public double getValue(Id<Link> id, double time, String attribute) {
+    public double getValueAtTime(Id<Link> id, double time, String attribute) {
         int timeBin = getTimeBin(time);
-        return getValue(id, timeBin, attribute);
+        return getValueInTimeBin(id, timeBin, attribute);
     }
 
-    public double getValue(Id<Link> id, int timeBin, String attribute) {
+    public double getValueInTimeBin(Id<Link> id, int timeBin, String attribute) {
         return 0.0;
     }
 
-    public void setValue(Id<Link> id, double time, String attribute, double value) {
+    public void setValueAtTime(Id<Link> id, double time, String attribute, double value) {
 
     }
 
-    public void setValue(Id<Link> id, int timeBin, String attribute, double value) {
+    public void setValueForTimeBin(Id<Link> id, int timeBin, String attribute, double value) {
     }
 
-    public void addValue(Id<Link> id, double time, String attribute, double value) {
+    public void addValueAtTime(Id<Link> id, double time, String attribute, double value) {
 
     }
 
-    public void addValue(Id<Link> id, int timeBin, String attribute, double value) {
+    public void addValueToTimeBin(Id<Link> id, int timeBin, String attribute, double value) {
 
     }
 

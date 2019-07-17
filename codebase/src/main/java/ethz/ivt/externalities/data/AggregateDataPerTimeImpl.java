@@ -1,22 +1,28 @@
 package ethz.ivt.externalities.data;
 
+import com.esotericsoftware.kryo.Kryo;
+import com.esotericsoftware.kryo.io.Input;
+import com.esotericsoftware.kryo.io.Output;
 import com.opencsv.CSVReader;
+import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
 import java.io.*;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.*;
 
-public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
+public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
     final Class<T> clazz;
     double binSize;
     int numBins;
     Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
-    List<String> attributes;
+    ArrayList<String> attributes;
 
-    public AggregateDataPerTimeImpl(double binSize, List<String> attributes,
+    public AggregateDataPerTimeImpl(double binSize, ArrayList<String> attributes,
                                     Class<T> clazz) {
         this.numBins = (int) (30 * 3600 / binSize);
         this.binSize = binSize;
@@ -38,12 +44,12 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
         return aggregateDataPerLinkPerTime;
     }
 
-    public double getValue(Id<T> id, double time, String attribute) {
+    public double getValueAtTime(Id<T> id, double time, String attribute) {
         int timeBin = getTimeBin(time);
-        return getValue(id, timeBin, attribute);
+        return getValueInTimeBin(id, timeBin, attribute);
     }
 
-    public double getValue(Id<T> id, int timeBin, String attribute) {
+    public double getValueInTimeBin(Id<T> id, int timeBin, String attribute) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
             return 0.0;
@@ -51,20 +57,23 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
         if (aggregateDataPerLinkPerTime.containsKey(id)) {
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
                 return aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin];
+            } else {
+                log.warn("Attribute " + attribute + " is not valid. Returning 0.");
             }
-            log.warn("Attribute " + attribute + " is not valid. Returning 0.");
             return 0.0;
+        } else {
+            log.debug("Id " + id + " is not valid. No value set.");
+            return 0.0;
+
         }
-        log.warn("Id " + id + " is not valid. No value set.");
-        return 0.0;
     }
 
-    public void setValue(Id<T> id, double time, String attribute, double value) {
+    public void setValueAtTime(Id<T> id, double time, String attribute, double value) {
         int timeBin = getTimeBin(time);
-        setValue(id, timeBin, attribute, value);
+        setValueForTimeBin(id, timeBin, attribute, value);
     }
 
-    public void setValue(Id<T> id, int timeBin, String attribute, double value) {
+    public void setValueForTimeBin(Id<T> id, int timeBin, String attribute, double value) {
         if (timeBin >= this.numBins) {
             log.warn("Time bin must be < " + this.numBins + ". No value set.");
             return;
@@ -74,23 +83,23 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
                 aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin] = value;
                 return;
-            }
-            log.warn("Attribute " + attribute + " is not valid. No value set.");
-            return;
+            } else {
+                log.warn("Attribute " + attribute + " is not valid. No value set.");
+            }return;
+        } else {
+            log.error("Id " + id + " is not valid. A value should have been set");
         }
-        log.warn("Id " + id + " is not valid. No value set.");
-        return;
     }
 
-    public void addValue(Id<T> id, double time, String attribute, double value) {
+    public void addValueAtTime(Id<T> id, double time, String attribute, double value) {
         int timeBin = getTimeBin(time);
-        addValue(id, timeBin, attribute, value);
+        addValueToTimeBin(id, timeBin, attribute, value);
     }
 
-    public void addValue(Id<T> id, int timeBin, String attribute, double value) {
-        double oldValue = getValue(id, timeBin, attribute);
+    public void addValueToTimeBin(Id<T> id, int timeBin, String attribute, double value) {
+        double oldValue = getValueInTimeBin(id, timeBin, attribute);
         double newValue = oldValue + value;
-        setValue(id, timeBin, attribute, newValue);
+        setValueForTimeBin(id, timeBin, attribute, newValue);
     }
 
 
@@ -138,7 +147,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
                                 {
                                     value = 0.;
                                 }
-                                this.addValue(lid, time, header[i+3], value);
+                                this.addValueAtTime(lid, time, header[i+3], value);
                             }
                         }
                     }
@@ -188,15 +197,17 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
 
             for (Map.Entry<Id<T>, Map<String, double[]>> e : this.aggregateDataPerLinkPerTime.entrySet()) {
                 for (int bin = 0; bin<this.numBins; bin++) {
+                    if (aggregateDataPerLinkPerTime.get(e.getKey()).get("count")[bin] > 0) {
 
-                    String entry = e.getKey() + ";" + binSize + ";" + bin;
+                        String entry = e.getKey() + ";" + binSize + ";" + bin;
 
-                    for (String attribute : attributes) {
-                        entry = entry + ";" + e.getValue().get(attribute)[bin];
+                        for (String attribute : attributes) {
+                            entry = entry + ";" + e.getValue().get(attribute)[bin];
+                        }
+
+                        bw.write(entry);
+                        bw.newLine();
                     }
-
-                    bw.write(entry);
-                    bw.newLine();
 
                 }
             }
@@ -220,13 +231,35 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T>{
     }
 
     public static AggregateDataPerTimeImpl congestion(double binSize, Class clazz) {
-        List<String> attributes = new ArrayList<>();
+        ArrayList<String> attributes = new ArrayList<>();
         attributes.add("count");
         attributes.add("delay_caused");
         attributes.add("delay_experienced");
         attributes.add("congestion_caused");
         attributes.add("congestion_experienced");
 
-        return new AggregateDataPerTimeImpl<>(binSize, attributes, clazz);
+        return new AggregateDataPerTimeImpl(binSize, attributes, clazz);
+    }
+
+
+    public ArrayList<String> getAttributes() {
+        return attributes;
+    }
+
+    public static AggregateDataPerTimeImpl<Link> readKryoCongestion(Path path) throws FileNotFoundException {
+        Kryo kryo = new Kryo();
+        kryo.register(Id.class, new IdSerializer(Link.class));
+        kryo.register(Link.class);
+        kryo.register(AggregateDataPerTimeImpl.class, new AggregateDataSerializer());
+
+        long startTime = System.currentTimeMillis();
+
+        Input input = new Input(new FileInputStream(path.toFile()));
+        AggregateDataPerTimeImpl<Link> cd2 = kryo.readObject(input, AggregateDataPerTimeImpl.class);
+        long endTime = System.currentTimeMillis();
+        double readTime = (endTime - startTime)/1000;
+        log.info(String.format("read from kryo format in %.2f seconds", readTime));
+        return cd2;
+
     }
 }

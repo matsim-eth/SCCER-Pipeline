@@ -15,7 +15,6 @@ import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import java.util.Map;
 
 /**
@@ -30,7 +29,7 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
 
     public EmissionsAggregator(Scenario scenario, Vehicle2DriverEventHandler v2deh) {
         this.drivers = v2deh;
-        List<String> attributes = new ArrayList<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
+        ArrayList<String> attributes = new ArrayList<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
 
         this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(3600, attributes, Link.class);
         this.aggregateEmissionsDataPerPersonPerTime = new AggregateDataPerTimeImpl<Person>(3600, attributes, Person.class);
@@ -46,8 +45,8 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
         Map<String, Double> pollutants = event.getColdEmissions();
         for (Map.Entry<String, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey();
-            aggregateEmissionsDataPerLinkPerTime.addValue(linkId, timeBin, pollutant, p.getValue());
-            aggregateEmissionsDataPerPersonPerTime.addValue(personId, timeBin, pollutant, p.getValue());
+            aggregateEmissionsDataPerLinkPerTime.addValueToTimeBin(linkId, timeBin, pollutant, p.getValue());
+            aggregateEmissionsDataPerPersonPerTime.addValueToTimeBin(personId, timeBin, pollutant, p.getValue());
         }
     }
 
@@ -61,8 +60,8 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
         Map<String, Double> pollutants = event.getWarmEmissions();
         for (Map.Entry<String, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey();
-            aggregateEmissionsDataPerLinkPerTime.addValue(linkId, timeBin, pollutant, p.getValue());
-            aggregateEmissionsDataPerPersonPerTime.addValue(personId, timeBin, pollutant, p.getValue());
+            aggregateEmissionsDataPerLinkPerTime.addValueToTimeBin(linkId, timeBin, pollutant, p.getValue());
+            aggregateEmissionsDataPerPersonPerTime.addValueToTimeBin(personId, timeBin, pollutant, p.getValue());
         }
 //        this.linkId2timeBin2values.get(event.getLinkId()).putIfAbsent("WarmEmissionsCount", new double[num_bins]);
 //        this.linkId2timeBin2values.get(event.getLinkId()).get("WarmEmissionsCount")[bin]++;

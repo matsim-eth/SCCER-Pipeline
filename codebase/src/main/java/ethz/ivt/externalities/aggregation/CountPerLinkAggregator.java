@@ -15,10 +15,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 
-import java.util.HashMap;
-import java.util.LinkedList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 
 public class CountPerLinkAggregator implements LinkEnterEventHandler, LinkLeaveEventHandler {
     private static final Logger log = Logger.getLogger(ExternalityCounter.class);
@@ -31,7 +28,7 @@ public class CountPerLinkAggregator implements LinkEnterEventHandler, LinkLeaveE
         this.scenario = scenario;
         this.drivers = drivers;
 
-        List<String> attributes = new LinkedList<>();
+        ArrayList<String> attributes = new ArrayList<>();
         attributes.add(CountPerLinkField.COUNT.getText());
         attributes.add(CountPerLinkField.DISTANCE.getText());
         attributes.add(CountPerLinkField.TIME.getText());
@@ -68,11 +65,11 @@ public class CountPerLinkAggregator implements LinkEnterEventHandler, LinkLeaveE
         int leaveTimeBin = ExternalityUtils.getTimeBin(leaveTime, 3600.0);
 
         if (leaveTimeBin == enterTimeBin) {
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.COUNT.getText(), 1.0);
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.DISTANCE.getText(), distance);
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.TIME.getText(), dt);
         }
         else if (leaveTimeBin > enterTimeBin) {
@@ -83,19 +80,19 @@ public class CountPerLinkAggregator implements LinkEnterEventHandler, LinkLeaveE
             double c1 = t1 / dt;
             double c2 = t2 / dt;
 
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     enterTimeBin, CountPerLinkField.COUNT.getText(), c1);
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.COUNT.getText(), c2);
 
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     enterTimeBin, CountPerLinkField.DISTANCE.getText(), distance*c1);
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.DISTANCE.getText(), distance*c2);
 
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     enterTimeBin, CountPerLinkField.TIME.getText(), t1);
-            aggregateCountDataPerLinkPerTime.addValue(linkId,
+            aggregateCountDataPerLinkPerTime.addValueToTimeBin(linkId,
                     leaveTimeBin, CountPerLinkField.TIME.getText(), t2);
         }
     }

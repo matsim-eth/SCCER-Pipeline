@@ -114,7 +114,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	    		for (LegValues leg : person.getValue()) {
 	    			legCount++;
 
-	    			String record = person.getKey() + ";" + this.date + ";" + legCount + ";";
+	    			String record = person.getKey() + ";" + this.date + ";" + leg.getTriplegId() + ";";
 					record += leg.getMode() + ";";
 	    			record += keys.stream ().map(key -> String.format("%.4f", leg.get(key)))
 							.collect(Collectors.joining(";"));

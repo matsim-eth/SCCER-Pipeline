@@ -1,7 +1,6 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.vsp.AgentOnLinkInfo;
 import ethz.ivt.vsp.CongestionEvent;
 import ethz.ivt.vsp.handlers.CongestionEventHandler;
@@ -78,15 +77,15 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         }
 
         // store delay info
-        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId,causingAgentEnterTime, "delay_caused", delay);
-        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId,affectedAgentLeaveTime, "delay_experienced", delay);
-        aggregateCongestionDataPerLinkPerTime.addValue(causingAgentLinkId,causingAgentEnterTime, "congestion_caused", congestion);
-        aggregateCongestionDataPerLinkPerTime.addValue(affectedAgentLinkId,affectedAgentLeaveTime, "congestion_experienced", congestion);
+        aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "delay_caused", delay);
+        aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId,affectedAgentLeaveTime, "delay_experienced", delay);
+        aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "congestion_caused", congestion);
+        aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId,affectedAgentLeaveTime, "congestion_experienced", congestion);
 
-        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId,causingAgentEnterTime, "delay_caused", delay);
-        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId,affectedAgentLeaveTime, "delay_experienced", delay);
-        aggregateCongestionDataPerPersonPerTime.addValue(causingAgentId,causingAgentEnterTime, "congestion_caused", congestion);
-        aggregateCongestionDataPerPersonPerTime.addValue(affectedAgentId,affectedAgentLeaveTime, "congestion_experienced", congestion);
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "delay_caused", delay);
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "delay_experienced", delay);
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "congestion_caused", congestion);
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "congestion_experienced", congestion);
    }
 
     /*
@@ -106,7 +105,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.addValue(linkId, enterTime, "count", 1);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
         }
     }
 
@@ -126,7 +125,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.addValue(linkId, enterTime, "count", 1);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
         }
     }
 
