@@ -36,7 +36,7 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef
 
   private def  processJsonFile(jsonFile : Path) : Seq[TripRecord] = {
     val trList = waypointProcessor.readJson(jsonFile)
-    log.info(s"reading path $jsonFile into ${trList.size} trips")
+    log.info(s"read path $jsonFile into ${trList.size} trips")
     trList
   }
 
