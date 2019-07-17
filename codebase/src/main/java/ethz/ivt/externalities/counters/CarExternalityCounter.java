@@ -67,12 +67,12 @@ public class CarExternalityCounter implements WarmEmissionEventHandler, ColdEmis
         if (personId == null) { //TODO fix this, so that the person id is retrieved properly
             personId = Id.createPersonId(e.getVehicleId().toString());
         }
-
         // add emissions
         Map<String, Double> pollutants = e.getWarmEmissions();
         for (Map.Entry<String, Double> p : pollutants.entrySet()) {
             String pollutant = p.getKey();
             if (!p.getValue().isNaN() && !p.getValue().isInfinite()) {
+                System.out.println(pollutant + " emissions: " + p.getValue());
 
                 if (pollutant.equals("PM")) {
                     pollutant = addLandUseToEmissionKey(pollutant, e.getLinkId());
