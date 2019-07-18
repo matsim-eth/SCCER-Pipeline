@@ -2,7 +2,6 @@ package ethz.ivt.externalities.data;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
-import com.esotericsoftware.kryo.io.Output;
 import com.opencsv.CSVReader;
 import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.apache.log4j.Logger;
@@ -11,8 +10,9 @@ import org.matsim.api.core.v01.network.Link;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.nio.file.Paths;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.HashMap;
+import java.util.Map;
 
 public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
@@ -178,12 +178,8 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     @Override
     public void writeDataToCsv(String outputPath) {
 
-        File dir = new File(outputPath);
-        dir.mkdirs();
-
-        String fileName = outputPath;
-
-        File file = new File(fileName);
+        File file = new File(outputPath);
+        file.getParentFile().mkdirs();
 
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
@@ -213,7 +209,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
             }
 
             bw.close();
-            log.info("Output written to " + fileName);
+            log.info("Output written to " + outputPath);
 
         } catch (IOException e) {
             e.printStackTrace();
