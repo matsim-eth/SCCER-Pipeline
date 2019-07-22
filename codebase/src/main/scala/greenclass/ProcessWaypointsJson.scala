@@ -65,6 +65,8 @@ object ProcessWaypointsJson {
 
     val logger = Logger.getLogger(this.getClass)
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
+    val save_mapmatched_traces = props.getProperty("save.mapmatched_traces", "false").equalsIgnoreCase("true")
+
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
     val gc_vehicles_file = base_file_location.resolve(Paths.get(props.getProperty("vehicles.file")))
@@ -84,8 +86,8 @@ object ProcessWaypointsJson {
     //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
-    val writerActorProps = ExternalitiesWriterActor.buildMobis(dbProps)
-    //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities.csv"))
+    //val writerActorProps = ExternalitiesWriterActor.buildMobis(dbProps)
+    val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities.csv"))
 
     val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
 
@@ -123,7 +125,11 @@ object ProcessWaypointsJson {
 
     val traces_output_dir = props.getProperty("traces.folder")
     val eventWriterProps = EventsWriterActor.props(scenario, traces_output_dir)
-    val eventWriterActor = _system.actorOf(eventWriterProps, "EventWriterActor")
+    val eventWriterActor = if (save_mapmatched_traces) {
+      Some(_system.actorOf(eventWriterProps, "EventWriterActor"))
+    } else {
+      None
+    }
 
 
     val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor, eventWriterActor)

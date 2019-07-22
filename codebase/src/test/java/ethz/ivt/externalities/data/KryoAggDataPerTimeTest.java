@@ -61,6 +61,59 @@ public class KryoAggDataPerTimeTest {
         compareDatasets(cd1, cd2);
     }
 
+    @Test
+    public void testKryoWrite() throws FileNotFoundException {
+
+        ArrayList<String> att = new ArrayList<>();
+        att.add("count");
+        att.add("delay");
+
+        Kryo kryo = new Kryo();
+        kryo.register(Id.class, new IdSerializer(Link.class));
+        kryo.register(Link.class);
+        kryo.register(AggregateDataPerTimeImpl.class, new AggregateDataSerializer());
+
+        AggregateDataPerTimeImpl<Link> cd1 = new AggregateDataPerTimeImpl<>(3600.0, att, Link.class);
+        for (int i=0; i< 100; i++) {
+
+            for (String a : cd1.attributes) {
+                for (int j = 0; j < cd1.numBins; j++) {
+                    Id<Link> linkId = Id.createLinkId(i);
+                    double val = Math.random() * 100;
+                    if (cd1.getValueInTimeBin(linkId, j, "count") > 0){
+                        cd1.addValueToTimeBin(linkId, j, a, val);
+
+                    }
+                }
+            }
+        }
+        Path folder = Paths.get("C:\\Projects\\SCCER_project\\data\\new_swiss\\congestion");
+        Output output = new Output(new FileOutputStream(folder.resolve("test.kryo").toFile()));
+
+        kryo.writeObject(output, cd1);
+        output.flush();
+        output.close();
+
+    }
+
+    @Test
+    public void testKryoRead() throws FileNotFoundException {
+
+        ArrayList<String> att = new ArrayList<>();
+        att.add("count");
+        att.add("delay");
+
+        Kryo kryo = new Kryo();
+        kryo.register(Id.class, new IdSerializer(Link.class));
+        kryo.register(Link.class);
+        kryo.register(AggregateDataPerTimeImpl.class, new AggregateDataSerializer());
+
+        Path folder = Paths.get("C:\\Projects\\SCCER_project\\data\\new_swiss\\congestion");
+        Input input = new Input(new FileInputStream(folder.resolve("test.kryo").toFile()));
+
+        AggregateDataPerTimeImpl<Link>  cd2 = kryo.readObject(input, AggregateDataPerTimeImpl.class);
+    }
+
     private void compareDatasets(AggregateDataPerTimeImpl<Link> cd1, AggregateDataPerTimeImpl<Link> cd2) {
         for (int i=0; i< 100; i++) {
             for (String a : cd1.attributes) {
@@ -93,7 +146,7 @@ public class KryoAggDataPerTimeTest {
         long startTime = System.currentTimeMillis();
         long endTime = System.currentTimeMillis();
 
-        AggregateDataPerTimeImpl<Link>  cd1 = AggregateDataPerTimeImpl.congestion(900, Link.class);
+        AggregateDataPerTimeImpl<Link>  cd1 = new AggregateDataPerTimeImpl<>(900, att, Link.class);
         Path folder = Paths.get("C:\\Projects\\SCCER_project\\data\\new_swiss\\congestion");
         System.out.print("loading from csv...");
         cd1.loadDataFromCsv(folder.resolve("aggregate_delay_per_link_per_time.csv").toString());
@@ -103,7 +156,7 @@ public class KryoAggDataPerTimeTest {
         startTime = System.currentTimeMillis();
 
         System.out.print("write to csv...");
-        cd1.writeDataToCsv(folder.resolve("aggregate_delay_per_link_per_time_integers.csv").toString());
+      //  cd1.writeDataToCsv(folder.resolve("aggregate_delay_per_link_per_time_integers.csv").toString());
 
         endTime = System.currentTimeMillis();
         System.out.println(String.format("%.2f", ((float) (endTime-startTime))/1000));

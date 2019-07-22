@@ -7,6 +7,7 @@ import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.population.Person;
 
 import java.io.*;
 import java.nio.file.Path;
@@ -62,7 +63,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
             }
             return 0.0;
         } else {
-            log.debug("Id " + id + " is not valid. No value set.");
+            log.debug("No value for " + id + ", returning 0");
             return 0.0;
 
         }
@@ -181,6 +182,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
         File file = new File(outputPath);
         file.getParentFile().mkdirs();
 
+
         try {
             BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 
@@ -226,7 +228,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
         return Math.min(bin, this.numBins-1);
     }
 
-    public static AggregateDataPerTimeImpl congestion(double binSize, Class clazz) {
+    public static AggregateDataPerTimeImpl<Link> congestionLink(double binSize) {
         ArrayList<String> attributes = new ArrayList<>();
         attributes.add("count");
         attributes.add("delay_caused");
@@ -234,9 +236,29 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
         attributes.add("congestion_caused");
         attributes.add("congestion_experienced");
 
-        return new AggregateDataPerTimeImpl(binSize, attributes, clazz);
+        return new AggregateDataPerTimeImpl<Link>(binSize, attributes, Link.class);
     }
 
+    public static AggregateDataPerTimeImpl<Person> congestionPerson(double binSize) {
+        ArrayList<String> attributes = new ArrayList<>();
+        attributes.add("count");
+        attributes.add("delay_caused");
+        attributes.add("delay_experienced");
+        attributes.add("congestion_caused");
+        attributes.add("congestion_experienced");
+
+        return new AggregateDataPerTimeImpl<Person>(binSize, attributes, Person.class);
+    }
+
+    public static AggregateDataPerTimeImpl<?> congestion(double binSize, Class clazz) {
+        if (clazz.getName().equals("Link")) {
+            return congestionLink(binSize);
+        }
+        if (clazz.getName().equals("Person")) {
+            return congestionPerson(binSize);
+        }
+        return null;
+    }
 
     public ArrayList<String> getAttributes() {
         return attributes;

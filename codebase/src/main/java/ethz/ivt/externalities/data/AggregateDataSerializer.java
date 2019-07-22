@@ -32,7 +32,15 @@ public class AggregateDataSerializer extends Serializer<AggregateDataPerTimeImpl
         for (Object id : object.aggregateDataPerLinkPerTime.keySet()) {
             output.writeString(id.toString());
             Map<Id<?>, Map<String, double[]>> data = (Map<Id<?>, Map<String, double[]>>) object.aggregateDataPerLinkPerTime;
-            long numRows = Arrays.stream(data.get(id).get("count")).filter(x -> x > 0).count();
+
+            long numRows = 0;
+
+            for (int bin = 0; bin < object.numBins; bin++) {
+                if (data.get(id).get("count")[bin] > 0) {
+                    numRows += 1;
+                }
+            }
+
             output.writeLong(numRows, true);
             for (int bin = 0; bin < object.numBins; bin++) {
                 if (data.get(id).get("count")[bin] > 0) {
@@ -51,7 +59,7 @@ public class AggregateDataSerializer extends Serializer<AggregateDataPerTimeImpl
     @Override
     public AggregateDataPerTimeImpl read(Kryo kryo, Input input, Class<? extends AggregateDataPerTimeImpl> type) {
         Registration r = kryo.readClass(input);
-    //    Class valueClass = r.getType();
+        //    Class valueClass = r.getType();
         Class valueClass = Link.class;
 
         double binSize = input.readDouble();

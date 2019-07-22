@@ -24,7 +24,7 @@ public class CongestionWriterTest {
         collection.add(linkId);
 
 
-        AggregateDataPerTimeImpl<Link> aggData = AggregateDataPerTimeImpl.congestion(binSize, Link.class);
+        AggregateDataPerTimeImpl<Link> aggData = (AggregateDataPerTimeImpl<Link>) AggregateDataPerTimeImpl.congestion(binSize, Link.class);
 
         Random random = new Random(0);
 
@@ -54,7 +54,7 @@ public class CongestionWriterTest {
     public void WritePerPerson() throws IOException {
         double binSize = 3600.;
 
-        AggregateDataPerTimeImpl<Person> aggData = AggregateDataPerTimeImpl.congestion(binSize, Person.class);
+        AggregateDataPerTimeImpl<Person> aggData = AggregateDataPerTimeImpl.congestionPerson(binSize);
 
         Id<Person> person = Id.createPersonId("person");
         Collection<Id<Person>> collection = new HashSet<>();
@@ -92,7 +92,7 @@ public class CongestionWriterTest {
         double value = 1.0;
         double newBinSize = aggregationFactor * originalBinSize;
 
-        AggregateDataPerTimeImpl<Link> inputMap = AggregateDataPerTimeImpl.congestion(originalBinSize, Link.class);
+        AggregateDataPerTimeImpl<Link> inputMap = AggregateDataPerTimeImpl.congestionLink(originalBinSize);
 
         Id<Link> linkId = Id.createLinkId("link");
         Collection<Id<Link>> collection = new HashSet<>();
@@ -123,7 +123,7 @@ public class CongestionWriterTest {
     public void WritePerLinkSparse() throws IOException {
         double binSize = 3600.;
 
-        AggregateDataPerTimeImpl<Link> aggData = AggregateDataPerTimeImpl.congestion(binSize, Link.class);
+        AggregateDataPerTimeImpl<Link> aggData = AggregateDataPerTimeImpl.congestionLink(binSize);
 
 
         Id<Link> linkId = Id.createLinkId("link");
@@ -174,7 +174,7 @@ public class CongestionWriterTest {
     public void WriteAndReadMultipleLinks() throws IOException {
         double binSize = 3600.;
 
-        AggregateDataPerTimeImpl<Link> aggData = AggregateDataPerTimeImpl.congestion(binSize, Link.class);
+        AggregateDataPerTimeImpl<Link> aggData = AggregateDataPerTimeImpl.congestionLink(binSize);
         Collection<Id<Link>> idCollection = new HashSet<>();
 
         Random randomValueGenerator = new Random(0);

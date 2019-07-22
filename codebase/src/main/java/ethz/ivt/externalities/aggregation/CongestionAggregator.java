@@ -40,8 +40,8 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         this.scenario = scenario;
         this.drivers = drivers;
         this.binSize = binSize;
-        aggregateCongestionDataPerLinkPerTime = AggregateDataPerTimeImpl.congestion(binSize, Link.class);
-        aggregateCongestionDataPerPersonPerTime =  AggregateDataPerTimeImpl.congestion(binSize, Person.class);
+        aggregateCongestionDataPerLinkPerTime = AggregateDataPerTimeImpl.congestionLink(binSize);
+        aggregateCongestionDataPerPersonPerTime =  AggregateDataPerTimeImpl.congestionPerson(binSize);
 
         
         // set up person2linkinfo
