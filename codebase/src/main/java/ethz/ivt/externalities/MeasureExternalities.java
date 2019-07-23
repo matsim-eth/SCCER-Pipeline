@@ -1,9 +1,9 @@
 package ethz.ivt.externalities;
 
-import ethz.ivt.JITvehicleCreator;
 import ethz.ivt.externalities.counters.*;
 import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.JITVehicleCreator;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -52,7 +52,7 @@ public class MeasureExternalities {
         this.ecc = ecc;
 
         eventsManager = new EventsManagerImpl();
-    //    eventsManager.addHandler(new JITvehicleCreator(scenario));
+        eventsManager.addHandler(new JITVehicleCreator(scenario));
 
         reader = new MatsimEventsReader(eventsManager);
 

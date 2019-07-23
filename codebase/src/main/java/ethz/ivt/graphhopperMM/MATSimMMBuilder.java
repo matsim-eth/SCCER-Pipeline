@@ -16,33 +16,34 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 
 import java.io.File;
+import java.nio.file.Path;
 
 public class MATSimMMBuilder {
 
-    public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans) {
-        GraphHopperMATSim hopper = GraphHopperMATSim.build(networkFilename, trans);
-        MapMatching mapMatcher = createMapMatching(hopper);
+    public GHtoEvents buildGhToEvents(String networkFilename, CoordinateTransformation trans, Path hopper_location) {
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(networkFilename, trans, hopper_location);
+        MapMatchingUnlimited mapMatcher = createMapMatching(hopper);
         return new GHtoEvents(hopper, mapMatcher);
 
     }
 
 
-    public GHtoEvents buildGhToEvents(Network network, CoordinateTransformation trans) {
-        GraphHopperMATSim hopper = GraphHopperMATSim.build(network, trans);
-        MapMatching mapMatcher = createMapMatching(hopper);
+    public GHtoEvents buildGhToEvents(Network network, CoordinateTransformation trans, Path hopper_location) {
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(network, trans, hopper_location);
+        MapMatchingUnlimited mapMatcher = createMapMatching(hopper);
         return new GHtoEvents(hopper, mapMatcher);
 
     }
 
 
 
-    private MapMatching createMapMatching(GraphHopper hopper) {
+    private MapMatchingUnlimited createMapMatching(GraphHopper hopper) {
         String algorithm = Parameters.Algorithms.DIJKSTRA_BI;
 
         //TODO: dont just get first encoder, let the searcher specify the transport type
         Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
-        MapMatching mapMatching = new MapMatchingUnlimited(hopper, algoOptions);
+        MapMatchingUnlimited mapMatching = new MapMatchingUnlimited(hopper, algoOptions);
 
         return mapMatching;
     }

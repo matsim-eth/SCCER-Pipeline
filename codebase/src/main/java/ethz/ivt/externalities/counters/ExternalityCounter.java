@@ -109,6 +109,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 	        // write header and records
 			boolean headerWritten = false;
+			List<String> keys_list = new ArrayList<>(keys);
+
 	    	for (Map.Entry<Id<Person>,List<LegValues>> person : personId2Leg.entrySet()  ) {
 	    		int legCount = 0;
 	    		for (LegValues leg : person.getValue()) {
@@ -116,12 +118,13 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 	    			String record = person.getKey() + ";" + this.date + ";" + leg.getTriplegId() + ";";
 					record += leg.getMode() + ";";
-	    			record += keys.stream ().map(key -> String.format("%.4f", leg.get(key)))
+					record += leg.getDistance() + ";";
+	    			record += keys_list.stream().map(key -> String.format("%.4f", leg.get(key)))
 							.collect(Collectors.joining(";"));
 
 	    	        if (!headerWritten) {
-                        String header = "PersonId;Date;Leg;Mode;";
-                        bw.write(header + String.join(";", keys));
+                        String header = "PersonId;Date;Leg;Mode;Distance;";
+                        bw.write(header + String.join(";", keys_list));
 	    				bw.newLine();
 	    	        	headerWritten = true;
 	    	        }

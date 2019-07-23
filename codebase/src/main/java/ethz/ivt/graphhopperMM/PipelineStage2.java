@@ -15,6 +15,7 @@ import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
+import java.nio.file.Paths;
 import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
@@ -60,7 +61,7 @@ public class PipelineStage2 {
         String outputFilename = args[3];
 
 
-        GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFileName, new CH1903LV03PlustoWGS84());
+        GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFileName, new CH1903LV03PlustoWGS84(), Paths.get(""));
         PipelineStage2 pipelineStage2 = new PipelineStage2(gHtoEvents);
 
         //load GPS traces from folder

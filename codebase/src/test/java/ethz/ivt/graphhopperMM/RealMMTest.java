@@ -9,6 +9,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84;
 import org.matsim.core.utils.geometry.transformations.WGS84toCH1903LV03Plus;
 
+import java.nio.file.Paths;
 import java.util.Arrays;
 import java.util.List;
 
@@ -34,7 +35,7 @@ public class RealMMTest {
         assertEquals(ch1, ch);
 
         String networkFilename = "src/test/resources/swiss_network.xml";
-        GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFilename, new CH1903LV03PlustoWGS84());
+        GHtoEvents gHtoEvents = new MATSimMMBuilder().buildGhToEvents(networkFilename, new CH1903LV03PlustoWGS84(), Paths.get(""));
 
         QueryResult qr = gHtoEvents.getHopper().getLocationIndex().findClosest(start.getLat(), start.getLon(), EdgeFilter.ALL_EDGES);
         assertNotNull(qr.getClosestEdge());

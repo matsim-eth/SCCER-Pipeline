@@ -1,6 +1,7 @@
 package ethz.ivt.graphhopperMM;
 
 import com.graphhopper.GraphHopper;
+import com.graphhopper.MapMatchingUnlimited;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
@@ -31,11 +32,11 @@ import java.util.stream.Collectors;
  */
 public class GHtoEvents {
 
-    private final MapMatching matcher;
+    private final MapMatchingUnlimited matcher;
     private GraphHopperMATSim hopper;
     private Logger logger = Logger.getLogger(this.getClass().getName());
 
-    public GHtoEvents(GraphHopperMATSim hopper, MapMatching matcher) {
+    public GHtoEvents(GraphHopperMATSim hopper, MapMatchingUnlimited matcher) {
         this.matcher = matcher;
         this.hopper = hopper;
     }
@@ -74,9 +75,12 @@ public class GHtoEvents {
 
 
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
+        int numCandidates = Integer.MAX_VALUE;
         if (entries.size() < 2) return new ArrayList<>();
+        if (entries.size() == 2) numCandidates = 1;
+
         try {
-            MatchResult mr = getMatcher().doWork(entries);
+            MatchResult mr = getMatcher().doWork(entries, numCandidates);
             if (mr.getEdgeMatches().isEmpty()) {
                 return Collections.EMPTY_LIST;
             }
@@ -253,12 +257,7 @@ public class GHtoEvents {
         return coordToCoordinate(getNetwork().getNodes().get(Id.createNodeId(node)).getCoord());
     }
 
-    public MapMatching getMatcher() {
-        return matcher;
-    }
-
-
-    public MapMatching getMapper() {
+    public MapMatchingUnlimited getMatcher() {
         return matcher;
     }
 

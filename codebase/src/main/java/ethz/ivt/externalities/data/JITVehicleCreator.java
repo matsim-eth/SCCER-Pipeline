@@ -1,4 +1,4 @@
-package ethz.ivt;
+package ethz.ivt.externalities.data;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -13,11 +13,10 @@ import org.matsim.vehicles.VehicleUtils;
 import java.util.LinkedList;
 import java.util.List;
 
-public class JITvehicleCreator implements PersonDepartureEventHandler {
+public class JITVehicleCreator implements PersonDepartureEventHandler {
     Scenario scenario;
-    List<Id<Vehicle>> addedVehicles = new LinkedList<>();
 
-    public JITvehicleCreator(Scenario scenario) {
+    public JITVehicleCreator(Scenario scenario) {
         this.scenario = scenario;
     }
 
@@ -25,22 +24,37 @@ public class JITvehicleCreator implements PersonDepartureEventHandler {
     public void handleEvent(PersonDepartureEvent event) {
         Id<Person> pid = event.getPersonId();
 
-        Id<VehicleType>  vt = Id.create("Benzin", VehicleType.class);
         Id<Vehicle> vid = Id.createVehicleId(pid);
         //easy option: add
         if (!scenario.getVehicles().getVehicles().containsKey(vid)) {
+            Id<VehicleType>  vt = Id.create("PASSENGER_CAR", VehicleType.class);
+
+            if(!scenario.getVehicles().getVehicleTypes().containsKey(vt)) {
+                createDefaultVehicle(scenario);
+            }
+
             VehicleType car = scenario.getVehicles().getVehicleTypes().get(vt);
             Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
             scenario.getVehicles().addVehicle(v);
-
-            addedVehicles.add(vid);
-            //scenario.getHouseholds().popul  ().get(hid).getVehicleIds().add(vid);
         }
+    }
+
+    private Id<VehicleType> createDefaultVehicle(Scenario scenario) {
+
+        Id<VehicleType> vehicleId = Id.create("PASSENGER_CAR", VehicleType.class);
+
+        VehicleType vehicleType = VehicleUtils.getFactory().createVehicleType(vehicleId);
+        vehicleType.setMaximumVelocity(100.0 / 3.6);
+        vehicleType.setPcuEquivalents(1.0);
+        vehicleType.setDescription("BEGIN_EMISSIONS" + vehicleId.toString() + "END_EMISSIONS");
+        scenario.getVehicles().addVehicleType(vehicleType);
+
+        return vehicleId;
     }
 
     @Override
     public void reset(int iteration) {
-    //    addedVehicles.forEach(vid ->scenario.getVehicles().removeVehicle(vid));
-    //   addedVehicles.clear();
+        //    addedVehicles.forEach(vid ->scenario.getVehicles().removeVehicle(vid));
+        //   addedVehicles.clear();
     }
 }

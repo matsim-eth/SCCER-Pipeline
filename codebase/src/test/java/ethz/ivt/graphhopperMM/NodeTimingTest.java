@@ -1,5 +1,6 @@
 package ethz.ivt.graphhopperMM;
 
+import com.graphhopper.MapMatchingUnlimited;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
@@ -56,7 +57,7 @@ public class NodeTimingTest {
     double start_x = 8.514318;
     double step = 0.002;
     double end_y = start_y + 2*step;
-    private MapMatching mapMatching;
+    private MapMatchingUnlimited mapMatching;
 
     Id<Person> personId = Id.createPersonId(1);
     Id<Vehicle> vehicleId = Id.createVehicleId(1);
@@ -99,7 +100,7 @@ public class NodeTimingTest {
 
         Weighting weighting = new FastestWeighting(hopper.getEncodingManager().getEncoder("car"));
         AlgorithmOptions algoOptions = new AlgorithmOptions(algorithm, weighting);
-        mapMatching = new MapMatching(hopper, algoOptions);
+        mapMatching = new MapMatchingUnlimited(hopper, algoOptions);
         graphhopper = hopper;
     }
 

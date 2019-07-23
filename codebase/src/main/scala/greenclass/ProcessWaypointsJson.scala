@@ -78,6 +78,7 @@ object ProcessWaypointsJson {
 
     val events_folder = base_file_location.resolve(Paths.get(props.getProperty("events.folder")))
 
+
     val trips_folder = if (args.length > 1) Paths.get(args(1))
     else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
@@ -86,37 +87,47 @@ object ProcessWaypointsJson {
     //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
-    //val writerActorProps = ExternalitiesWriterActor.buildMobis(dbProps)
-    val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities.csv"))
+    val writerActorProps = if (props.getProperty("write.to.database", "false").equals("true")) {
+      ExternalitiesWriterActor.buildMobis(dbProps)
+    } else {
+      ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities"))
+    }
 
     val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
 
     implicit val ec: ExecutionContext = _system.dispatcher
 
+    logger.info("Loading scenario")
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
+    logger.info("Loading vehicles")
     HelperFunctions.createVehicleTypes(scenario: Scenario)
     HelperFunctions.loadVehiclesFromDatabase(scenario, dbProps)
 
+    logger.info("Adding hbefa mappings")
     val roadTypeMapping = OsmHbefaMapping.build()
     roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
     //  Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
-    val processWaypointsJson = new ProcessWaypointsJson(scenario)
+    logger.info("Build ProcessWaypoints Module (with graphhopper)")
+    val gh_location = base_file_location.resolve(props.getProperty("graphhopper.graph.location"))
+    val processWaypointsJson = new ProcessWaypointsJson(scenario, gh_location)
 
-    val congestionAggregator = if (props_filename.contains("euler")) {
-      CSVCongestionReader.forLink().read(congestion_file.toString, 900)
-    } else {
+    logger.info("Build Congestion Module")
+    val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
       logger.warn("Using mock aggregate congestion values - ie 0.")
       new AggregateDataPerTimeMock()
+    } else {
+      CSVCongestionReader.forLink().read(congestion_file.toString, 900)
     }
 
+    logger.info("Build External Costs Module")
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
 
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
 
-    logger.info("Data loaded")
+    logger.info("Preloadable Data (excluding emissions module) loaded")
 
     val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
@@ -148,14 +159,18 @@ object ProcessWaypointsJson {
     traceProcessors ! PoisonPill
 
   }
+
+
+
 }
 
-class ProcessWaypointsJson(scenario: Scenario) {
+class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
 
   val logger = Logger.getLogger(this.getClass)
   val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
-  val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84)
+  val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84, hopper_location)
   gh.getMatcher.setMeasurementErrorSigma(500)
+
 
   val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")
 
@@ -209,18 +224,21 @@ class ProcessWaypointsJson(scenario: Scenario) {
   }
 
   def tripLegToEvents(tr : TripRecord, tl : TripLeg) : (Seq[Event], Geometry) = {
-    val matsim_mode = mapMode(tl.mode)
     val personId = Id.createPersonId(tr.user_id)
     val vehicleId = determineVehicleType(tr.user_id, tl.mode)
-    val (links : scala.List[LinkGPXStruct], linkEvents : List[Event])  = if (matsim_mode == TransportMode.car) {
-      val entries = tl.waypoints.map(_.toGPX).asJava
+    val (links : scala.List[LinkGPXStruct], linkEvents : List[Event])  = if (tl.mode.equals(TransportMode.car)) {
+      val start_pt = tl.start_point.toGPX
+      val finish_pt = tl.finish_point.toGPX
+
+      val entries = (start_pt +: tl.waypoints.map(_.toGPX) :+ finish_pt).asJava
+
       val links = gh.mapMatchWithTravelTimes(entries)
       val events = gh.linkGPXToEvents(links.iterator, vehicleId).asScala.toList
       (links.asScala.toList, events)
     } else (List.empty, List.empty)
 
 
-    val events_full = bookendEventswithDepArr(gh, tl, personId, matsim_mode, linkEvents)
+    val events_full = bookendEventswithDepArr(gh, tl, personId, tl.mode, linkEvents)
     val linestring = createLineString(tl, links)
     (events_full, linestring)
   }
@@ -233,17 +251,6 @@ class ProcessWaypointsJson(scenario: Scenario) {
     Some(event).map { case e : HasLinkId => e.getLinkId }
   }
 
-  def mapMode(mode: String) : String = mode.toLowerCase match {
-    case "ecar" | "car" => TransportMode.car
-    case "bus" => TransportMode.pt
-    case "tram" => TransportMode.pt
-    case "train" => TransportMode.train
-    case "walk"  => TransportMode.walk
-    case "bicycle" => TransportMode.bike
-    case _ => TransportMode.other
-
-
-  }
 
   def bookendEventswithDepArr(gh : GHtoEvents, tl: TripLeg,
                               personId:Id[Person], mappedMode : String,

@@ -13,8 +13,10 @@ import ethz.ivt.externalities.data.WaypointRecord
 import org.apache.log4j.{Level, Logger}
 import org.json4s.jackson.Serialization
 import me.tongfei.progressbar.ProgressBar
+import org.matsim.api.core.v01.TransportMode
 
 import scala.io.Source
+import scala.collection.JavaConverters._
 
 object SplitWaypoints {
 
@@ -54,6 +56,22 @@ object SplitWaypoints {
     }
   }
 
+  def parseDate(d: String): LocalDateTime = LocalDateTime.parse(d.replace(" ", "T"))
+  //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
+
+  def buildModeMap(props: Properties): Map[String, String] = {
+    val m1 = props.stringPropertyNames().asScala.filter(_.startsWith("matsim.mode"))
+    val modeMap = m1.flatMap { case matsim_mode_key =>
+      val matsim_mode = matsim_mode_key.split('.').last
+      props.getProperty(matsim_mode_key).split(';').map(mode => mode.trim -> matsim_mode)
+    }.toMap
+
+    modeMap.foreach(println)
+
+
+    return modeMap
+  }
+
   def main(args: Array[String]) {
 
     val props = new Properties()
@@ -65,15 +83,17 @@ object SplitWaypoints {
 
     val ds = new HikariDataSource(config)
 
-    val trips_sql_file = Source.fromFile(base_file_location.resolve(Paths.get(props.getProperty("trips.sql"))).toFile)
-    val triplegs_sql = trips_sql_file.getLines.mkString
+    val trips_sql_file = Source.fromFile(base_file_location.resolve(Paths.get(props.getProperty("trips.sql.file"))).toFile)
+    val triplegs_sql = trips_sql_file.getLines mkString "\n"
     trips_sql_file.close()
 
-    val waypoints_sql_file = Source.fromFile(base_file_location.resolve(Paths.get(props.getProperty("trips.sql"))).toFile)
-    val waypoints_sql = waypoints_sql_file.getLines.mkString
+    val waypoints_sql_file = Source.fromFile(base_file_location.resolve(Paths.get(props.getProperty("waypoints.sql.file"))).toFile)
+    val waypoints_sql = waypoints_sql_file.getLines mkString "\n"
     waypoints_sql_file.close()
 
     val logger = Logger.getLogger(this.getClass)
+
+    val matsimModeMap = buildModeMap(props)
 
     System.out.println(trips_folder)
 
@@ -88,8 +108,7 @@ object SplitWaypoints {
 
     case class TripRow(user_id: String, leg_id: Long, tripLeg: TripLeg)
 
-    def parseDate(d: String): LocalDateTime = LocalDateTime.parse(d.replace(" ", "T"))
-    //config.controler.setOutputDirectory(RUN_FOLDER + "aggregate/")
+
 
     logger.info("Loading trip legs from database")
 
@@ -104,7 +123,7 @@ object SplitWaypoints {
           LatLon(rs.getDouble("start_y"), rs.getDouble("start_x")),
           LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")),
           rs.getDouble("distance"),
-          rs.getString("mode_validated"),
+          matsimModeMap.getOrElse(rs.getString("mode_validated"), TransportMode.other),
           Nil
         )
       )
@@ -140,23 +159,22 @@ object SplitWaypoints {
         val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
 
 
-          if (Files.notExists(outFile)) {
-          //  logger.info("Creating:\t " + outFile.toAbsolutePath)
+        //  logger.info("Creating:\t " + outFile.toAbsolutePath)
 
-            val updatedLegs = tr.legs.map { leg =>
-              leg.copy(waypoints = getWaypoints(ds, waypoints_sql, tr.user_id, leg))
-            }
-            val new_tr = List(tr.copy(legs = updatedLegs))
-            val tripsJSON = Serialization.writePretty(new_tr)
-
-            Files.createDirectories(sub_dir)
-            val pw = new PrintWriter(outFile.toFile)
-            try {
-              pw.write(tripsJSON)
-            } finally {
-                pw.close()
-            }
+          val updatedLegs = tr.legs.map { leg =>
+            leg.copy(waypoints = getWaypoints(ds, waypoints_sql, tr.user_id, leg))
           }
+          val new_tr = List(tr.copy(legs = updatedLegs))
+          val tripsJSON = Serialization.writePretty(new_tr)
+
+          Files.createDirectories(sub_dir)
+          val pw = new PrintWriter(outFile.toFile)
+          try {
+            pw.write(tripsJSON)
+          } finally {
+              pw.close()
+          }
+
         pb.step(); // step by 1
         pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
       }

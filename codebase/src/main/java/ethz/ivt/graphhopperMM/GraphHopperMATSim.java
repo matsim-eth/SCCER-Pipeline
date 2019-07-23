@@ -14,6 +14,8 @@ import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 
 import java.io.File;
+import java.nio.file.Path;
+import java.nio.file.Paths;
 
 
 /**
@@ -30,19 +32,23 @@ public class GraphHopperMATSim extends GraphHopper {
         this.setDataReaderFile("/");
     }
 
-    public static GraphHopperMATSim build(String networkFilename, CoordinateTransformation coordinateTransformation) {
-        return build(readNetwork(networkFilename), coordinateTransformation);
+    public static GraphHopperMATSim build(Network network, CoordinateTransformation coordinateTransformation) {
+        return new GraphHopperMATSim(network, coordinateTransformation);
     }
 
-    public static GraphHopperMATSim build(Network network, CoordinateTransformation coordinateTransformation) {
+    public static GraphHopperMATSim build(String networkFilename, CoordinateTransformation coordinateTransformation, Path hopper_location) {
+        return build(readNetwork(networkFilename), coordinateTransformation, hopper_location);
+    }
+
+    public static GraphHopperMATSim build(Network network, CoordinateTransformation coordinateTransformation, Path hopper_location) {
         GraphHopperMATSim hopper = new GraphHopperMATSim(network, coordinateTransformation);
-        hopper.setStoreOnFlush(false)
-                .setGraphHopperLocation(new File("").getAbsolutePath());
+        hopper.setGraphHopperLocation(hopper_location.toString());
 
         //TODO: set up multiple encoders
         hopper.setEncodingManager(EncodingManager.create("car"));
 
         hopper.getCHFactoryDecorator().setEnabled(false);
+        //hopper.setCHEnabled(true);
         hopper.setPreciseIndexResolution(1000); //TODO: refactor this so that the index resoltion can be set on startup. but this is needed to find edges on some nodes
         hopper.importOrLoad();
 

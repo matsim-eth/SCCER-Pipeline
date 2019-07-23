@@ -165,11 +165,19 @@ public class MapMatchingUnlimited extends MapMatching {
      *                of the graph specified in the constructor
      */
     public MatchResult doWork(List<GPXEntry> gpxList) {
+        return doWork(gpxList, Integer.MAX_VALUE);
+    }
+
+    public MatchResult doWork(List<GPXEntry> gpxList, int numCandidates) {
         // filter the entries:
         List<GPXEntry> filteredGPXEntries = filterGPXEntries(gpxList);
 
         // now find each of the entries in the graph:
-        List<Collection<QueryResult>> queriesPerEntry = lookupGPXEntries(filteredGPXEntries, DefaultEdgeFilter.allEdges(weighting.getFlagEncoder()));
+        List<Collection<QueryResult>> queriesPerEntry = lookupGPXEntries(
+                filteredGPXEntries,
+                DefaultEdgeFilter.allEdges(weighting.getFlagEncoder()),
+                numCandidates
+        );
 
         // Add virtual nodes and edges to the graph so that candidates on edges can be represented
         // by virtual nodes.
@@ -271,12 +279,13 @@ public class MapMatchingUnlimited extends MapMatching {
      * Find the possible locations (edges) of each GPXEntry in the graph.
      */
     private List<Collection<QueryResult>> lookupGPXEntries(List<GPXEntry> gpxList,
-                                                           EdgeFilter edgeFilter) {
+                                                           EdgeFilter edgeFilter, int numCandidates) {
 
         final List<Collection<QueryResult>> gpxEntryLocations = new ArrayList<>();
         for (GPXEntry gpxEntry : gpxList) {
-            final List<QueryResult> queryResults = locationIndex.findNClosest(
+            List<QueryResult> queryResults = locationIndex.findNClosest(
                     gpxEntry.lat, gpxEntry.lon, edgeFilter, measurementErrorSigma);
+            queryResults = queryResults.stream().limit(numCandidates).collect(Collectors.toList());
             gpxEntryLocations.add(queryResults);
         }
         return gpxEntryLocations;

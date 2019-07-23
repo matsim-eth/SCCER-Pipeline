@@ -8,10 +8,10 @@
 	ST_Y(ST_StartPoint(geometry)) as start_y,
 	ST_X(ST_EndPoint(geometry)) as finish_x,
 	ST_Y(ST_EndPoint(geometry)) as finish_y,
-	length
+	length as distance
 
  FROM motion_tag_trips as l
- where mode not in ('', '???', 'overseas', 'Split', 'Activity')
+ where type='Track' and mode in ('Mode::Car')
  -- and person_id in (select person_id from legs_per_person where days_since_first_leg > 27 and valid_dates >= 7)
  --and person_id in (select distinct participant_id from vehicle_information)
  --and id not in (select distinct (leg_id) from validation_externalities)

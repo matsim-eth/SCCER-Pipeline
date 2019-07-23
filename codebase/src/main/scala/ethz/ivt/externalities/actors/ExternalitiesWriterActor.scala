@@ -115,7 +115,7 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   var ds : HikariDataSource = _
-  val externalities_insert_sql = s"INSERT INTO validation_externalities (leg_id, key, value) values (?, ?, ?);"
+  val externalities_insert_sql = s"INSERT INTO externalities_list (leg_id, key, value) values (?, ?, ?);"
 
   override def preStart() = {
     super.preStart

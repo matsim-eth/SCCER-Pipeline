@@ -75,7 +75,7 @@ public class TestMATSimGraphhopper {
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // import matsim network data
-        GraphHopperMATSim hopper = GraphHopperMATSim.build(scenario.getNetwork(), new CH1903LV03PlustoWGS84());
+        GraphHopperMATSim hopper = GraphHopperMATSim.build(scenario.getNetwork(), new CH1903LV03PlustoWGS84(), Paths.get(""));
 
         hopper.setStoreOnFlush(false)
                 .setGraphHopperLocation(new File("").getAbsolutePath())
