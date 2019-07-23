@@ -32,15 +32,15 @@ public class ExternalityCostCalculator {
                 .map(l -> l.split("="))
                 .collect(Collectors.toMap(x -> x[0].trim(), x -> Double.parseDouble(x[1])));
 
-        double years = rv.get("scenario.year") - rv.get("base.year");
-        double C02_cost_increase = years * rv.get("CO2.costs.growth_rate") * rv.get("CO2.climate.costs.2010");
-        rv.put("CO2.climate.costs.adj", rv.get("CO2.climate.costs.2010") + C02_cost_increase);
-        log.info(String.format("Original CO2 cost was: %s in %.0f", rv.get("CO2.climate.costs.2010"), rv.get("base.year")));
+        double years = rv.get("scenario.year") - rv.get("CO2.climate.costs.base.year");
+        double C02_cost_increase = years * rv.get("CO2.costs.growth_rate") * rv.get("CO2.climate.costs.base");
+        rv.put("CO2.climate.costs.adj", rv.get("CO2.climate.costs.base") + C02_cost_increase);
+        log.info(String.format("Original CO2 cost was: %s in %.0f", rv.get("CO2.climate.costs.base"), rv.get("CO2.climate.costs.base.year")));
         log.info(String.format("With growth rate of %f, adding %f", rv.get("CO2.costs.growth_rate"), C02_cost_increase));
 
         double norm_scale_years = rv.get("scenario.year") - rv.get("noise.base.year");
-        double noise_cost_increase = norm_scale_years * rv.get("noise.costs.growth_rate") * rv.get("noise.average.cost");
-        rv.put("noise.average.cost.adj", rv.get("noise.average.cost") + noise_cost_increase);
+        double noise_cost_increase = 1 + norm_scale_years * rv.get("noise.costs.growth_rate");
+        rv.put("noise.average.cost.adjustment", noise_cost_increase);
 
 
     }
@@ -62,68 +62,37 @@ public class ExternalityCostCalculator {
         return emissions.values().stream().flatMap(x->x.stream().flatMap(x1->x1.keys().stream())).collect(Collectors.toSet());
     }
 
-    private Map<String,Double> calculateCostsForLeg(LegValues emissions) {
+    protected Map<String,Double> calculateCostsForLeg(LegValues emissions) {
         Map<String, Double> costs = new HashMap<>();
 
-        if ("Car".equalsIgnoreCase(emissions.getMode()) && emissions.get("MappedDistance") == 0.0) {
-            emissions.setDistance(emissions.get("MappedDistance"));
+
+        if (emissions.getMode().equalsIgnoreCase("train")
+                ||emissions.getMode().equalsIgnoreCase("bus")
+                ||emissions.getMode().equalsIgnoreCase("tram")) {
+            addPTEmissions(emissions, costs);
         }
-        addPTEmissions(emissions);
-
-        double CO2_equivelent_g = 0;
-        //CO2 equivelents
-        CO2_equivelent_g += emissions.get("CO2(total)");
-        CO2_equivelent_g += emissions.get("N2O") * rv.get("N2O.CO2.equivalents");
-        CO2_equivelent_g += emissions.get("CH4") * rv.get("CH4.CO2.equivalents");
-
-        double CO2_equivilent_costs = CO2_equivelent_g * rv.get("CO2.climate.costs.adj") / 1e6;
-        costs.put("CO2_costs", CO2_equivilent_costs);
-
-        //Non-exhaust PM
-        if (emissions.containsKey("MappedDistance_urban") && emissions.containsKey("MappedDistance_rural")) {
-            double PM_urban_non_exhaust = emissions.get("MappedDistance_urban") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
-            double PM_rural_non_exhaust = emissions.get("MappedDistance_rural") / 1000 * rv.get("PM10.non_exhaust.g_per_km_pv");
-
-            double PM_urban_total = emissions.get("PM_urban") + PM_urban_non_exhaust;
-            double PM_rural_total = emissions.get("PM_rural") + PM_rural_non_exhaust;
-
-            emissions.put("PM_urban", PM_urban_total);
-            emissions.put("PM_rural", PM_rural_total);
+        if ("car".equalsIgnoreCase(emissions.getMode())) {
+            addCarEmissions(emissions, costs);
         }
-        //PM urban and rural
-        double PM_urban_health = emissions.get("PM_urban") * rv.get("PM10.healthcare.urban") / 1e6;
-        double PM_urban_buildings = emissions.get("PM_urban") * rv.get("PM10.building.urban") / 1e6;
-        //PM rural
-        double PM_rural_health = emissions.get("PM_rural") * rv.get("PM10.healthcare.rural") / 1e6;
-        double PM_rural_buildings = emissions.get("PM_rural") * rv.get("PM10.building.rural") / 1e6;
-
-        //PM regional
-        double PM_regional_health = (emissions.get("PM_urban") + emissions.get("PM_rural")) * rv.get("PM10.healthcare.regional") / 1e6;
-        double PM_regional_buildings = (emissions.get("PM_urban") + emissions.get("PM_rural")) * rv.get("PM10.building.regional") / 1e6;
-
-        costs.put("PM_health_costs", PM_urban_health + PM_rural_health + PM_regional_health);
-        costs.put("PM_building_damage_costs", PM_urban_buildings + PM_rural_buildings + PM_regional_buildings);
 
         //NOX regional
-        double NOX_regional = emissions.get("NOx") * rv.get("NOX.regional") / 1e6;
+        double NOX_regional = emissions.get("NOx") * rv.get("NOX.regional.CHF_t") / 1e6;
         costs.put("NOx_costs", NOX_regional);
 
         //Zinc
-        if ("Car".equalsIgnoreCase(emissions.getMode())) {
-            double zinc_regional = (emissions.getDistance()) / 1000 * rv.get("Zinc.g_per_km_pv") * rv.get("Zinc.soil_quality.regional") / 1e6;
-            costs.put("Zinc_costs", zinc_regional);
+        String zincKey = "Zinc.soil_quality." + emissions.getMode();
+        double zinc_g = rv.getOrDefault(zincKey, 0.0) / 1e6;
+        double zinc_cost = (emissions.getDistance()) / 1000 * rv.get("Zinc.regional") * zinc_g;
+        costs.put("Zinc_costs", zinc_cost);
 
-            double noise_costs = (emissions.getDistance())  / 1000 * rv.get("noise.average.cost.adj");
-            costs.put("Noise_costs", noise_costs);
-        }
-        else if ("walk".equalsIgnoreCase(emissions.getMode())) {
-            costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("walking.health.cost"));
-        }
-        else if ("Bicycle".equalsIgnoreCase(emissions.getMode()) ||
-                "bike".equalsIgnoreCase(emissions.getMode())) {
-            costs.put("Active_costs", emissions.getDistance() / 1000 * rv.get("cycling.health.cost"));
+        String noiseKey = "noise.average.cost." + emissions.getMode();
+        double noise_base_cost = rv.getOrDefault(noiseKey, 0.0);
+        double noise_costs = (emissions.getDistance())  / 1000 * noise_base_cost * rv.get("noise.average.cost.adjustment");
+        costs.put("Noise_costs", noise_costs);
 
-        }
+        String activeHealthKey = "health.cost." + emissions.getMode();
+
+        costs.put("Active_costs", emissions.getDistance() / 1000 * rv.getOrDefault(activeHealthKey, 0.0));
 
         //congestion
         double congestion_costs = emissions.get("delay_caused") * rv.get("VTTS") / 3600;
@@ -132,24 +101,64 @@ public class ExternalityCostCalculator {
         return costs;
     }
 
-    private void addPTEmissions(LegValues emissions) {
-        String mode = null;
+    private void addCarEmissions(LegValues emissions, Map<String, Double> costs ) {
 
-        if ("Train".equalsIgnoreCase(emissions.getMode())) {
-            mode = "sbb.regional_train.";
-        } else if (TransportMode.pt.equalsIgnoreCase(emissions.getMode()) ||
-                "bus".equalsIgnoreCase(emissions.getMode()) ||
-                "tram".equalsIgnoreCase(emissions.getMode())) {
-            mode = "sbb.bus.";
+        double CO2_equivelent_g = 0;
+        //CO2 equivelents
+        CO2_equivelent_g += emissions.get("CO2(total)");
+        CO2_equivelent_g += emissions.get("N2O") * rv.get("N2O.CO2.equivalents");
+        CO2_equivelent_g += emissions.get("CH4") * rv.get("CH4.CO2.equivalents");
+        emissions.put("CO2_equivalent_emissions", CO2_equivelent_g);
+
+        //co2 costs
+        double CO2_equivilent_costs =  emissions.get("CO2_equivalent_emissions") * rv.get("CO2.climate.costs.adj") / 1e6;
+        costs.put("CO2_costs", CO2_equivilent_costs);
+
+        if (!emissions.containsKey("MappedDistance_urban") || emissions.containsKey("MappedDistance_rural")) {
+            emissions.put("MappedDistance_urban", emissions.getDistance()/2);
+            emissions.put("MappedDistance_rural", emissions.getDistance()/2);
         }
 
-        if (mode != null) {
-            emissions.put("PM_urban", emissions.getDistance() / 1000  * (rv.get(mode + "PM10")) * 0.5);
-            emissions.put("PM_rural", emissions.getDistance() / 1000 * (rv.get(mode + "PM10")) * 0.5);
-            emissions.put("NOx", emissions.getDistance() / 1000 * rv.get(mode + "NOX"));
+        //Non-exhaust PM
+        double PM_urban_non_exhaust = emissions.get("MappedDistance_urban") / 1000 * rv.get("PM10.non_exhaust.innerorts.g_per_km_pv");
+        double PM_rural_non_exhaust = emissions.get("MappedDistance_rural") / 1000 * rv.get("PM10.non_exhaust.ausserorts.g_per_km_pv");
 
-            emissions.put("CO2(total)", emissions.getDistance() / 1000 * rv.get(mode + "CO2"));
-        }
+        double PM_urban_total = emissions.get("PM_urban") + PM_urban_non_exhaust;
+        double PM_rural_total = emissions.get("PM_rural") + PM_rural_non_exhaust;
+
+        emissions.put("PM_urban", PM_urban_total);
+        emissions.put("PM_rural", PM_rural_total);
+
+        double PM_urban_health = emissions.get("PM_urban") * rv.get("PM10.healthcare.car.urban") / 1e6;
+        double PM_urban_buildings = emissions.get("PM_urban") * rv.get("PM10.building.car.urban") / 1e6;
+        //PM rural
+        double PM_rural_health = emissions.get("PM_rural") * rv.get("PM10.healthcare.car.rural") / 1e6;
+        double PM_rural_buildings = emissions.get("PM_rural") * rv.get("PM10.building.car.rural") / 1e6;
+
+        //PM regional
+        double PM_regional_health = (emissions.get("PM_urban") + emissions.get("PM_rural")) * rv.get("PM10.healthcare.car.regional") / 1e6;
+        double PM_regional_buildings = (emissions.get("PM_urban") + emissions.get("PM_rural")) * rv.get("PM10.building.car.regional") / 1e6;
+
+        costs.put("PM_health_costs", PM_urban_health + PM_rural_health + PM_regional_health);
+        costs.put("PM_building_damage_costs", PM_urban_buildings + PM_rural_buildings + PM_regional_buildings);
+    }
+
+    private void addPTEmissions(LegValues emissions, Map<String, Double> costs ) {
+
+        String mode = emissions.getMode().toLowerCase();
+        double distance = emissions.getDistance()/1000;
+        double co2_costs_p_km = rv.get("CO2."+mode+".CHF_pkm");
+        costs.put("CO2_costs", co2_costs_p_km*distance);
+
+        double pm10_health = rv.getOrDefault("PM10.healthcare."+mode+".CHF_pkm", 0.0);
+        double pm10_building = rv.getOrDefault("PM10.building."+mode+".CHF_pkm", 0.0);
+
+        double nox = rv.getOrDefault("NOX."+mode+".urban.g_per_pkm", 0.0) * distance;
+        emissions.put("NOx", nox);
+
+
+        costs.put("PM_health_costs", pm10_health);
+        costs.put("PM_building_damage_costs", pm10_building);
     }
 
 }
