@@ -33,11 +33,7 @@ public class LegValues {
     }
 
     public double get(String key) {
-        if (personId2Leg2Values.containsKey(key)) {
-            return personId2Leg2Values.get(key);
-        } else {
-            return Double.NaN;
-        }
+        return personId2Leg2Values.getOrDefault(key, 0.0);
     }
 
     public void putAll(Map<String, Double> map) {

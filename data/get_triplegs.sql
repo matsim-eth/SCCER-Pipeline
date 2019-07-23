@@ -1,4 +1,8 @@
- SELECT person_id, id as leg_id, leg_date, leg_date+ interval '1 second' * duration as end_date, leg_mode_user  as mode_validated,
+ SELECT 
+ 	person_id, 
+ 	id as leg_id, 
+ 	leg_date, leg_date+ interval '1 second' * duration as end_date, 
+ 	leg_mode_user  as mode_validated,
 	ST_X(ST_StartPoint(geom)) as start_x,
 	ST_Y(ST_StartPoint(geom)) as start_y,
 	ST_X(ST_EndPoint(geom)) as finish_x,
