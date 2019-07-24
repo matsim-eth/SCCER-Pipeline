@@ -5,7 +5,8 @@ import java.sql.Statement
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
 import org.apache.log4j.Logger
 import org.matsim.api.core.v01.{Id, Scenario}
-import org.matsim.vehicles.{Vehicle, VehicleType}
+import org.matsim.contrib.emissions.EmissionUtils
+import org.matsim.vehicles.{EngineInformation, EngineInformationImpl, Vehicle, VehicleType}
 
 import scala.collection.JavaConverters._
 import scala.collection.mutable
@@ -42,17 +43,26 @@ object HelperFunctions {
 
   val PETROL_KEY = "petrol (4S)"
   val DIESEL_KEY = "diesel"
+  val ELECTRIC_KEY = "electric"
   val DESCRIPTION_TEMPLATE = "BEGIN_EMISSIONSPASSENGER_CAR;%s;%s;%sEND_EMISSIONS"
 
-  def createVehicleId(fuelType: String, euro: Int, size: String) : String =  {
-    fuelType+ "_"+euro+"_"+size
+  def createVehicleTypeId(fuelType: String, euro: Int, size: String) : Id[VehicleType] =  {
+    fuelType match {
+      case "Electric" => EmissionUtils.ELECTRIC_VEHICLE_TYPE_ID
+      case _          => Id.create(fuelType+ "_"+euro+"_"+size, classOf[VehicleType])
+    }
+
   }
 
   def createEmissionsString(fuelType: String, euro: Int, size: String) : String =  {
+    if (fuelType.equalsIgnoreCase("electric")) {
+      return ""
+    }
 
     val mappedFuelType = fuelType.toLowerCase match {
       case "diesel" => DIESEL_KEY
-      case _ => PETROL_KEY
+      case "gasoline" => PETROL_KEY
+      case "hybrid (gasoline/diesel + electric)" => PETROL_KEY //no hybrid in hbefa database
     }
 
     val mapped_size = size match {
@@ -72,17 +82,13 @@ object HelperFunctions {
   }
 
   def createVehicleTypes(scenario: Scenario): Unit = {
-    for (mappedFuelType <- PETROL_KEY :: DIESEL_KEY :: Nil) {
-      for (mapped_size <- "<1,4L" :: "1,4-<2L" :: "≥2L" :: Nil) {
+    for (fuelType <- PETROL_KEY :: DIESEL_KEY :: Nil) {
+      for (size <- "<1,4L" :: "1,4-<2L" :: "≥2L" :: Nil) {
         for (euro <- 0 to 6) {
-          val mapped_euro = (mappedFuelType match {
-            case PETROL_KEY => "PC P Euro-%d"
-            case _=> "PC D Euro-%d"
-          }).format(euro)
 
-          val emissionsString = DESCRIPTION_TEMPLATE.format(mappedFuelType, mapped_size, mapped_euro)
-          val vehicleTypeId = Id.create(emissionsString, classOf[VehicleType])
+          val vehicleTypeId = createVehicleTypeId(fuelType, euro, size)
           val vehicleType = scenario.getVehicles.getFactory.createVehicleType(vehicleTypeId)
+          vehicleType.setDescription(createEmissionsString(fuelType, euro, size))
           scenario.getVehicles.addVehicleType(vehicleType)
         }
       }
@@ -105,7 +111,7 @@ object HelperFunctions {
       stmt.execute(vehicles_sql)
       val resultSet = stmt.getResultSet
 
-      val vs = new Iterator[(Id[Vehicle], Id[VehicleType], String)] {
+      val vs = new Iterator[(Id[Vehicle], String, Int, String)] {
         def hasNext = resultSet.next()
 
 
@@ -114,15 +120,17 @@ object HelperFunctions {
           val fuelType = resultSet.getString("fuel_type")
           val euro = resultSet.getInt("euro_standard")
           val size = resultSet.getString("size_category_short")
-          val vehicleDescString = createEmissionsString(fuelType, euro, size)
-          val vehicleTypeId = Id.create(createVehicleId(fuelType, euro, size), classOf[VehicleType])
 
-          (vid, vehicleTypeId, vehicleDescString)
+          (vid, fuelType, euro, size)
         }
-      }.toStream.foreach { case (vid, vehicleTypeId, vehicleDescString) =>
+      }.toStream.foreach { case (vid, fuelType, euro, size) =>
+        val vehicleTypeId = createVehicleTypeId(fuelType, euro, size)
+
         if (!scenario.getVehicles.getVehicleTypes.containsKey(vehicleTypeId)) {
           val vehicleType = scenario.getVehicles.getFactory.createVehicleType(vehicleTypeId)
-          vehicleType.setDescription(vehicleDescString)
+          val emissionsString = createEmissionsString(fuelType, euro, size)
+          vehicleType.setDescription(emissionsString)
+
           scenario.getVehicles.addVehicleType(vehicleType)
         }
         val vehicleType = scenario.getVehicles.getVehicleTypes.get(vehicleTypeId)

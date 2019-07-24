@@ -101,7 +101,6 @@ object ProcessWaypointsJson {
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
 
     logger.info("Loading vehicles")
-    HelperFunctions.createVehicleTypes(scenario: Scenario)
     HelperFunctions.loadVehiclesFromDatabase(scenario, dbProps)
 
     logger.info("Adding hbefa mappings")
