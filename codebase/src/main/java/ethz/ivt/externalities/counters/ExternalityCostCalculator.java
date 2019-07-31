@@ -67,9 +67,13 @@ public class ExternalityCostCalculator {
 
 
         if (emissions.getMode().equalsIgnoreCase("train")
-                ||emissions.getMode().equalsIgnoreCase("bus")
-                ||emissions.getMode().equalsIgnoreCase("tram")) {
+                ||emissions.getMode().equalsIgnoreCase("pt")
+                ||emissions.getMode().equalsIgnoreCase("tram")
+                ||emissions.getMode().equalsIgnoreCase("bus")) {
             addPTEmissions(emissions, costs);
+        }
+        if ("car".equalsIgnoreCase(emissions.getMode())) {
+            addCarEmissions(emissions, costs);
         }
         if ("car".equalsIgnoreCase(emissions.getMode())) {
             addCarEmissions(emissions, costs);
@@ -147,7 +151,7 @@ public class ExternalityCostCalculator {
 
         String mode = emissions.getMode().toLowerCase();
         double distance = emissions.getDistance()/1000;
-        double co2_costs_p_km = rv.get("CO2."+mode+".CHF_pkm");
+        double co2_costs_p_km = rv.getOrDefault("CO2."+mode+".CHF_pkm", 0.0);
         costs.put("CO2_costs", co2_costs_p_km*distance);
 
         double pm10_health = rv.getOrDefault("PM10.healthcare."+mode+".CHF_pkm", 0.0);

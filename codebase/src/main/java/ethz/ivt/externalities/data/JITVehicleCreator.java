@@ -15,7 +15,9 @@ public class JITVehicleCreator implements PersonDepartureEventHandler {
     Scenario scenario;
 
     public JITVehicleCreator(Scenario scenario) {
+
         this.scenario = scenario;
+        createDefaultVehicle(scenario);
     }
 
     @Override

@@ -44,8 +44,8 @@ N2O.CO2.equivalents = 298
 CH4.CO2.equivalents = 25
 
 accident.costs.car.p_km = 0.0214
-accident.costs.walking.p_km =  0.075 
-accident.costs.cycling.p_km =  0.257
+accident.costs.walk.p_km =  0.075 
+accident.costs.bike.p_km =  0.257
 
 noise.base.year = 2015
 noise.costs.growth_rate = 0.0015
@@ -57,5 +57,5 @@ noise.average.cost.trolleybus =  0.0009
 noise.average.cost.tram =  0.0015 
 
 
-health.cost.walking = -0.1863
-health.cost.bicycle = -0.1870 
+health.cost.walk = -0.1863
+health.cost.bike = -0.1870 

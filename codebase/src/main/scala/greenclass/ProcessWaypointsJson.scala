@@ -69,7 +69,6 @@ object ProcessWaypointsJson {
 
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
-    val gc_vehicles_file = base_file_location.resolve(Paths.get(props.getProperty("vehicles.file")))
 
     val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
     val congestion_file = base_file_location.resolve(Paths.get(props.getProperty("congestion.file")))

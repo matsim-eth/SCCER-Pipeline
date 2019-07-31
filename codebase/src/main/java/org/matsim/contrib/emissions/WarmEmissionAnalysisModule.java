@@ -189,7 +189,7 @@ public final class WarmEmissionAnalysisModule {
 		warmEmissions = calculateWarmEmissions(vehicle.getId(), travelTime, roadType, freeVelocity, linkLength, vehicleInformationTuple);
 
 		// a basic apporach to introduce emission reduced cars:
-		if(emissionEfficiencyFactor != null){
+		if(emissionEfficiencyFactor != null && warmEmissions != null){
 			warmEmissions = rescaleWarmEmissions(warmEmissions);
 		}
 		return warmEmissions;
@@ -252,7 +252,8 @@ public final class WarmEmissionAnalysisModule {
 		double ef_gpkm;
 
 		if(averageSpeed_kmh <= 0.0){
-			throw new RuntimeException("Average speed has been calculated to 0.0 or a negative value. Aborting...");
+			logger.warn("Average speed has been calculated to 0.0 or a negative value. Skipping...");
+			return null;
 		}
 		if ((averageSpeed_kmh - freeFlowSpeed_kmh) > 1.0){
 			if (ecg.handlesHighAverageSpeeds()) {

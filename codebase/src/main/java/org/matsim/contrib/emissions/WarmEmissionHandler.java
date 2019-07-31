@@ -220,8 +220,9 @@ class WarmEmissionHandler implements LinkEnterEventHandler, LinkLeaveEventHandle
 					vehicle,
 					link,
 					travelTime);
-
-				warmEmissionAnalysisModule.throwWarmEmissionEvent(leaveTime, linkId, vehicleId, warmEmissions);
+				if (warmEmissions != null) {
+					warmEmissionAnalysisModule.throwWarmEmissionEvent(leaveTime, linkId, vehicleId, warmEmissions);
+				}
 			}
 		}
 	}
