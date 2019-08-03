@@ -23,7 +23,7 @@ object ExternalitiesActor {
   def props(meCreator: () => MeasureExternalities, writerActor : ActorRef): Props =
     Props(new ExternalitiesActor(meCreator, writerActor))
 
-  final case class EventList(tr: TripRecord, events : Stream[(Long, Seq[Event], Geometry)])
+  final case class EventList(tr: TripRecord, events : Stream[(String, Seq[Event], Geometry)])
 
 
 }

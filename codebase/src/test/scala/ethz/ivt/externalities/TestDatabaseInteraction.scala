@@ -44,7 +44,7 @@ object TestDatabaseInteraction {
     val writerActor = _system.actorOf(writerActorProps, "ExternalityWriter")
 
     val leg  = TripLeg(
-      0,
+     "0" ,
       LocalDateTime.now(),
       LocalDateTime.now().plusHours(1),
       LatLon(0.0, 0.0), LatLon(0.0, 0.0),

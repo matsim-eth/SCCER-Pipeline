@@ -134,10 +134,10 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
             val insert_date = LocalDateTime.now()
 
             legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) =>
-              val leg_id = leg.getTriplegId.toInt
+              val leg_id = leg.getTriplegId
               leg.keys().asScala.foreach{ k =>
                 val v = leg.get(k)
-                externalities_pst.setInt(1, leg_id)
+                externalities_pst.setString(1, leg_id)
                 externalities_pst.setString(2, k)
                 externalities_pst.setDouble(3, v)
                 externalities_pst.addBatch()

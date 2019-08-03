@@ -191,7 +191,7 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
 
   }
 
-  def processJson(tr : TripRecord): Stream[(Long, Seq[Event], Geometry)] = {
+  def processJson(tr : TripRecord): Stream[(String, Seq[Event], Geometry)] = {
 
     logger.info(s"\tprocessing ${tr.user_id}, ${tr.date}")
 

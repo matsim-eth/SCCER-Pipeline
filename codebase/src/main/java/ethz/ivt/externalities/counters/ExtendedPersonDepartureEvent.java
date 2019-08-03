@@ -9,12 +9,12 @@ import org.matsim.api.core.v01.population.Person;
 public class ExtendedPersonDepartureEvent extends Event {
 
     private final double distance;
-    private final Long tripleg_id;
+    private final String tripleg_id;
     private final PersonDepartureEvent personDepartureEvent;
 
     public ExtendedPersonDepartureEvent(final double time, final Id<Person> agentId,
                                         final Id<Link> linkId, final String legMode,
-                                        final double distance, final Long tripleg_id) {
+                                        final double distance, final String tripleg_id) {
 
         super(time);
         this.personDepartureEvent = new PersonDepartureEvent(time, agentId, linkId, legMode);
@@ -26,7 +26,7 @@ public class ExtendedPersonDepartureEvent extends Event {
         return distance;
     }
 
-    public Long getTripleg_id() {
+    public String getTripleg_id() {
         return tripleg_id;
     }
 

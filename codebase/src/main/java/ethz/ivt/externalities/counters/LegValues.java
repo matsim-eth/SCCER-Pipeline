@@ -8,7 +8,7 @@ import java.util.stream.Stream;
 
 public class LegValues {
     Map<String, Double> personId2Leg2Values = new HashMap<>();
-    private Long triplegId;
+    private String triplegId;
     private double distance;
 
     public LegValues(LocalDateTime timestamp, String mode) {
@@ -64,11 +64,11 @@ public class LegValues {
         return personId2Leg2Values.keySet();
     }
 
-    public Long getTriplegId() {
+    public String getTriplegId() {
         return triplegId;
     }
 
-    public void setTriplegId(Long triplegId) {
+    public void setTriplegId(String triplegId) {
         this.triplegId = triplegId;
     }
 

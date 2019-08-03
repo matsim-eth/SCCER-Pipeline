@@ -44,7 +44,7 @@ object SplitWaypoints {
       val query = conn.prepareStatement(waypoints_sql)
 
       query.setString(1, user_id)
-      query.setLong(2, leg.leg_id)
+      query.setString(2, leg.leg_id)
 
       val rs = query.executeQuery()
       val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
@@ -118,7 +118,7 @@ object SplitWaypoints {
     val triplegs_rs = conn1.createStatement().executeQuery(triplegs_sql)
     val triplegs = Iterator.continually(triplegs_rs).takeWhile(_.next()).map { rs =>
       TripRow(rs.getString("person_id"), 0,
-        TripLeg(rs.getLong("leg_id"),
+        TripLeg(rs.getString("leg_id"),
           rs.getTimestamp("leg_date").toLocalDateTime, rs.getTimestamp("end_date").toLocalDateTime,
           LatLon(rs.getDouble("start_y"), rs.getDouble("start_x")),
           LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")),

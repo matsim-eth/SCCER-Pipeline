@@ -17,7 +17,7 @@ package object data {
   }
 
   case class TripLeg(
-                      leg_id: Long,
+                      leg_id: String,
                       started_at : LocalDateTime,
                       finished_at : LocalDateTime,
                       start_point : LatLon,
@@ -29,7 +29,7 @@ package object data {
     def getStartedSeconds: Double = started_at.toLocalTime.toSecondOfDay
     def getFinishedSeconds: Double = finished_at.toLocalTime.toSecondOfDay
 
-    override def toString() = "%d,%s,%s".format(leg_id, started_at, finished_at)
+    override def toString() = "%s,%s,%s".format(leg_id, started_at, finished_at)
 
 
   }
