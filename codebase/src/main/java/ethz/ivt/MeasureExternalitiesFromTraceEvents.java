@@ -2,8 +2,11 @@ package ethz.ivt;
 
 import ethz.ivt.externalities.MeasureExternalities;
 import ethz.ivt.externalities.counters.ExternalityCostCalculator;
+import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
+import ethz.ivt.externalities.roadTypeMapping.HbefaRoadTypeMapping;
+import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -40,9 +43,16 @@ public class MeasureExternalitiesFromTraceEvents {
         String vehicleCompositionPath = args[5];
         String outputPath = args[6];
 
+//        System.exit(0);
+
         // load config file and scenario
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
+
+        // adding hbefa mappings
+        log.info("Adding hbefa mappings");
+        HbefaRoadTypeMapping roadTypeMapping = OsmHbefaMapping.build();
+        roadTypeMapping.addHbefaMappings(scenario.getNetwork());
 
         // set up vehicle composition from file
         VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
@@ -50,7 +60,7 @@ public class MeasureExternalitiesFromTraceEvents {
         vehicleGenerator.setUpVehicles();
 
 //        CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
-//        writer.write(outputPath + "vehicles.csv");
+//        writer.write(Paths.get(outputPath, "externalities.csv"));
 
         // load data
         AggregateDataPerTimeImpl<Link> congestionData = CSVCongestionReader.forLink().read(congestionPath, binSize);
@@ -60,8 +70,8 @@ public class MeasureExternalitiesFromTraceEvents {
         MeasureExternalities measureExternalities = new MeasureExternalities(scenario, congestionData, ecc);
 
         // process events and write to file
-        measureExternalities.process(eventPath, LocalDateTime.now());
-        measureExternalities.write(Paths.get(outputPath, LocalDateTime.now().toString(), "Switzerland"));
+        ExternalityCounter externalityCounter = measureExternalities.process(eventPath, LocalDateTime.now());
+        externalityCounter.writeCsvFile(Paths.get(outputPath, LocalDateTime.now().toString(), "externalities.csv"));
     }
 
     public static void setUpRoadTypes(Network network) {
