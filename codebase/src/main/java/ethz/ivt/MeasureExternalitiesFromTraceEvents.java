@@ -43,8 +43,6 @@ public class MeasureExternalitiesFromTraceEvents {
         String vehicleCompositionPath = args[5];
         String outputPath = args[6];
 
-//        System.exit(0);
-
         // load config file and scenario
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
@@ -59,8 +57,8 @@ public class MeasureExternalitiesFromTraceEvents {
         vehicleGenerator.read(vehicleCompositionPath, 2015);
         vehicleGenerator.setUpVehicles();
 
-//        CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
-//        writer.write(Paths.get(outputPath, "externalities.csv"));
+        CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
+        writer.write(Paths.get(outputPath, "externalities.csv"));
 
         // load data
         AggregateDataPerTimeImpl<Link> congestionData = CSVCongestionReader.forLink().read(congestionPath, binSize);

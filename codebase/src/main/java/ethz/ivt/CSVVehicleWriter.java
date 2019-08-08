@@ -2,10 +2,8 @@ package ethz.ivt;
 
 import org.matsim.vehicles.Vehicle;
 
-import java.io.BufferedWriter;
-import java.io.FileOutputStream;
-import java.io.IOException;
-import java.io.OutputStreamWriter;
+import java.io.*;
+import java.nio.file.Path;
 import java.util.Collection;
 
 public class CSVVehicleWriter {
@@ -15,8 +13,12 @@ public class CSVVehicleWriter {
         this.vehicles = vehicles;
     }
 
-    public void write(String outputPath) throws IOException {
-        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath)));
+    public void write(Path outputFileName) throws IOException {
+
+        File file = outputFileName.toFile();
+        file.getParentFile().mkdirs();
+
+        BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(file)));
 
         writer.write(formatHeader() + "\n");
         writer.flush();
