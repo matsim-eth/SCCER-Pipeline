@@ -58,7 +58,7 @@ public class MeasureExternalitiesFromTraceEvents {
         vehicleGenerator.setUpVehicles();
 
         CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
-        writer.write(Paths.get(outputPath, "externalities.csv"));
+        writer.write(Paths.get(outputPath, "vehicles.csv"));
 
         // load data
         AggregateDataPerTimeImpl<Link> congestionData = CSVCongestionReader.forLink().read(congestionPath, binSize);

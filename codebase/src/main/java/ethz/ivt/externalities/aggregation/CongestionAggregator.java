@@ -43,7 +43,6 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         aggregateCongestionDataPerLinkPerTime = AggregateDataPerTimeImpl.congestionLink(binSize);
         aggregateCongestionDataPerPersonPerTime =  AggregateDataPerTimeImpl.congestionPerson(binSize);
 
-        
         // set up person2linkinfo
         scenario.getPopulation().getPersons().keySet().forEach(personId -> {
             person2linkinfo.put(personId, new AgentOnLinkInfo(personId, null, -1.0, -1.0));
@@ -76,12 +75,16 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             congestion = 0;
         }
 
-        // store delay info
-        aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "delay_caused", delay);
+        // record delays on links
         aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId,affectedAgentLeaveTime, "delay_experienced", delay);
-        aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "congestion_caused", congestion);
         aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId,affectedAgentLeaveTime, "congestion_experienced", congestion);
+        // only store caused delay on link if causing agents is not freight
+        if (!causingAgentId.toString().contains("freight")) {
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "delay_caused", delay);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId,causingAgentEnterTime, "congestion_caused", congestion);
+        }
 
+        // record delays by person
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "delay_caused", delay);
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "delay_experienced", delay);
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "congestion_caused", congestion);
@@ -105,7 +108,11 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+
+            // only count non-freight agents
+            if (!personId.toString().contains("freight")) {
+                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+            }
         }
     }
 
@@ -125,7 +132,11 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         if (person2linkinfo.get(personId).getSetLinkId() == null || !person2linkinfo.get(personId).getSetLinkId().toString().equals(linkId.toString())) {
             AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, linkId, enterTime, freespeedLeaveTime);
             person2linkinfo.replace(personId, agentOnLinkInfo);
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+
+            // only count non-freight agents
+            if (!personId.toString().contains("freight")) {
+                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+            }
         }
     }
 

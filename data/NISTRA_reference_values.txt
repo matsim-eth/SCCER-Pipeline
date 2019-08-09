@@ -1,6 +1,6 @@
 scenario.year = 2019
 
-VTTS = 25.77 
+VTTS = 25.77
 
 PM10.healthcare.car.urban =  842964
 PM10.healthcare.car.rural = 0
@@ -11,10 +11,13 @@ PM10.building.car.rural = 0
 PM10.building.car.regional = 2304
 
 PM10.healthcare.train.CHF_pkm = 0.0140
-PM10.healthcare.bus.CHF_pkm =   0.0437 
+PM10.healthcare.bus.CHF_pkm =   0.0437
+PM10.healthcare.pt.CHF_pkm = 	0.02885
+
 
 PM10.building.train.CHF_pkm = 0.0010
 PM10.building.bus.CHF_pkm =  0.0033
+PM10.building.pt.CHF_pkm =	0.00215
 
 
 PM10.non_exhaust.autobahn.g_per_km_pv = 0.046
@@ -22,13 +25,15 @@ PM10.non_exhaust.innerorts.g_per_km_pv = 0.042
 PM10.non_exhaust.ausserorts.g_per_km_pv = 0.035
 
 
-NOX.regional.CHF_t =  7109 
-Zinc.regional =	437712 
+NOX.regional.CHF_t =  7109
+Zinc.regional =	437712
 
 Zinc.soil_quality.car =  0.00127
 Zinc.soil_quality.train =   0.001264
-Zinc.soil_quality.bus =   0.002160 
-Zinc.soil_quality.tram = 0.000014 
+Zinc.soil_quality.bus =   0.002160
+Zinc.soil_quality.tram = 0.000014
+Zinc.soil_quality.pt =	0.001146
+
 
 NOX.bus.urban.g_per_pkm = 0.5440
 
@@ -39,23 +44,29 @@ CO2.costs.growth_rate = 0.03
 
 CO2.train.CHF_pkm = 0.000066
 CO2.bus.CHF_pkm = 0.0144
+CO2.pt.CHF_pkm = 0.007233
+
 
 N2O.CO2.equivalents = 298
 CH4.CO2.equivalents = 25
 
 accident.costs.car.p_km = 0.0214
-accident.costs.walk.p_km =  0.075 
+accident.costs.walk.p_km =  0.075
 accident.costs.bike.p_km =  0.257
 
 noise.base.year = 2015
 noise.costs.growth_rate = 0.0015
 
 noise.average.cost.car = 0.01039
-noise.average.cost.train =  0.0087 
-noise.average.cost.bus =  0.0197 
-noise.average.cost.trolleybus =  0.0009 
-noise.average.cost.tram =  0.0015 
+noise.average.cost.train =  0.0087
+noise.average.cost.bus =  0.0197
+noise.average.cost.trolleybus =  0.0009
+noise.average.cost.tram =  0.0015
+noise.average.cost.pt =	0.0077
 
 
 health.cost.walk = -0.1863
-health.cost.bike = -0.1870 
+health.cost.access_walk = -0.1863
+health.cost.egress_walk = -0.1863
+health.cost.transit_walk = -0.1863
+health.cost.bike = -0.1870

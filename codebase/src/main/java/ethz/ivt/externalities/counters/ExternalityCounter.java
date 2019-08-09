@@ -11,6 +11,8 @@ import org.matsim.api.core.v01.events.handler.PersonArrivalEventHandler;
 import org.matsim.api.core.v01.events.handler.PersonDepartureEventHandler;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
+import org.matsim.core.api.experimental.events.TeleportationArrivalEvent;
+import org.matsim.core.api.experimental.events.handler.TeleportationArrivalEventHandler;
 import org.matsim.core.events.EventsManagerImpl;
 import org.matsim.core.events.handler.EventHandler;
 import org.matsim.vehicles.Vehicle;
@@ -27,7 +29,8 @@ import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
 
-public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler, ExtendedPersonDepartureEventEventHandler, EventHandler {
+public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler,
+		ExtendedPersonDepartureEventEventHandler, TeleportationArrivalEventHandler, EventHandler {
 	private static final Logger log = Logger.getLogger(ExternalityCounter.class);
 
     protected final Scenario scenario;
@@ -83,7 +86,23 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 	}
 
-    // Get leg end time and append new leg to list
+	@Override
+	public void handleEvent(TeleportationArrivalEvent e) {
+		Id<Person> pid = e.getPersonId();
+		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
+
+		this.tempValues.get(pid).put("EndTime", e.getTime());
+		this.tempValues.get(pid).setTriplegId("0");
+		this.tempValues.get(pid).setDistance(e.getDistance());
+		this.personId2Leg.putIfAbsent(pid, new ArrayList<>());
+		this.personId2Leg.get(pid).add(this.tempValues.get(pid)); //add new leg
+
+		//reset
+		String legMode = this.tempValues.get(pid).getMode();
+		this.tempValues.put(pid, new LegValues(eventDateTime, legMode));
+	}
+
+	// Get leg end time and append new leg to list
     @Override
     public void handleEvent(PersonArrivalEvent e) {
         Id<Person> pid = e.getPersonId();
