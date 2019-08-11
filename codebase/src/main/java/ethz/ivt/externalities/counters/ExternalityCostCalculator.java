@@ -163,6 +163,11 @@ public class ExternalityCostCalculator {
 
         costs.put("PM_health_costs", pm10_health);
         costs.put("PM_building_damage_costs", pm10_building);
+
+        //congestion
+        double peak_surcharge_per_km = rv.getOrDefault("peak.surcharge.pt.CHF_km", 0.0);
+        double congestion_costs = emissions.get("pt_congestion_m") / 1000 * peak_surcharge_per_km;
+        costs.put("Congestion_costs", congestion_costs);
     }
 
 }

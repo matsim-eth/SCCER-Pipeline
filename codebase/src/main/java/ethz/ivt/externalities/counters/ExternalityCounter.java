@@ -114,7 +114,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 		personId2Leg.get(pid).add(tempValues.get(pid)); //add new leg
 
         //reset
-        tempValues.put(pid, new LegValues(eventDateTime, e.getLegMode()));
+        tempValues.remove(pid);
 
     }
 

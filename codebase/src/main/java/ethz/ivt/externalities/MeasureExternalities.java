@@ -64,13 +64,18 @@ public class MeasureExternalities {
         EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
-        eventsManager.addHandler(externalityCounter);
 
         CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
         eventsManager.addHandler(carExternalityCounter);
 
         CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
         eventsManager.addHandler(congestionCounter);
+
+        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter);
+        eventsManager.addHandler(ptCongestionCounter);
+
+        eventsManager.addHandler(externalityCounter);
+
     }
 
     public void reset() {
