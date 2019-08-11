@@ -5,6 +5,7 @@ import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
 import ethz.ivt.externalities.data.JITVehicleCreator;
 import ethz.ivt.externalities.data.congestion.CongestionPerTime;
+import ethz.ivt.externalities.data.congestion.PtChargingZones;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -46,7 +47,8 @@ public class MeasureExternalities {
     public MeasureExternalities(
             Scenario scenario,
             AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime,
-            ExternalityCostCalculator ecc) {
+            ExternalityCostCalculator ecc,
+            PtChargingZones ptChargingZones) {
 
         this.scenario = scenario;
         this.ecc = ecc;
@@ -71,7 +73,7 @@ public class MeasureExternalities {
         CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter);
+        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
         eventsManager.addHandler(ptCongestionCounter);
 
         eventsManager.addHandler(externalityCounter);

@@ -65,7 +65,7 @@ public class MeasureExternalitiesFromTraceEvents {
         ExternalityCostCalculator ecc = new ExternalityCostCalculator(costValuesPath);
 
         // create runner
-        MeasureExternalities measureExternalities = new MeasureExternalities(scenario, congestionData, ecc);
+        MeasureExternalities measureExternalities = new MeasureExternalities(scenario, congestionData, ecc, null);
 
         // process events and write to file
         ExternalityCounter externalityCounter = measureExternalities.process(eventPath, LocalDateTime.now());

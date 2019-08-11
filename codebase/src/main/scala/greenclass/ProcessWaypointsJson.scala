@@ -17,6 +17,7 @@ import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
 import ethz.ivt.externalities.counters.{ExtendedPersonDepartureEvent, ExternalityCostCalculator}
+import ethz.ivt.externalities.data.congestion.PtChargingZones
 import ethz.ivt.externalities.data.{AggregateDataPerTime, AggregateDataPerTimeImpl, AggregateDataPerTimeMock, TripLeg, TripRecord}
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.graphhopperMM.{GHtoEvents, LinkGPXStruct, MATSimMMBuilder}
@@ -52,7 +53,6 @@ object ProcessWaypointsJson {
 
   Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
-
 
   def main(args: Array[String]) {
 
@@ -123,7 +123,11 @@ object ProcessWaypointsJson {
     logger.info("Build External Costs Module")
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
 
-    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc)
+    val zonesShpFile = Paths.get(props.getProperty("pt.zones.shapefile"))
+    val odPairsFile = Paths.get(props.getProperty("pt.zones.od_pairs"))
+    val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
+
+    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
     logger.info("Preloadable Data (excluding emissions module) loaded")
 
