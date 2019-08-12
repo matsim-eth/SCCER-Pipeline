@@ -75,9 +75,6 @@ public class ExternalityCostCalculator {
         if ("car".equalsIgnoreCase(emissions.getMode())) {
             addCarEmissions(emissions, costs);
         }
-        if ("car".equalsIgnoreCase(emissions.getMode())) {
-            addCarEmissions(emissions, costs);
-        }
 
         //NOX regional
         double NOX_regional = emissions.get("NOx") * rv.get("NOX.regional.CHF_t") / 1e6;
@@ -167,6 +164,11 @@ public class ExternalityCostCalculator {
         //congestion
         double peak_surcharge_per_km = rv.getOrDefault("peak.surcharge.pt.CHF_km", 0.0);
         double congestion_costs = emissions.get("pt_congestion_m") / 1000 * peak_surcharge_per_km;
+        log.info(String.format("converting pt km %f @ %f to %f chf",
+                emissions.get("pt_congestion_m"),
+                peak_surcharge_per_km,
+                congestion_costs));
+
         costs.put("Congestion_costs", congestion_costs);
     }
 
