@@ -98,10 +98,6 @@ public class ExternalityCostCalculator {
 
         costs.put("Active_costs", emissions.getDistance() / 1000 * rv.getOrDefault(activeHealthKey, 0.0));
 
-        //congestion
-        double congestion_costs = emissions.get("delay_caused") * rv.get("VTTS") / 3600;
-        costs.put("Congestion_costs", congestion_costs);
-
         return costs;
     }
 
@@ -145,6 +141,10 @@ public class ExternalityCostCalculator {
 
         costs.put("PM_health_costs", PM_urban_health + PM_rural_health + PM_regional_health);
         costs.put("PM_building_damage_costs", PM_urban_buildings + PM_rural_buildings + PM_regional_buildings);
+
+        //congestion
+        double congestion_costs = emissions.get("delay_caused") * rv.get("VTTS") / 3600;
+        costs.put("Congestion_costs", congestion_costs);
     }
 
     private void addPTEmissions(LegValues emissions, Map<String, Double> costs ) {

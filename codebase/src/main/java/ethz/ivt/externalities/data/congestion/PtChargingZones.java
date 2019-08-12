@@ -5,6 +5,7 @@ import org.locationtech.jts.geom.MultiPolygon;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
+import org.matsim.api.core.v01.network.Network;
 import org.matsim.contrib.zone.Zone;
 import org.matsim.contrib.zone.util.ZoneFinder;
 import org.matsim.contrib.zone.util.ZoneFinderImpl;
@@ -22,9 +23,10 @@ import static org.matsim.contrib.zone.util.NetworkWithZonesUtils.createLinkToZon
 
 public class PtChargingZones {
 
+    Network network;
     Map<Id<Zone>, Zone> pt_zones;
-    Map<Id<Link>, Zone> linkToZoneMap;
     Map<Id<Zone>, Set<Id<Zone>>> peakODpairs;
+    ZoneFinder zoneFinder;
 
     public static void main (String[] args) {
         new PtChargingZones(null, Paths.get("C:\\Projects\\SCCER_project\\data\\pt_zones\\pt_zones_shapefile\\pt_zones.shp")
@@ -34,6 +36,8 @@ public class PtChargingZones {
     public PtChargingZones(Scenario scenario, Path zonesShpFile, Path odPairsFile) {
         Collection<SimpleFeature> features = ShapeFileReader.getAllFeatures(zonesShpFile.toString());
 
+        network = scenario.getNetwork();
+
         pt_zones = features.stream().map(ft -> {
             String id = ft.getAttribute("gmdqnr").toString();
             Id<Zone> zone_id = Id.create(ft.getAttribute("gmdqnr").toString(), Zone.class);
@@ -41,8 +45,7 @@ public class PtChargingZones {
             return z;
         }).collect(Collectors.toMap(Zone::getId, z -> z));
 
-        ZoneFinder zoneFinder = new ZoneFinderImpl(pt_zones, 0);
-        linkToZoneMap = createLinkToZoneMap(scenario.getNetwork(), zoneFinder);
+        zoneFinder = new ZoneFinderImpl(pt_zones, 0);
         peakODpairs = loadODPairs(odPairsFile);
 
     }
@@ -66,8 +69,11 @@ public class PtChargingZones {
     public boolean is_peak_connection(Id<Link> e1, Id<Link> e2) {
         boolean is_peak = false;
         if (e1 != null && e2 != null) {
-            Zone zone1 = linkToZoneMap.get(e1);
-            Zone zone2 = linkToZoneMap.get(e2);
+            Link l1 = network.getLinks().get(e1);
+            Link l2 = network.getLinks().get(e2);
+            Zone zone1 = zoneFinder.findZone(l1.getToNode().getCoord());
+            Zone zone2 = zoneFinder.findZone(l2.getToNode().getCoord());
+
             if (zone1 != null && zone2 != null) {
                 Set<Id<Zone>> dest_zones = peakODpairs.get(zone1.getId());
                 if (dest_zones != null) {
