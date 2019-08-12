@@ -48,7 +48,7 @@ object SplitWaypoints {
 
       val rs = query.executeQuery()
       val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
-        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis") / 1000, rs.getLong("accuracy"))
+        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
       }
       return results.toList
     } finally {
