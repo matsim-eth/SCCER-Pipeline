@@ -65,6 +65,8 @@ public class ExternalityCostCalculator {
     protected Map<String,Double> calculateCostsForLeg(LegValues emissions) {
         Map<String, Double> costs = new HashMap<>();
 
+        log.info(String.format("Calculating costs for emissions on leg %s with mode %s", emissions.getTriplegId(), emissions.getMode()));
+
 
         if (emissions.getMode().equalsIgnoreCase("train")
                 ||emissions.getMode().equalsIgnoreCase("pt")
