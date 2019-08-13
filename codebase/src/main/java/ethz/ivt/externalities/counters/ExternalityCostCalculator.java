@@ -94,8 +94,11 @@ public class ExternalityCostCalculator {
         costs.put("Noise_costs", noise_costs);
 
         String activeHealthKey = "health.cost." + emissions.getMode();
-
         costs.put("Active_costs", emissions.getDistance() / 1000 * rv.getOrDefault(activeHealthKey, 0.0));
+
+        //accident costs
+        String accidentHealthKey = "accident.cost." + emissions.getMode() + ".p_km";
+        costs.put("Accident_costs", emissions.getDistance() / 1000 * rv.getOrDefault(accidentHealthKey, 0.0));
 
         return costs;
     }
