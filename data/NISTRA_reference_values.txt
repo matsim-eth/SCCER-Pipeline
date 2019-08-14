@@ -51,9 +51,14 @@ CO2.pt.CHF_pkm = 0.007233
 N2O.CO2.equivalents = 298
 CH4.CO2.equivalents = 25
 
-accident.costs.car.p_km = 0.0214
-accident.costs.walk.p_km =  0.075
-accident.costs.bike.p_km =  0.257
+accident.cost.car.p_km =  0.0201
+accident.cost.walk.p_km =  0.075
+accident.cost.bike.p_km =  0.257
+
+accident.cost.train.p_km = 0.00066 
+accident.cost.bus.p_km = 0.0141 
+accident.cost.tram.p_km =  0.0126 
+accident.cost.pt.p_km =  0.01335 
 
 noise.base.year = 2015
 noise.costs.growth_rate = 0.0015
