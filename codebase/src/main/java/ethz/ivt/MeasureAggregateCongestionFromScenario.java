@@ -92,6 +92,7 @@ public class MeasureAggregateCongestionFromScenario {
         log.info("Congestion calculation completed.");
         log.info("Total delay : " + this.congestionHandler.getTotalDelay());
         log.info("Total internalized delay : " + this.congestionHandler.getTotalInternalizedDelay());
+        log.info("Total rounding error delay : " + this.congestionHandler.getTotalRoundingErrorDelay());
 
         this.eventsManager.finishProcessing();
     }
@@ -100,8 +101,8 @@ public class MeasureAggregateCongestionFromScenario {
         // save congestion data to csv files
         CSVCongestionWriter.forLink().write(this.congestionAggregator.getAggregateCongestionDataPerLinkPerTime(),
                 outputDirectory + "/aggregate_delay_per_link_per_time.csv");
-        CSVCongestionWriter.forPerson().write(this.congestionAggregator.getAggregateCongestionDataPerPersonPerTime(),
-                outputDirectory + "/aggregate_delay_per_person_per_time.csv");
+//        CSVCongestionWriter.forPerson().write(this.congestionAggregator.getAggregateCongestionDataPerPersonPerTime(),
+//                outputDirectory + "/aggregate_delay_per_person_per_time.csv");
     }
 
 }

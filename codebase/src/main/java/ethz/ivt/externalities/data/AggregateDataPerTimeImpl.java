@@ -235,6 +235,10 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
         attributes.add("delay_experienced");
         attributes.add("congestion_caused");
         attributes.add("congestion_experienced");
+        attributes.add("length");
+        attributes.add("free_speed");
+        attributes.add("capacity");
+        attributes.add("flow_capacity_per_sec");
 
         return new AggregateDataPerTimeImpl<Link>(binSize, attributes, Link.class);
     }

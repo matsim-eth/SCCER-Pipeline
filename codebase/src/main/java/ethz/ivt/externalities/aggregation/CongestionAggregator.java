@@ -117,6 +117,12 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             // only count non-freight agents
             if (!personId.toString().contains("freight")) {
                 aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+
+                // some extra link info
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "length", l.getLength());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "free_speed", l.getFreespeed());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "capacity", l.getCapacity());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "flow_capacity_per_sec", l.getFlowCapacityPerSec());
             }
         }
     }
@@ -141,6 +147,12 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
             // only count non-freight agents
             if (!personId.toString().contains("freight")) {
                 aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+
+                // some extra link info
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "length", l.getLength());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "free_speed", l.getFreespeed());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "capacity", l.getCapacity());
+                aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "flow_capacity_per_sec", l.getFlowCapacityPerSec());
             }
         }
     }
