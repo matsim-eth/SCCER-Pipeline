@@ -1,4 +1,4 @@
-package ethz.ivt.vsp;
+package ethz.ivt.vsp.congestion;
 
 import org.junit.Assert;
 import org.matsim.api.core.v01.Id;

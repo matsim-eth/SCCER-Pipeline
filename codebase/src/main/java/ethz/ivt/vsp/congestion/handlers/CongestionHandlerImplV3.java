@@ -20,19 +20,7 @@
 /**
  * 
  */
-package ethz.ivt.vsp.handlers;
-
-import org.apache.log4j.Logger;
-import org.matsim.api.core.v01.Id;
-import org.matsim.api.core.v01.Scenario;
-import org.matsim.api.core.v01.events.*;
-import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
-import org.matsim.api.core.v01.population.Person;
-import org.matsim.core.api.experimental.events.EventsManager;
-import ethz.ivt.vsp.DelayInfo;
-import ethz.ivt.vsp.LinkCongestionInfo;
-import org.matsim.core.events.EventsManagerImpl;
-import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
+package ethz.ivt.vsp.congestion.handlers;
 
 import java.io.BufferedWriter;
 import java.io.File;
@@ -40,6 +28,24 @@ import java.io.FileWriter;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+
+import org.apache.log4j.Logger;
+import org.matsim.api.core.v01.Id;
+import org.matsim.api.core.v01.Scenario;
+import org.matsim.api.core.v01.events.ActivityEndEvent;
+import org.matsim.api.core.v01.events.LinkEnterEvent;
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
+import org.matsim.api.core.v01.events.PersonArrivalEvent;
+import org.matsim.api.core.v01.events.PersonDepartureEvent;
+import org.matsim.api.core.v01.events.PersonStuckEvent;
+import org.matsim.api.core.v01.events.TransitDriverStartsEvent;
+import org.matsim.api.core.v01.events.VehicleLeavesTrafficEvent;
+import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
+import org.matsim.api.core.v01.events.handler.ActivityEndEventHandler;
+import org.matsim.api.core.v01.population.Person;
+import org.matsim.core.api.experimental.events.EventsManager;
+
+import ethz.ivt.vsp.congestion.DelayInfo;
 
 /** 
  * 
@@ -63,14 +69,8 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 	private final Map<Id<Person>, Double> agentId2storageDelay = new HashMap<>();
 	private double delayNotInternalized_spillbackNoCausingAgent = 0.;
 
-	private static String PREFIX_GPS = "gps";
-
-	public CongestionHandlerImplV3(EventsManager events, Scenario scenario, Vehicle2DriverEventHandler v2d) {
-		this.delegate = new CongestionHandlerBaseImpl(events, scenario, v2d);
-	}
-
-	public CongestionHandlerImplV3(EventsManager eventsManager, Scenario scenario) {
-		this(eventsManager, scenario, new Vehicle2DriverEventHandler());
+	public CongestionHandlerImplV3(EventsManager events, Scenario scenario) {
+		this.delegate = new CongestionHandlerBaseImpl(events, scenario);
 	}
 
 	@Override
@@ -140,44 +140,49 @@ public final class CongestionHandlerImplV3 implements CongestionHandler, Activit
 		return this.delegate.getTotalDelay();
 	}
 	
-	
-
 	public final double getDelayNotInternalizedSpillbackNoCausingAgent() {
 		return this.delayNotInternalized_spillbackNoCausingAgent;
 	}
 
 	@Override
 	public void handleEvent(ActivityEndEvent event) {
-		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
-
 		// I read the following as: remove non-allocated delays from agents once they are no longer on a leg. kai, sep'15
 
-		if (this.agentId2storageDelay.get(event.getPersonId()) == null) {
-			// skip that person
-
+		if (event.getActType().contains("interaction")) {
+			// skip
 		} else {
-			if (this.agentId2storageDelay.get(event.getPersonId()) != 0.) {
-				// log.warn("A delay of " + this.agentId2storageDelay.get(event.getDriverId()) + " sec. resulting from spill-back effects was not internalized. Setting the delay to 0.");
-				this.delayNotInternalized_spillbackNoCausingAgent += this.agentId2storageDelay.get(event.getPersonId());
+			if (this.agentId2storageDelay.get(event.getPersonId()) == null) {
+				// skip that person
+
+			} else {
+				if (this.agentId2storageDelay.get(event.getPersonId()) != 0.) {
+					// log.warn("A delay of " + this.agentId2storageDelay.get(event.getDriverId()) + " sec. resulting from spill-back effects was not internalized. Setting the delay to 0.");
+					this.delayNotInternalized_spillbackNoCausingAgent += this.agentId2storageDelay.get(event.getPersonId());
+				}
+				this.agentId2storageDelay.put(event.getPersonId(), 0.);
 			}
-			this.agentId2storageDelay.put(event.getPersonId(), 0.);
 		}
 	}
 
 	@Override
 	public final void handleEvent(LinkLeaveEvent event) {
-		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
 		// yy see my note under CongestionHandlerBaseImpl.handleEvent( LinkLeaveEvent ... ) . kai, sep'15
 		
 		// coming here ...
 		this.delegate.handleEvent( event ) ;
 
 		if (this.delegate.getPtVehicleIDs().contains(event.getVehicleId())){
-			log.warn("Public transport mode. Mixed traffic is not tested.");
-		} else { // car!
-			LinkCongestionInfo linkInfo = this.delegate.getLinkId2congestionInfo().get( event.getLinkId() ) ;
-			DelayInfo delayInfo = linkInfo.getFlowQueue().getLast();
-			calculateCongestion(event, delayInfo);
+			// skip pt vehicles
+		} else {
+			
+			Id<Person> personId = this.delegate.getVehicle2DriverEventHandler().getDriverOfVehicle( event.getVehicleId() ) ;
+
+			if (this.delegate.getCarPersonIDs().contains(personId)) {
+				// car
+				LinkCongestionInfo linkInfo = this.delegate.getLinkId2congestionInfo().get( event.getLinkId() ) ;
+				DelayInfo delayInfo = linkInfo.getFlowQueue().getLast();
+				calculateCongestion(event, delayInfo);
+			}
 		}
 	}
 

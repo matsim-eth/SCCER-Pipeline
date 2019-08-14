@@ -1,9 +1,9 @@
 package ethz.ivt.externalities.aggregation;
 
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
-import ethz.ivt.vsp.AgentOnLinkInfo;
-import ethz.ivt.vsp.CongestionEvent;
-import ethz.ivt.vsp.handlers.CongestionEventHandler;
+import ethz.ivt.vsp.congestion.AgentOnLinkInfo;
+import ethz.ivt.vsp.congestion.events.CongestionEvent;
+import ethz.ivt.vsp.congestion.handlers.CongestionEventHandler;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -89,7 +89,12 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "delay_experienced", delay);
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "congestion_caused", congestion);
         aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "congestion_experienced", congestion);
-   }
+
+        // TODO: fix this
+        // add 1 to person count values for each congestion event (also need a count for the write to work)
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(causingAgentId,causingAgentEnterTime, "count", 1);
+        aggregateCongestionDataPerPersonPerTime.addValueAtTime(affectedAgentId,affectedAgentLeaveTime, "count", 1);
+    }
 
     /*
      * We only count the agent once when it enters the link,

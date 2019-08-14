@@ -20,16 +20,21 @@
 /**
  * 
  */
-package ethz.ivt.vsp;
+package ethz.ivt.vsp.congestion.handlers;
 
 import java.util.Deque;
+import java.util.HashMap;
 import java.util.LinkedHashMap;
 import java.util.LinkedList;
+import java.util.Map;
 
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.events.LinkLeaveEvent;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
+
+import ethz.ivt.vsp.congestion.AgentOnLinkInfo;
+import ethz.ivt.vsp.congestion.DelayInfo;
 
 
 /**

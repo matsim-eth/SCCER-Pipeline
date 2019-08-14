@@ -1,9 +1,6 @@
 package ethz.ivt;
 
-import ethz.ivt.externalities.aggregation.CongestionAggregator;
 import ethz.ivt.externalities.aggregation.CountPerLinkAggregator;
-import ethz.ivt.vsp.handlers.CongestionHandler;
-import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;

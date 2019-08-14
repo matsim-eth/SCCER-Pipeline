@@ -20,7 +20,7 @@
 /**
  * 
  */
-package ethz.ivt.vsp;
+package ethz.ivt.vsp.congestion.events;
 
 import java.util.Map;
 

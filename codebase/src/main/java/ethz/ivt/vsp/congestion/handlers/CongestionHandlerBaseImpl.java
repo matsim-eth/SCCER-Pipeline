@@ -20,25 +20,35 @@
 /**
  * 
  */
-package ethz.ivt.vsp.handlers;
+package ethz.ivt.vsp.congestion.handlers;
+
+import java.util.HashMap;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.util.Map;
+import java.util.Set;
 
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.events.*;
+import org.matsim.api.core.v01.events.LinkEnterEvent;
+import org.matsim.api.core.v01.events.LinkLeaveEvent;
+import org.matsim.api.core.v01.events.PersonArrivalEvent;
+import org.matsim.api.core.v01.events.PersonDepartureEvent;
+import org.matsim.api.core.v01.events.PersonStuckEvent;
+import org.matsim.api.core.v01.events.TransitDriverStartsEvent;
+import org.matsim.api.core.v01.events.VehicleEntersTrafficEvent;
+import org.matsim.api.core.v01.events.VehicleLeavesTrafficEvent;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.api.experimental.events.EventsManager;
 import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.vehicles.Vehicle;
-import ethz.ivt.vsp.AgentOnLinkInfo;
-import ethz.ivt.vsp.DelayInfo;
-import ethz.ivt.vsp.CongestionEvent;
-import ethz.ivt.vsp.LinkCongestionInfo;
-import ethz.ivt.vsp.CongestionUtils;
 
-import java.util.*;
+import ethz.ivt.vsp.congestion.AgentOnLinkInfo;
+import ethz.ivt.vsp.congestion.DelayInfo;
+import ethz.ivt.vsp.congestion.events.CongestionEvent;
 
 /**
  * This class provides the basic functionality to calculate congestion effects which may be used for internalization.
@@ -54,21 +64,20 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	private final Scenario scenario;
 	private final EventsManager events;
-	private final List<Id<Vehicle>> ptVehicleIDs = new ArrayList<>();
+	private final Set<Id<Vehicle>> ptVehicleIDs = new HashSet<>();
+	private final Set<Id<Person>> carPersonIDs = new HashSet<>();
+
 	private final Map<Id<Link>, LinkCongestionInfo> linkId2congestionInfo = new HashMap<>();
 
 	private double totalDelay = 0.;
 	private double delayNotInternalized_roundingErrors = 0.;
 	private double totalInternalizedDelay = 0.;
 
-	private static String PREFIX_GPS = "gps";
+	private Vehicle2DriverEventHandler veh2DriverDelegate = new Vehicle2DriverEventHandler();
 
-	private Vehicle2DriverEventHandler veh2DriverDelegate;
-
-	CongestionHandlerBaseImpl(EventsManager events, Scenario scenario, Vehicle2DriverEventHandler v2d) {
+	CongestionHandlerBaseImpl(EventsManager events, Scenario scenario) {
 		this.scenario = scenario;
 		this.events = events;
-		this.veh2DriverDelegate = v2d;
 
 		if (this.scenario.getNetwork().getCapacityPeriod() != 3600.) {
 			log.warn("Capacity period is other than 3600.");
@@ -76,14 +85,6 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 		if ( this.scenario.getConfig().parallelEventHandling().getNumberOfThreads()!= null) {
 			log.warn("Parallel event handling is not tested. It should not work properly.");
-		}
-
-		if (this.scenario.getConfig().qsim().getFlowCapFactor() != 1.0) {
-			log.warn("Flow capacity factor unequal 1.0 is not tested.");
-		}
-
-		if (this.scenario.getConfig().qsim().getStorageCapFactor() != 1.0) {
-			log.warn("Storage capacity factor unequal 1.0 is not tested.");
 		}
 
 		if (this.scenario.getConfig().transit().isUseTransit()) {
@@ -96,6 +97,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 	public final void reset(int iteration) {
 		this.linkId2congestionInfo.clear();
 		this.ptVehicleIDs.clear();
+		this.carPersonIDs.clear();
 
 		this.totalDelay = 0.;
 		this.delayNotInternalized_roundingErrors = 0.;
@@ -113,7 +115,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent(PersonStuckEvent event) {
-		log.warn("An agent is stucking. No garantee for right calculation of external congestion effects: " + event.toString());
+//		log.warn("An agent is stucking. No garantee for right calculation of external congestion effects: " + event.toString());
 	}
 
 	@Override
@@ -123,34 +125,40 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 
 	@Override
 	public final void handleEvent(PersonDepartureEvent event) {
-		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
 		if (event.getLegMode().toString().equals(TransportMode.car.toString())){ // car!
+			
+			this.carPersonIDs.add(event.getPersonId());
+			
 			LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario ) ;
 
 			AgentOnLinkInfo agentInfo = new AgentOnLinkInfo.Builder().setAgentId( event.getPersonId() )
 					.setLinkId( event.getLinkId() ).setEnterTime( event.getTime() ).setFreeSpeedLeaveTime( event.getTime()+1. ).build();
 			linkInfo.getAgentsOnLink().put( event.getPersonId(), agentInfo ) ;
+		} else {
+			// pt, ride, freight, ...
 		}
 	}
 
 	@Override
 	public final void handleEvent(LinkEnterEvent event) {
-		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
-		if (this.ptVehicleIDs.contains(event.getVehicleId())){
-			log.warn("Public transport mode. Mixed traffic is not tested.");
+		if (this.ptVehicleIDs.contains(event.getVehicleId())) {
+			// skip pt vehicles
 		} else { // car! 
 			LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario ) ;
 
 			Id<Person> driverId = veh2DriverDelegate.getDriverOfVehicle(event.getVehicleId());
-			AgentOnLinkInfo agentInfo = new AgentOnLinkInfo.Builder().setAgentId( driverId ).setLinkId( event.getLinkId() )
-					.setEnterTime( event.getTime() ).setFreeSpeedLeaveTime( event.getTime()+linkInfo.getFreeTravelTime()+1. ).build();
-			linkInfo.getAgentsOnLink().put( driverId, agentInfo ) ;
+			
+			if (this.carPersonIDs.contains(driverId)) {
+				// the driver is a car user
+				AgentOnLinkInfo agentInfo = new AgentOnLinkInfo.Builder().setAgentId( driverId ).setLinkId( event.getLinkId() )
+						.setEnterTime( event.getTime() ).setFreeSpeedLeaveTime( event.getTime()+linkInfo.getFreeTravelTime()+1. ).build();
+				linkInfo.getAgentsOnLink().put( driverId, agentInfo ) ;
+			}
 		}
 	}
 
 	@Override
 	public final void handleEvent(LinkLeaveEvent event) {
-		if (event.getVehicleId().toString().contains(PREFIX_GPS)) { return;}
 		// yy My preference would be if we found a solution where the basic bookkeeping (e.g. update flow and
 		// delay queues) is done here.  However, delegation does not allow to have custom code in between 
 		// standard code (as was the case before with calculateCongestion).  We need to consider if it is possible to 
@@ -164,35 +172,43 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		
 		// coming here ...
 		
-		
-		Id<Person> personId = veh2DriverDelegate.getDriverOfVehicle( event.getVehicleId() ) ;
+		if (this.ptVehicleIDs.contains(event.getVehicleId())) {
+			// skip pt vehicles
+		} else { // car! 
+			
+			Id<Person> personId = veh2DriverDelegate.getDriverOfVehicle( event.getVehicleId() ) ;
+			
+			if (this.carPersonIDs.contains(personId)) {
+				// this person is a car user
+				LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo(event.getLinkId(), this.getLinkId2congestionInfo(), scenario);
 
-		LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo(event.getLinkId(), this.getLinkId2congestionInfo(), scenario);
+				AgentOnLinkInfo agentInfo = linkInfo.getAgentsOnLink().get( personId ) ;
 
-		AgentOnLinkInfo agentInfo = linkInfo.getAgentsOnLink().get( personId ) ;
+				DelayInfo delayInfo = new DelayInfo.Builder( agentInfo ).setLinkLeaveTime( event.getTime() ).build() ;
 
-		DelayInfo delayInfo = new DelayInfo.Builder( agentInfo ).setLinkLeaveTime( event.getTime() ).build() ;
+				CongestionHandlerBaseImpl.updateFlowAndDelayQueues(event.getTime(), delayInfo, linkInfo );
 
-		CongestionHandlerBaseImpl.updateFlowAndDelayQueues(event.getTime(), delayInfo, linkInfo );
+				linkInfo.getFlowQueue().add( delayInfo ) ;
 
+				linkInfo.memorizeLastLinkLeaveEvent( event );
 
-		linkInfo.getFlowQueue().add( delayInfo ) ;
+				linkInfo.getAgentsOnLink().remove( personId ) ;
 
-		linkInfo.memorizeLastLinkLeaveEvent( event );
-
-		linkInfo.getAgentsOnLink().remove( personId ) ;
-
-		// global book-keeping:
-		this.totalDelay += ( event.getTime() - delayInfo.freeSpeedLeaveTime );
-
-		
+				// global book-keeping:
+				this.totalDelay += ( event.getTime() - delayInfo.freeSpeedLeaveTime );
+			}
+		}		
 	}
 
 	@Override
 	public final void handleEvent( PersonArrivalEvent event ) {
-		if (event.getPersonId().toString().contains(PREFIX_GPS)) { return;}
-		LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario) ;
-		linkInfo.getAgentsOnLink().remove( event.getPersonId() ) ;
+		
+		if (event.getLegMode().equals(TransportMode.car)) {
+			LinkCongestionInfo linkInfo = CongestionUtils.getOrCreateLinkInfo( event.getLinkId(), linkId2congestionInfo, scenario) ;
+			linkInfo.getAgentsOnLink().remove( event.getPersonId() ) ;
+			
+			this.carPersonIDs.remove(event.getPersonId());
+		}
 	}
 
 	public final static void updateFlowAndDelayQueues(double time, DelayInfo delayInfo, LinkCongestionInfo linkInfo) {
@@ -217,10 +233,10 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 				double freeSpeedLeaveTimeGap = delayInfo.freeSpeedLeaveTime - linkInfo.getFlowQueue().getLast().freeSpeedLeaveTime ; 
 
 				if(freeSpeedLeaveTimeGap < linkInfo.getMarginalDelayPerLeavingVehicle_sec()){
-					// we are ALSO be flow delayed.  Therefore, we consider the bottleneck still active
+					// we are ALSO flow delayed.  Therefore, we consider the bottleneck still active
 					
 				} else {
-					// we are NOT also be flow delayed.  The bottleneck is now inactive:
+					// we are NOT also flow delayed.  The bottleneck is now inactive:
 					linkInfo.getFlowQueue().clear();
 				}
 				// yy this is what I think we would have to accept if we wanted to bring V3 and V4 under the same umbrella.
@@ -306,7 +322,7 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		return this.scenario ;
 	}
 
-	public List<Id<Vehicle>> getPtVehicleIDs() {
+	public Set<Id<Vehicle>> getPtVehicleIDs() {
 		return ptVehicleIDs;
 	}
 
@@ -334,5 +350,8 @@ class CongestionHandlerBaseImpl implements CongestionHandler {
 		veh2DriverDelegate.handleEvent(event);
 	}
 
+	public Set<Id<Person>> getCarPersonIDs() {
+		return carPersonIDs;
+	}
 
 }

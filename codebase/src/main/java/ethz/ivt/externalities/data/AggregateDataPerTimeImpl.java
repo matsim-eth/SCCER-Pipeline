@@ -52,18 +52,18 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
 
     public double getValueInTimeBin(Id<T> id, int timeBin, String attribute) {
         if (timeBin >= this.numBins) {
-            log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
+//            log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
             return 0.0;
         }
         if (aggregateDataPerLinkPerTime.containsKey(id)) {
             if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
                 return aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin];
             } else {
-                log.warn("Attribute " + attribute + " is not valid. Returning 0.");
+//                log.warn("Attribute " + attribute + " is not valid. Returning 0.");
             }
             return 0.0;
         } else {
-            log.debug("No value for " + id + ", returning 0");
+//            log.debug("No value for " + id + ", returning 0");
             return 0.0;
 
         }
@@ -76,7 +76,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
 
     public void setValueForTimeBin(Id<T> id, int timeBin, String attribute, double value) {
         if (timeBin >= this.numBins) {
-            log.warn("Time bin must be < " + this.numBins + ". No value set.");
+//            log.warn("Time bin must be < " + this.numBins + ". No value set.");
             return;
         }
         setUpTimeBins(id);
@@ -85,10 +85,10 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
                 aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin] = value;
                 return;
             } else {
-                log.warn("Attribute " + attribute + " is not valid. No value set.");
+//                log.warn("Attribute " + attribute + " is not valid. No value set.");
             }return;
         } else {
-            log.error("Id " + id + " is not valid. A value should have been set");
+//            log.error("Id " + id + " is not valid. A value should have been set");
         }
     }
 

@@ -2,8 +2,7 @@ package ethz.ivt;
 
 import ethz.ivt.externalities.aggregation.CongestionAggregator;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionWriter;
-import ethz.ivt.vsp.handlers.CongestionHandler;
-import ethz.ivt.vsp.handlers.CongestionHandlerImplV3;
+import ethz.ivt.vsp.congestion.handlers.*;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
@@ -20,6 +19,7 @@ public class MeasureAggregateCongestionFromScenario {
 	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
 	private Scenario scenario;
     private double binSize;
+    private String congestionHandlerVersion;
     private EventsManagerImpl eventsManager;
     private final MatsimEventsReader reader;
     private CongestionHandler congestionHandler;
@@ -29,21 +29,23 @@ public class MeasureAggregateCongestionFromScenario {
         String configPath = args[0];
         double binSize = Double.parseDouble(args[1]); // aggregation time bin size in seconds
         String eventFile = args[2];
-        String outputDirectory = args[3];
+        String congestionHandlerVersion = args[3];
+        String outputDirectory = args[4];
 
         // load config file
         Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // process MATSim events and write congestion data to file
-        MeasureAggregateCongestionFromScenario runner = new MeasureAggregateCongestionFromScenario(scenario, binSize);
+        MeasureAggregateCongestionFromScenario runner = new MeasureAggregateCongestionFromScenario(scenario, binSize, congestionHandlerVersion);
         runner.process(eventFile);
         runner.write(outputDirectory);
     }
 
-    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize) {
+    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize, String congestionHandlerVersion) {
         this.scenario = scenario;
         this.binSize = binSize;
+        this.congestionHandlerVersion = congestionHandlerVersion;
 
         // set up event manager
         this.eventsManager = new EventsManagerImpl();
@@ -54,7 +56,29 @@ public class MeasureAggregateCongestionFromScenario {
         this.eventsManager.addHandler(v2deh);
 
         // add congestion handler and aggregator
-        this.congestionHandler = new CongestionHandlerImplV3(this.eventsManager, scenario, v2deh);
+        switch (this.congestionHandlerVersion) {
+            case "3":
+                this.congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+
+            case "4":
+                this.congestionHandler = new CongestionHandlerImplV4(eventsManager, scenario);
+
+            case "7":
+                this.congestionHandler = new CongestionHandlerImplV7(eventsManager, scenario);
+
+            case "8":
+                this.congestionHandler = new CongestionHandlerImplV8(eventsManager, scenario);
+
+            case "9":
+                this.congestionHandler = new CongestionHandlerImplV9(eventsManager, scenario);
+
+            case "10":
+                this.congestionHandler = new CongestionHandlerImplV10(eventsManager, scenario);
+
+            default:
+                this.congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
+        }
+        log.info("Selected " + this.congestionHandler.getClass().getName());
         this.congestionAggregator = new CongestionAggregator(scenario, v2deh, this.binSize);
         this.eventsManager.addHandler(congestionHandler);
         this.eventsManager.addHandler(congestionAggregator);
