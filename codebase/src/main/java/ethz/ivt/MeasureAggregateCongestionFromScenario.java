@@ -19,7 +19,7 @@ public class MeasureAggregateCongestionFromScenario {
 	private final static Logger log = Logger.getLogger(MeasureAggregateCongestionFromScenario.class);
 	private Scenario scenario;
     private double binSize;
-    private String congestionHandlerVersion;
+    private int congestionHandlerVersion;
     private EventsManagerImpl eventsManager;
     private final MatsimEventsReader reader;
     private CongestionHandler congestionHandler;
@@ -29,7 +29,7 @@ public class MeasureAggregateCongestionFromScenario {
         String configPath = args[0];
         double binSize = Double.parseDouble(args[1]); // aggregation time bin size in seconds
         String eventFile = args[2];
-        String congestionHandlerVersion = args[3];
+        int congestionHandlerVersion = Integer.parseInt(args[3]);
         String outputDirectory = args[4];
 
         // load config file
@@ -42,7 +42,7 @@ public class MeasureAggregateCongestionFromScenario {
         runner.write(outputDirectory);
     }
 
-    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize, String congestionHandlerVersion) {
+    public MeasureAggregateCongestionFromScenario(Scenario scenario, double binSize, int congestionHandlerVersion) {
         this.scenario = scenario;
         this.binSize = binSize;
         this.congestionHandlerVersion = congestionHandlerVersion;
@@ -57,24 +57,24 @@ public class MeasureAggregateCongestionFromScenario {
 
         // add congestion handler and aggregator
         switch (this.congestionHandlerVersion) {
-            case "3":
+            case 3:
                 this.congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
-
-            case "4":
-                this.congestionHandler = new CongestionHandlerImplV4(eventsManager, scenario);
-
-            case "7":
+                break;
+//            case 4:
+//                this.congestionHandler = new CongestionHandlerImplV4(eventsManager, scenario);
+//                break;
+            case 7:
                 this.congestionHandler = new CongestionHandlerImplV7(eventsManager, scenario);
-
-            case "8":
+                break;
+            case 8:
                 this.congestionHandler = new CongestionHandlerImplV8(eventsManager, scenario);
-
-            case "9":
+                break;
+            case 9:
                 this.congestionHandler = new CongestionHandlerImplV9(eventsManager, scenario);
-
-            case "10":
+                break;
+            case 10:
                 this.congestionHandler = new CongestionHandlerImplV10(eventsManager, scenario);
-
+                break;
             default:
                 this.congestionHandler = new CongestionHandlerImplV3(eventsManager, scenario);
         }
