@@ -24,6 +24,7 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
+import org.matsim.core.mobsim.qsim.qnetsimengine.QVehicle;
 
 /**
  * @author nagel
@@ -44,7 +45,7 @@ public final class CongestionUtils {
 			Link link = network.getLinks().get(linkId);
 			builder.setLinkId(link.getId());
 		
-			builder.setFreeTravelTime(Math.floor(link.getLength() / link.getFreespeed()));
+			builder.setFreeTravelTime(Math.floor(link.getLength() / getFreeSpeedVelocity(link)));
 		
 			double flowCapacity_capPeriod = link.getCapacity() * scenario.getConfig().qsim().getFlowCapFactor();
 			double marginalDelay_sec = ((1 / (flowCapacity_capPeriod / scenario.getNetwork().getCapacityPeriod()) ) );
@@ -59,6 +60,26 @@ public final class CongestionUtils {
 			linkId2congestionInfo.put(link.getId(), linkInfo);
 			
 			return linkInfo ;
+		}
+
+
+		public static double getFreeSpeedVelocity(Link link) {
+			double crossingPenalty = 3.0;
+			boolean isMajor = true;
+
+			for (Link other : link.getToNode().getInLinks().values()) {
+				if (other.getCapacity() >= link.getCapacity()) {
+					isMajor = false;
+				}
+			}
+
+			if (isMajor || link.getToNode().getInLinks().size() == 1) {
+				return link.getFreespeed();
+			} else {
+				double travelTime =  link.getLength() / link.getFreespeed();
+				travelTime += crossingPenalty;
+				return link.getLength() / travelTime;
+			}
 		}
 
 }
