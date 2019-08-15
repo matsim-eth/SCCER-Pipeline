@@ -195,7 +195,8 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
 
             for (Map.Entry<Id<T>, Map<String, double[]>> e : this.aggregateDataPerLinkPerTime.entrySet()) {
                 for (int bin = 0; bin<this.numBins; bin++) {
-                    if (aggregateDataPerLinkPerTime.get(e.getKey()).get("count")[bin] > 0) {
+                    if (aggregateDataPerLinkPerTime.get(e.getKey()).get("count_entering")[bin] > 0 |
+                            aggregateDataPerLinkPerTime.get(e.getKey()).get("count_exiting")[bin] > 0) {
 
                         String entry = e.getKey() + ";" + binSize + ";" + bin;
 
@@ -230,7 +231,8 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
 
     public static AggregateDataPerTimeImpl<Link> congestionLink(double binSize) {
         ArrayList<String> attributes = new ArrayList<>();
-        attributes.add("count");
+        attributes.add("count_entering");
+        attributes.add("count_exiting");
         attributes.add("delay_caused");
         attributes.add("delay_experienced");
         attributes.add("congestion_caused");

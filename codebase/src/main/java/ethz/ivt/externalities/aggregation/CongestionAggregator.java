@@ -121,7 +121,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
             // only count non-freight agents
             if (!personId.toString().contains("freight")) {
-                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count_entering", 1);
 
                 // some extra link info
                 aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "length", link.getLength());
@@ -151,7 +151,7 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
 
             // only count non-freight agents
             if (!personId.toString().contains("freight")) {
-                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count", 1);
+                aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, enterTime, "count_entering", 1);
 
                 // some extra link info
                 aggregateCongestionDataPerLinkPerTime.setValueAtTime(linkId, enterTime, "length", link.getLength());
@@ -170,6 +170,19 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         Id<Person> personId = drivers.getDriverOfVehicle(event.getVehicleId());
         AgentOnLinkInfo agentOnLinkInfo = new AgentOnLinkInfo(personId, null, -1.0, -1.0);
         person2linkinfo.replace(personId, agentOnLinkInfo);
+
+        // only count non-freight agents
+        if (!personId.toString().contains("freight")) {
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(event.getLinkId(), event.getTime(), "count_exiting", 1);
+
+            Link link = scenario.getNetwork().getLinks().get(event.getLinkId());
+
+            // some extra link info
+            aggregateCongestionDataPerLinkPerTime.setValueAtTime(event.getLinkId(), event.getTime(), "length", link.getLength());
+            aggregateCongestionDataPerLinkPerTime.setValueAtTime(event.getLinkId(), event.getTime(), "free_speed", CongestionUtils.getFreeSpeedVelocity(link));
+            aggregateCongestionDataPerLinkPerTime.setValueAtTime(event.getLinkId(), event.getTime(), "capacity", link.getCapacity());
+            aggregateCongestionDataPerLinkPerTime.setValueAtTime(event.getLinkId(), event.getTime(), "flow_capacity_per_sec", link.getFlowCapacityPerSec());
+        }
     }
 
     /*
