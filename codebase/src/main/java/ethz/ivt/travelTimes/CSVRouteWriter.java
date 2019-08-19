@@ -1,18 +1,16 @@
 package ethz.ivt.travelTimes;
 
-import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.network.Network;
-import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.network.io.MatsimNetworkReader;
+import jdk.internal.dynalink.support.LinkerServicesImpl;
+import org.matsim.api.core.v01.network.Link;
 import org.matsim.core.utils.misc.Counter;
 
 import java.io.BufferedWriter;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
-import java.lang.reflect.Array;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.stream.Collectors;
 
 public class CSVRouteWriter {
     final private Collection<RouteItem> routeItems;
@@ -55,7 +53,10 @@ public class CSVRouteWriter {
 
     private String formatItem(RouteItem routeItem) {
 
-        String links = String.join(",", new ArrayList<>(routeItem.links).toString());
+        Collection<String> links = routeItem.links
+                .stream()
+                .map(link -> link.getId().toString())
+                .collect(Collectors.toList());
 
         return String.join(";", new String[] {
                 Double.toString(routeItem.departureTime),
@@ -64,7 +65,7 @@ public class CSVRouteWriter {
                 Double.toString(routeItem.endCoord.getX()),
                 Double.toString(routeItem.endCoord.getY()),
                 Double.toString(routeItem.travelTime),
-                links,
+                String.join(",", new ArrayList<>(links).toString()),
         });
     }
 }

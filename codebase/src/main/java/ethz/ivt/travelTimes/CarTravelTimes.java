@@ -1,17 +1,13 @@
 package ethz.ivt.travelTimes;
 
 import org.matsim.api.core.v01.Coord;
-import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
 import org.matsim.api.core.v01.TransportMode;
-import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.network.Node;
-import org.matsim.api.core.v01.population.*;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
-import org.matsim.core.population.PopulationUtils;
 import org.matsim.core.router.DijkstraFactory;
 import org.matsim.core.router.costcalculators.RandomizingTimeDistanceTravelDisutilityFactory;
 import org.matsim.core.router.costcalculators.TravelDisutilityFactory;
@@ -19,13 +15,10 @@ import org.matsim.core.router.util.LeastCostPathCalculator;
 import org.matsim.core.router.util.TravelDisutility;
 import org.matsim.core.scenario.ScenarioUtils;
 import org.matsim.core.trafficmonitoring.TravelTimeCalculator;
-import org.matsim.core.utils.io.IOUtils;
 
-import java.io.*;
-import java.util.Arrays;
+import java.io.IOException;
 import java.util.Collection;
 import java.util.LinkedList;
-import java.util.List;
 import java.util.stream.Collectors;
 
 
@@ -75,11 +68,8 @@ public class CarTravelTimes {
         for(double departureTime : departureTimes) {
             LeastCostPathCalculator.Path path = router.calcLeastCostPath(startNode, endNode, departureTime, null, null);
 
-            Collection<String> osmLinks = path.links
-                    .stream()
-                    .map(link -> link.getAttributes().getAttribute("osm:way:id").toString())
-                    .collect(Collectors.toList());
-            routeItems.add(new RouteItem(departureTime, startCoord, endCoord, path.travelTime, osmLinks));
+            System.out.println(path.links.size() + " links along path!" );
+            routeItems.add(new RouteItem(departureTime, startCoord, endCoord, path.travelTime, path.links));
         }
 
         CSVRouteWriter writer = new CSVRouteWriter(routeItems);
