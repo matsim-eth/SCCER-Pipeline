@@ -64,29 +64,30 @@ public class CongestionAggregator implements CongestionEventHandler, LinkEnterEv
         double causingAgentEnterTime = event.getEmergenceTime(); // time when causing agent entered the link in the past
         double affectedAgentLeaveTime = event.getTime(); // time when the affected agent experiences the delay
 
-        Id<Link> causingAgentLinkId = event.getLinkId();
-        Id<Link> affectedAgentLinkId = event.getLinkId(); // event triggered when affected agent leaves link with delay
+        Id<Link> linkId = event.getLinkId(); // event triggered when affected agent leaves link with delay
 
         double delay = event.getDelay();
-        double congestion = delay;
-        double thresholdDelay = (freespeedTravelTime * ( (1 / congestionThresholdRatio) - 1));
+        double thresholdDelay = Math.ceil(freespeedTravelTime * ( (1 / congestionThresholdRatio) - 1));
 
         //delay must be larger than threshold to be considered as congestion
-        if ( congestion < thresholdDelay) {
+        double congestion = delay;
+        if ( delay < thresholdDelay) {
+//            log.info("Delay on link " + linkId.toString() + " at " + event.getTime() +
+//                    " is " + delay + " sec < " + thresholdDelay + " sec -> NO CONGESTION " );
             congestion = 0;
         }
 
         // record delays on links
         // only store caused delays on link if causing agent is not freight
         if (!causingAgentId.toString().contains("freight")) {
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId, causingAgentEnterTime, "delay_caused", delay);
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(causingAgentLinkId, causingAgentEnterTime, "congestion_caused", congestion);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, causingAgentEnterTime, "delay_caused", delay);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, causingAgentEnterTime, "congestion_caused", congestion);
         }
 
         // only store experienced delays on link if affected agent is not freight
         if (!affectedAgentId.toString().contains("freight")) {
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId, affectedAgentLeaveTime, "delay_experienced", delay);
-            aggregateCongestionDataPerLinkPerTime.addValueAtTime(affectedAgentLinkId, affectedAgentLeaveTime, "congestion_experienced", congestion);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, affectedAgentLeaveTime, "delay_experienced", delay);
+            aggregateCongestionDataPerLinkPerTime.addValueAtTime(linkId, affectedAgentLeaveTime, "congestion_experienced", congestion);
         }
 
         // record delays by person
