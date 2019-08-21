@@ -55,7 +55,7 @@ public class PtChargingZones {
         try {
             Files.lines(odPairsFile).forEach(l -> {
                 String[] ss = l.split(",");
-                Id<Zone> origin = Id.create(ss[0].trim(), Zone.class);
+                Id<Zone> origin = Id.create(ss[0].replaceAll("\"", "").trim(), Zone.class);
                 List<Id<Zone>> destinations = Arrays.stream(ss[1].replaceAll("\"", "").split(" "))
                         .map(s -> Id.create(s.trim(), Zone.class)).collect(Collectors.toList());
                 zoneMapping.put(origin, new HashSet<>(destinations));
