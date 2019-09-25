@@ -31,6 +31,7 @@ import java.io.BufferedWriter;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.nio.file.FileSystemNotFoundException;
 
 public class RunAggregateCongestionInSimulation {
 
@@ -150,8 +151,9 @@ public class RunAggregateCongestionInSimulation {
             @Override
             public void notifyShutdown(ShutdownEvent event) {
 
-                File file = new File(outputDirectory);
-                file.getParentFile().mkdirs();
+                File file = new File(outputDirectory + "/aggregate_delay_per_link_per_time.csv");
+                File parentFile = file.getParentFile();
+                parentFile.mkdirs();
 
                 try {
                     BufferedWriter bw = new BufferedWriter(new FileWriter(file));
