@@ -48,8 +48,7 @@ public class PTCongestionCounter implements ExtendedPersonDepartureEventEventHan
         this.externalityCounterDelegate = externalityCounterDelegate;
         this.ptChargingZones = ptChargingZones;
 
-        externalityCounterDelegate.addKey(PT_CONGESTION_KEY); //freespeed travel time
-
+        this.externalityCounterDelegate.addKey(PT_CONGESTION_KEY);
     }
 
     //don't need to look at the arrival event, as we know the length of the trip from the dep. event.

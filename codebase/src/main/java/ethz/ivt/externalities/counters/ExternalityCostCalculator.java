@@ -145,7 +145,7 @@ public class ExternalityCostCalculator {
         costs.put("PM_building_damage_costs", PM_urban_buildings + PM_rural_buildings + PM_regional_buildings);
 
         //congestion
-        double congestion_costs = emissions.get("delay_caused") * rv.get("VTTS") / 3600;
+        double congestion_costs = emissions.get("congestion_caused") * rv.get("VTTS") / 3600;
         costs.put("Congestion_costs", congestion_costs);
     }
 
