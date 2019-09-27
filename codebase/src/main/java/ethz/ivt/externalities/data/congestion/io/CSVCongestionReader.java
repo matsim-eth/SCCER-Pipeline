@@ -25,11 +25,7 @@ public class CSVCongestionReader<T> {
     public AggregateDataPerTimeImpl<T> read(String path, double binSize) {
 
         ArrayList<String> attributes = new ArrayList<>();
-        attributes.add("count");
-        attributes.add("delay_caused");
-        attributes.add("delay_experienced");
-        attributes.add("congestion_caused");
-        attributes.add("congestion_experienced");
+        attributes.add("congestion");
 
         AggregateDataPerTimeImpl<T> aggData = new AggregateDataPerTimeImpl<T>(binSize, attributes, clazz);
         aggData.loadDataFromCsv(path);

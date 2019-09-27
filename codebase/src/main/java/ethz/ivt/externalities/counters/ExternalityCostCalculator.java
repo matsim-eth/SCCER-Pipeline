@@ -99,6 +99,7 @@ public class ExternalityCostCalculator {
         //accident costs
         String accidentHealthKey = "accident.cost." + emissions.getMode() + ".p_km";
         costs.put("Accident_costs", emissions.getDistance() / 1000 * rv.getOrDefault(accidentHealthKey, 0.0));
+        log.info(accidentHealthKey + costs.get("Accident_costs"));
 
         return costs;
     }

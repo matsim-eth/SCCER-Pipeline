@@ -84,19 +84,9 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
             personId = Id.createPersonId(event.getVehicleId().toString());
         }
 
-        double count = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "count");
+        double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion");
 
-        if (count > 0) {
-            double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "delay_caused") / count;
-            double delayExperienced = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "delay_experienced") / count;
-            double congestionCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion_caused") / count;
-            double congestionExperienced = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion_experienced") / count;
-
-            externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
-            externalityCounterDelegate.incrementTempValueBy(personId, "delay_experienced", delayExperienced);
-            externalityCounterDelegate.incrementTempValueBy(personId, "congestion_caused", congestionCaused);
-            externalityCounterDelegate.incrementTempValueBy(personId, "congestion_experienced", congestionExperienced);
-        }
+        externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
 
         //Now store the event for the person
         this.personLinkEntryTime.put(personId, event.getTime());

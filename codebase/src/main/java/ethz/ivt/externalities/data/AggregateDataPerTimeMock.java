@@ -80,11 +80,7 @@ public class AggregateDataPerTimeMock extends AggregateDataPerTimeImpl<Link>{
 
     public static AggregateDataPerTimeMock congestion(double binSize, Class clazz) {
         List<String> attributes = new ArrayList<>();
-        attributes.add("count");
-        attributes.add("delay_caused");
-        attributes.add("delay_experienced");
-        attributes.add("congestion_caused");
-        attributes.add("congestion_experienced");
+        attributes.add("congstion");
 
         return new AggregateDataPerTimeMock();
     }
