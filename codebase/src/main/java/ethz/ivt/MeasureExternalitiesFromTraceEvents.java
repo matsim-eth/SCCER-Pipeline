@@ -4,6 +4,7 @@ import ethz.ivt.externalities.MeasureExternalities;
 import ethz.ivt.externalities.counters.ExternalityCostCalculator;
 import ethz.ivt.externalities.counters.ExternalityCounter;
 import ethz.ivt.externalities.data.AggregateDataPerTimeImpl;
+import ethz.ivt.externalities.data.congestion.PtChargingZones;
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader;
 import ethz.ivt.externalities.roadTypeMapping.HbefaRoadTypeMapping;
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping;
@@ -14,6 +15,7 @@ import org.matsim.api.core.v01.network.Link;
 import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup;
+import org.matsim.core.config.CommandLine;
 import org.matsim.core.config.Config;
 import org.matsim.core.config.ConfigUtils;
 import org.matsim.core.network.NetworkUtils;
@@ -34,17 +36,14 @@ import java.util.Random;
 public class MeasureExternalitiesFromTraceEvents {
     private final static Logger log = Logger.getLogger(MeasureExternalitiesFromTraceEvents.class);
 
-    public static void main(String[] args) throws IOException {
-        String configPath = args[0];
-        String eventPath = args[1];
-        String congestionPath = args[2];
-        double binSize = Double.valueOf(args[3]);
-        String costValuesPath = args[4];
-        String vehicleCompositionPath = args[5];
-        String outputPath = args[6];
+    public static void main(String[] args) throws IOException, CommandLine.ConfigurationException {
+        CommandLine cmd = new CommandLine.Builder(args) //
+                .requireOptions("config-path", "event-path", "congestion-path", "binsize", "cost-values-path",
+                        "car-fleet-path", "zones-shapefile-path", "od-pairs-path", "output-path") //
+                .build();
 
         // load config file and scenario
-        Config config = ConfigUtils.loadConfig(configPath, new EmissionsConfigGroup());
+        Config config = ConfigUtils.loadConfig(cmd.getOptionStrict("config-path"), new EmissionsConfigGroup());
         Scenario scenario = ScenarioUtils.loadScenario(config);
 
         // adding hbefa mappings
@@ -54,22 +53,25 @@ public class MeasureExternalitiesFromTraceEvents {
 
         // set up vehicle composition from file
         VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
-        vehicleGenerator.read(vehicleCompositionPath, 2015);
+        vehicleGenerator.read(cmd.getOptionStrict("car-fleet-path"), 2015);
         vehicleGenerator.setUpVehicles();
 
         CSVVehicleWriter writer = new CSVVehicleWriter(scenario.getVehicles().getVehicles().values());
-        writer.write(Paths.get(outputPath, "vehicles.csv"));
+        writer.write(Paths.get(cmd.getOptionStrict("output-path"), "vehicles.csv"));
 
         // load data
-        AggregateDataPerTimeImpl<Link> congestionData = CSVCongestionReader.forLink().read(congestionPath, binSize);
-        ExternalityCostCalculator ecc = new ExternalityCostCalculator(costValuesPath);
+        AggregateDataPerTimeImpl<Link> congestionData = CSVCongestionReader.forLink()
+                .read(cmd.getOptionStrict("congestion-path"), Double.parseDouble(cmd.getOptionStrict("binsize")));
+        ExternalityCostCalculator ecc = new ExternalityCostCalculator(cmd.getOptionStrict("cost-values-path"));
 
         // create runner
-        MeasureExternalities measureExternalities = new MeasureExternalities(scenario, congestionData, ecc, null);
+        MeasureExternalities measureExternalities = new MeasureExternalities(scenario, congestionData, ecc, new PtChargingZones(scenario,
+                Paths.get(cmd.getOptionStrict("zones-shapefile-path")),
+                Paths.get(cmd.getOptionStrict("od-pairs-path"))));
 
         // process events and write to file
-        ExternalityCounter externalityCounter = measureExternalities.process(eventPath, LocalDateTime.now());
-        externalityCounter.writeCsvFile(Paths.get(outputPath, LocalDateTime.now().toString(), "externalities.csv"));
+        ExternalityCounter externalityCounter = measureExternalities.process(cmd.getOptionStrict("event-path"), LocalDateTime.now());
+        externalityCounter.writeCsvFile(Paths.get(cmd.getOptionStrict("output-path"), LocalDateTime.now().toString(), "externalities.csv"));
     }
 
     public static void setUpRoadTypes(Network network) {

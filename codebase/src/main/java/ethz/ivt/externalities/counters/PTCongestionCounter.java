@@ -68,7 +68,7 @@ public class PTCongestionCounter implements ExtendedPersonDepartureEventEventHan
 
     @Override
     public void handleEvent(PersonArrivalEvent event) {
-        if (PT_MODES.contains(event.getLegMode())) {
+        if (PT_MODES.contains(event.getLegMode()) && personPTdepartureTime.containsKey(event.getPersonId())) {
             Id<Person> personId = event.getPersonId();
             double start_time = personPTdepartureTime.get(personId);
             double distance = personPTdistance.get(personId);
