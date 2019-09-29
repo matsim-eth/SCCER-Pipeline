@@ -29,6 +29,18 @@ package object data {
     def getStartedSeconds: Double = started_at.toLocalTime.toSecondOfDay
     def getFinishedSeconds: Double = finished_at.toLocalTime.toSecondOfDay
 
+    def getStartPoint: GPXEntry = {
+      val gpx = start_point.toGPX
+      gpx.setTime(getStartedSeconds.toLong * 1000)
+      return gpx
+    }
+
+    def getFinishPoint: GPXEntry = {
+      val gpx = finish_point.toGPX
+      gpx.setTime(getFinishedSeconds.toLong * 1000)
+      return gpx
+    }
+
     override def toString() = "%s,%s,%s".format(leg_id, started_at, finished_at)
 
 

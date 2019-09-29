@@ -171,7 +171,7 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
   val logger = Logger.getLogger(this.getClass)
   val dateFormatter = DateTimeFormatter.ofPattern("yyyy-MM-dd")
   val gh: GHtoEvents = new MATSimMMBuilder().buildGhToEvents(scenario.getNetwork, new CH1903LV03PlustoWGS84, hopper_location)
-  gh.getMatcher.setMeasurementErrorSigma(500)
+  gh.getMatcher.setMeasurementErrorSigma(100)
 
 
   val json_matcher: PathMatcher = FileSystems.getDefault.getPathMatcher("glob:**.json")
@@ -229,8 +229,8 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     val personId = Id.createPersonId(tr.user_id)
     val vehicleId = determineVehicleType(tr.user_id, tl.mode)
     val (links : scala.List[LinkGPXStruct], linkEvents : List[Event])  = if (tl.mode.equals(TransportMode.car)) {
-      val start_pt = tl.start_point.toGPX
-      val finish_pt = tl.finish_point.toGPX
+      val start_pt = tl.getStartPoint
+      val finish_pt = tl.getFinishPoint
 
       val entries = (start_pt +: tl.waypoints.map(_.toGPX) :+ finish_pt).asJava
 

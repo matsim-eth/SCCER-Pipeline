@@ -89,6 +89,7 @@ public class GHtoEvents {
             return timed_links;
         } catch (IllegalArgumentException ex) {
             logger.warning(ex.getMessage());
+            logger.warning(ex.toString());
             return Collections.EMPTY_LIST;
 
         }
@@ -114,19 +115,27 @@ public class GHtoEvents {
         EdgeMatch edgeMatch = pathEdges.next();
 
         LinkGPXStruct eLink = convertToLinkStruct(edgeMatch);
-        GPXExtension path_x0 = eLink.getGpxExtensions().get(eLink.getGpxExtensions().size() - 1);//get node from eLink
+        GPXExtension path_x0 = eLink.getGpxExtensions().get(0);//get node from eLink
         GPXExtension path_x1 = null;
         //can assume that first edge has a point. add end(eLink) to n_list, time(x, end(eLink)) to t_list
-        double aTime = timeBetween(path_x0, eLink.getLink());
-        double map_time = 0 + aTime;
-        eLink.entryTime = path_x0.getEntry().getTime();
-        eLink.exitTime = aTime;
+        double unmeasuredTime = timeBetween(eLink.getLink(), path_x0);
+        double travelTime = timeBetween(path_x0, eLink.getLink());
+
+        double firstLinkBeforeGPStime = unmeasuredTime;
+        double firstLinkAfterGPStime = travelTime;
+
+        //set entry time of first link
+        eLink.entryTime = path_x0.getEntry().getTime() - unmeasuredTime;
+
+        double real_time_start = eLink.entryTime;
+        double network_time = timeBetween(eLink.getLink());
+
         resultLinks.add(eLink);
 
         LinkGPXStruct firstLink = eLink;
 
         if (!pathEdges.hasNext()) {
-            eLink.exitTime =  eLink.exitTime + eLink.entryTime;
+            eLink.exitTime =  eLink.entryTime + travelTime;
         }
 
         while (pathEdges.hasNext()) {
@@ -135,38 +144,57 @@ public class GHtoEvents {
             eLink = convertToLinkStruct(edgeMatch);
             eLink.entryTime = prevE.exitTime;
             resultLinks.add(eLink);
-            currLinks.add(eLink);
 
             if(eLink.isEmpty()) {
+                currLinks.add(eLink);
+
                 //we will need to impute the travel time --cannot be the last link
                 if (!pathEdges.hasNext()) {
                     throw new RuntimeException("last link in a path needs to have a gps point");
                 }
-                aTime = timeBetween(eLink.getLink());
-                map_time += aTime;
-                eLink.exitTime = eLink.entryTime + aTime;
+                travelTime = timeBetween(eLink.getLink());
+                network_time += travelTime;
+
+                eLink.exitTime = eLink.entryTime + travelTime;
             } else { //finish off this section of road!
-                path_x1 = eLink.getGpxExtensions().get(0);//first point of eLink
-                aTime = timeBetween(eLink.getLink(), path_x1);
+                path_x1 = eLink.getGpxExtensions().get(eLink.getGpxExtensions().size() - 1);//first point of eLink
 
-                map_time += aTime;
+                travelTime = timeBetween(eLink.getLink(), path_x1);
+                unmeasuredTime = timeBetween(path_x1, eLink.getLink());
 
-                final double real_time = timeBetween(path_x0, path_x1);
+                network_time += travelTime;
+
+                double real_time_end = path_x1.getEntry().getTime();
+                final double real_travel_time = (real_time_end -  real_time_start) /1000;
+
                 final double beginNodeTime = path_x0.getEntry().getTime();
-                double final_map_time = map_time;
 
-                firstLink.exitTime = firstLink.entryTime + firstLink.exitTime*(real_time / final_map_time);
 
-                currLinks.forEach(n -> n.scaleTimesBy(beginNodeTime, real_time / final_map_time));
+                final double scaling_factor = real_travel_time / network_time;
+
+                logger.info(String.format("scaling by %f", scaling_factor));
+
+                eLink.entryTime = beginNodeTime + eLink.entryTime * scaling_factor;
+
+                currLinks.forEach(n -> n.scaleTimesBy(beginNodeTime, scaling_factor));
+
+                if (currLinks.isEmpty()) {
+                    firstLink.exitTime = eLink.entryTime;
+                } else {
+                    firstLink.exitTime = currLinks.get(0).entryTime;
+                }
                 currLinks.clear();
 
                 path_x0 = eLink.getGpxExtensions().get(eLink.getGpxExtensions().size() - 1); //last point of eLink
                 path_x1 = null;
 
-                aTime = timeBetween(path_x0, eLink.getLink());
-                map_time = 0 + aTime;
+                real_time_start = real_time_end;
+                network_time = 0 + travelTime;
+
                 firstLink = eLink;
-                firstLink.exitTime = timeBetween(path_x0, eLink.getLink());
+                firstLinkBeforeGPStime = unmeasuredTime;
+                firstLinkAfterGPStime  = travelTime;
+
             }
         }
         return resultLinks;

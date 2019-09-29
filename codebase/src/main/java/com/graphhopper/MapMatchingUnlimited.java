@@ -79,7 +79,7 @@ public class MapMatchingUnlimited extends MapMatching {
     private final Weighting weighting;
     private final boolean ch;
 
-    private double minDistanceBetweenPoints = 100;
+    private double minDistanceBetweenPoints = 200;
 
     public MapMatchingUnlimited(GraphHopper graphHopper, AlgorithmOptions algoOptions) {
         super(graphHopper, algoOptions);
@@ -246,6 +246,10 @@ public class MapMatchingUnlimited extends MapMatching {
         return matchResult;
     }
 
+    private boolean hasQueryResult(GPXEntry gpxEntry) {
+        return locationIndex.findClosest(gpxEntry.lat, gpxEntry.lon, EdgeFilter.ALL_EDGES) != null;
+    }
+
     private int getNumQueryResults(GPXEntry gpxEntry) {
         return locationIndex.findNClosest(gpxEntry.lat, gpxEntry.lon, EdgeFilter.ALL_EDGES, measurementErrorSigma).size();
     }
@@ -257,15 +261,17 @@ public class MapMatchingUnlimited extends MapMatching {
      */
     private List<GPXEntry> filterGPXEntries(List<GPXEntry> gpxList) {
         //filter points that are not matchable to the road network
-        List<GPXEntry> locatablePoints = gpxList.stream().filter(x -> getNumQueryResults(x) > 0).collect(Collectors.toList());
         List<GPXEntry> filtered = new ArrayList<>();
         GPXEntry prevEntry = null;
-        int last = locatablePoints.size() - 1;
-        for (int i = 0; i <= last; i++) {
-            GPXEntry gpxEntry = locatablePoints.get(i);
-            if (i == 0 || i == last || distanceCalc.calcDist(
+        for (int i = 0; i < gpxList.size(); i++) {
+            GPXEntry gpxEntry = gpxList.get(i);
+            boolean first_record = i == 0;
+            boolean distance_ok = first_record || distanceCalc.calcDist(
                     prevEntry.getLat(), prevEntry.getLon(),
-                    gpxEntry.getLat(), gpxEntry.getLon()) > minDistanceBetweenPoints) {
+                    gpxEntry.getLat(), gpxEntry.getLon()
+            ) > minDistanceBetweenPoints;
+            boolean hasQueryResult =  hasQueryResult(gpxEntry);
+            if ( distance_ok && hasQueryResult ) {
                 filtered.add(gpxEntry);
                 prevEntry = gpxEntry;
             } else {
