@@ -34,7 +34,7 @@ Zinc.soil_quality.bus =   0.002160
 Zinc.soil_quality.tram = 0.000014
 Zinc.soil_quality.pt =	0.001146
 
-peak.surcharge.pt.CHF_km = 0.20
+peak.surcharge.pt.CHF_km = 0.10
 
 NOX.bus.urban.g_per_pkm = 0.5440
 
