@@ -138,9 +138,10 @@ object SplitWaypoints {
     logger.info(s"${personday_triplegs.map(_.legs.size).sum} triplegs loaded")
     conn1.close()
 
-    val max_jobs = 200
-    val min_person_days_per_group = 100
-    val objects_per_group = personday_triplegs.size / max_jobs
+    val max_num_chunks : Int = props.getProperty("person_days.max.num.chunks", "20").toInt
+    val min_person_days_per_group : Int = props.getProperty("person.days.min.chunk.size", "100").toInt
+
+    val objects_per_group = personday_triplegs.size / max_num_chunks
     val group_size : Int = scala.math.max(objects_per_group, min_person_days_per_group)
 
     /////////// steps:
@@ -154,11 +155,11 @@ object SplitWaypoints {
         case (trs, chunk_i) =>
 
           val chunk_folder_name = "chunk_" + chunk_i
+          val sub_dir = OUTPUT_DIR.resolve(chunk_folder_name)
 
           trs.par.foreach { case tr =>
 
             val date1 = tr.date.format(dateFormatter)
-            val sub_dir = OUTPUT_DIR.resolve(chunk_folder_name)
             val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
 
 
@@ -181,8 +182,6 @@ object SplitWaypoints {
             pb.step(); // step by 1
             pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
           }
-
-          //fire off chunk job now
 
 
         }
