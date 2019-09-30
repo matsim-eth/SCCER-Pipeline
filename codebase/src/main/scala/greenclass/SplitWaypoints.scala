@@ -134,9 +134,14 @@ object SplitWaypoints {
   //    .filter(tr => ids.contains(tr.user_id))
       .toList
 
-    logger.info(s"${personday_triplegs.size} trips loaded")
+    logger.info(s"${personday_triplegs.size} trip days loaded")
     logger.info(s"${personday_triplegs.map(_.legs.size).sum} triplegs loaded")
     conn1.close()
+
+    val max_jobs = 200
+    val min_person_days_per_group = 100
+    val objects_per_group = personday_triplegs.size / max_jobs
+    val group_size : Int = scala.math.max(objects_per_group, min_person_days_per_group)
 
     /////////// steps:
     // split waypoints into user_id and date
@@ -145,32 +150,42 @@ object SplitWaypoints {
     // assign them to trip legs based on start and end trip_leg time.
     val pb = new ProgressBar("Test", personday_triplegs.size)
     try { // name, initial max
-      personday_triplegs.par.foreach { tr =>
+      personday_triplegs.grouped(group_size).zipWithIndex.foreach {
+        case (trs, chunk_i) =>
 
-        val date1 = tr.date.format(dateFormatter)
-        val sub_dir = OUTPUT_DIR.resolve(tr.user_id)
-        val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
+          val chunk_folder_name = "chunk_" + chunk_i
+
+          trs.par.foreach { case tr =>
+
+            val date1 = tr.date.format(dateFormatter)
+            val sub_dir = OUTPUT_DIR.resolve(chunk_folder_name)
+            val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
 
 
-        //  logger.info("Creating:\t " + outFile.toAbsolutePath)
+            //  logger.info("Creating:\t " + outFile.toAbsolutePath)
 
-          val updatedLegs = tr.legs.map { leg =>
-            leg.copy(waypoints = getWaypoints(ds, waypoints_sql, tr.user_id, leg))
-          }
-          val new_tr = List(tr.copy(legs = updatedLegs))
-          val tripsJSON = Serialization.writePretty(new_tr)
+            val updatedLegs = tr.legs.map { leg =>
+              leg.copy(waypoints = getWaypoints(ds, waypoints_sql, tr.user_id, leg))
+            }
+            val new_tr = List(tr.copy(legs = updatedLegs))
+            val tripsJSON = Serialization.writePretty(new_tr)
 
-          Files.createDirectories(sub_dir)
-          val pw = new PrintWriter(outFile.toFile)
-          try {
-            pw.write(tripsJSON)
-          } finally {
+            Files.createDirectories(sub_dir)
+            val pw = new PrintWriter(outFile.toFile)
+            try {
+              pw.write(tripsJSON)
+            } finally {
               pw.close()
+            }
+
+            pb.step(); // step by 1
+            pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
           }
 
-        pb.step(); // step by 1
-        pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
-      }
+          //fire off chunk job now
+
+
+        }
 
     } finally {
       pb.close()
