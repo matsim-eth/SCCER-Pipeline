@@ -138,7 +138,7 @@ object SplitWaypoints {
     logger.info(s"${personday_triplegs.map(_.legs.size).sum} triplegs loaded")
     conn1.close()
 
-    val max_num_chunks : Int = props.getProperty("person_days.max.num.chunks", "20").toInt
+    val max_num_chunks : Int = props.getProperty("person.days.max.num.chunks", "20").toInt
     val min_person_days_per_group : Int = props.getProperty("person.days.min.chunk.size", "100").toInt
 
     val objects_per_group = personday_triplegs.size / max_num_chunks
