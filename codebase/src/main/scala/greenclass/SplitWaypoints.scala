@@ -69,7 +69,8 @@ object SplitWaypoints {
 
     val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
     val config = new HikariConfig(props.getProperty("database.properties.file"))
-    config.setMaximumPoolSize(50)
+    config.setMinimumIdle(20)
+    config.setMaximumPoolSize(20)
 
     val ds = new HikariDataSource(config)
 
