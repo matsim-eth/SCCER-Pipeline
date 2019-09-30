@@ -120,11 +120,13 @@ object SplitWaypoints {
       )
     }
 
+    logger.info("creating person trip legs")
+
  //   val ids = "1647" :: "1681" :: "1595" :: "1596" :: "1607" :: Nil
 
     val personday_triplegs = triplegs.toStream
-      .groupBy(tr => (tr.user_id, tr.tripLeg.started_at.toLocalDate))
-      .map { case ((user_id, date), trs: Stream[TripRow]) =>
+        .groupBy(tr => (tr.user_id, tr.tripLeg.started_at.toLocalDate))
+        .par.map { case ((user_id, date), trs: Stream[TripRow]) =>
         TripRecord(user_id, 0, date, trs.map(_.tripLeg).toList)
       }
       .map( tr => tr.copy(legs = tr.legs   ))//.filter(tl => tl.mode == "Car" || tl.mode == "Ecar" )) )
