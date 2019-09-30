@@ -3,5 +3,5 @@ select
    	extract(epoch from tracked_at::time) * 1000 as tracked_at_millis,
    	accuracy
 from motion_tag_waypoint
-where user_id = ? and trip_id = ?
+where user_id = ? and trip_id = ? and accuracy < 200
 order by tracked_at
