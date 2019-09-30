@@ -2,8 +2,8 @@ package greenclass
 
 import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.{Files, Paths}
-import java.sql.{DriverManager, PreparedStatement}
-import java.time.LocalDateTime
+import java.sql.{Date, DriverManager, PreparedStatement}
+import java.time.{LocalDate, LocalDateTime}
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 
@@ -26,20 +26,25 @@ object SplitWaypoints {
 
   // Setup the connection
 
-  def getWaypoints(ds: HikariDataSource, waypoints_sql : String, user_id: String, leg: TripLeg): List[WaypointRecord] = {
+  def getWaypoints(ds: HikariDataSource, waypoints_sql : String, user_id: String, date: LocalDate): Map[String, List[WaypointRecord]] = {
 
     val conn = ds.getConnection()
     try {
       val query = conn.prepareStatement(waypoints_sql)
 
       query.setString(1, user_id)
-      query.setString(2, leg.leg_id)
+      query.setDate(2, Date.valueOf(date))
 
       val rs = query.executeQuery()
-      val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
-        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
-      }
-      return results.toList
+      val results: Map[String, List[WaypointRecord]] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
+        val trip_id = rs.getString("trip_id")
+        val wp = WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
+        (trip_id, wp)
+      }.toList               //List[K]
+        .groupBy(_._1)           //Map[J,List[K]]
+        .mapValues( ls => ls.map{ x => x._2 } )
+
+      return results
     } finally {
       conn.close()
     }
@@ -69,8 +74,8 @@ object SplitWaypoints {
 
     val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
     val config = new HikariConfig(props.getProperty("database.properties.file"))
-    config.setMinimumIdle(20)
-    config.setMaximumPoolSize(20)
+    config.setMinimumIdle(40)
+    config.setMaximumPoolSize(40)
 
     val ds = new HikariDataSource(config)
 
@@ -153,9 +158,10 @@ object SplitWaypoints {
 
 
         //  logger.info("Creating:\t " + outFile.toAbsolutePath)
+        val waypoints1 = getWaypoints(ds, waypoints_sql, tr.user_id, tr.date)
 
           val updatedLegs = tr.legs.map { leg =>
-            leg.copy(waypoints = getWaypoints(ds, waypoints_sql, tr.user_id, leg))
+            leg.copy(waypoints = waypoints1.getOrElse(leg.leg_id, List.empty))
           }
           val new_tr = List(tr.copy(legs = updatedLegs))
           val tripsJSON = Serialization.writePretty(new_tr)
