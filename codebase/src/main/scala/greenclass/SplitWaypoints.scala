@@ -24,17 +24,6 @@ object SplitWaypoints {
   Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
-  // Change to Your Database Config
-  var properties = new java.util.Properties()
-  properties.put("user", "mobis")
-  properties.put("password", "F1_mob_is")
-  properties.put("driver", "org.postgresql.Driver")
-  val conn_str = "jdbc:postgresql://id-hdb-psgr-cp50.ethz.ch/mobis_study"
-
-  // Load the driver
-  Class.forName("org.postgresql.Driver")
-
-
   // Setup the connection
 
   def getWaypoints(ds: HikariDataSource, waypoints_sql : String, user_id: String, leg: TripLeg): List[WaypointRecord] = {
@@ -80,6 +69,7 @@ object SplitWaypoints {
 
     val trips_folder = base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
     val config = new HikariConfig(props.getProperty("database.properties.file"))
+    config.setMaximumPoolSize(50)
 
     val ds = new HikariDataSource(config)
 
