@@ -181,6 +181,7 @@ object SplitWaypoints {
 
             pb.step(); // step by 1
             pb.setExtraMessage("Reading..."); // Set extra message to display at the end of the bar
+
           }
 
 
