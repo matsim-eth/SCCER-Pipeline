@@ -11,7 +11,7 @@ public class TestECC {
     public void testSimpleEmissions() {
         ExternalityCostCalculator ecc = new ExternalityCostCalculator("../data/NISTRA_reference_values.txt");
 
-        LegValues emissions1 = new LegValues(LocalDateTime.now(), "car");
+        LegValues emissions1 = new LegValues(LocalDateTime.now(), "car", LocalDateTime.MIN);
         emissions1.setDistance(10000);
         emissions1.put("NOx", 44.3723);
         emissions1.put("CO2(total)", 25340.7437);
@@ -36,7 +36,7 @@ public class TestECC {
     public void testSimpleBusEmissions() {
         ExternalityCostCalculator ecc = new ExternalityCostCalculator("../data/NISTRA_reference_values.txt");
 
-        LegValues emissions1 = new LegValues(LocalDateTime.now(), "bus");
+        LegValues emissions1 = new LegValues(LocalDateTime.now(), "bus", LocalDateTime.MIN);
         emissions1.setDistance(10000);
 
         Map<String, Double> costs = ecc.calculateCostsForLeg(emissions1);
@@ -57,7 +57,7 @@ public class TestECC {
     public void testSimpleTrainEmissions() {
         ExternalityCostCalculator ecc = new ExternalityCostCalculator("../data/NISTRA_reference_values.txt");
 
-        LegValues emissions1 = new LegValues(LocalDateTime.now(), "train");
+        LegValues emissions1 = new LegValues(LocalDateTime.now(), "train", LocalDateTime.MIN);
         emissions1.setDistance(50000);
 
         Map<String, Double> costs = ecc.calculateCostsForLeg(emissions1);

@@ -24,6 +24,7 @@ package object data {
                       finish_point : LatLon,
                       distance: Double,
                       mode: String,
+                      updated_at :  LocalDateTime,
                       waypoints : List[WaypointRecord]
                     ) {
     def getStartedSeconds: Double = started_at.toLocalTime.toSecondOfDay

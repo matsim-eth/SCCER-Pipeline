@@ -50,6 +50,7 @@ object TestDatabaseInteraction {
       LatLon(0.0, 0.0), LatLon(0.0, 0.0),
       1000,
       "Car",
+      LocalDateTime.MIN,
       List.empty
     )
 
@@ -64,7 +65,7 @@ object TestDatabaseInteraction {
 
         val values = headers.split(";").zip(data.split(";")).drop(4).toMap
 
-        val legValues = new LegValues(LocalDate.now().minusYears(1).atStartOfDay(), "Car")
+        val legValues = new LegValues(LocalDate.now().minusYears(1).atStartOfDay(), "Car", LocalDateTime.MIN)
         values.foreach{ case (k,v) => {
           legValues.put(k,v.toDouble)
         }}

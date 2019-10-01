@@ -67,7 +67,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	public void handleEvent(ExtendedPersonDepartureEvent e ) {
 		Id<Person> pid = e.getPersonId();
 		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
-		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getPersonDepartureEvent().getLegMode()));
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getPersonDepartureEvent().getLegMode(), e.getUpdatedAt()));
 		tempValues.get(pid).setTriplegId(e.getTripleg_id());
 		tempValues.get(pid).setDistance(e.getDistance());
 		eventsManager.processEvent(e.getPersonDepartureEvent());
@@ -80,7 +80,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 		Id<Person> pid = e.getPersonId();
 		//check if person in map, assume that first event is always departure event
 		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
-		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode()));
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode(), null));
 		tempValues.get(pid).put("StartTime", e.getTime());
         tempValues.get(pid).setMode(e.getLegMode());
 
@@ -99,7 +99,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
 		//reset
 		String legMode = this.tempValues.get(pid).getMode();
-		this.tempValues.put(pid, new LegValues(eventDateTime, legMode));
+		this.tempValues.put(pid, new LegValues(eventDateTime, legMode, null));
 	}
 
 	// Get leg end time and append new leg to list
@@ -108,7 +108,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
         Id<Person> pid = e.getPersonId();
 		LocalDateTime eventDateTime = this.date.plus(Duration.ofSeconds(Math.round(e.getTime())));
 
-		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode()));
+		this.tempValues.putIfAbsent(pid, new LegValues(eventDateTime, e.getLegMode(), null));
 		tempValues.get(pid).put("EndTime", e.getTime());
 		personId2Leg.putIfAbsent(pid, new ArrayList<>());
 		personId2Leg.get(pid).add(tempValues.get(pid)); //add new leg
@@ -135,14 +135,16 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	    		for (LegValues leg : person.getValue()) {
 	    			legCount++;
 
-	    			String record = person.getKey() + ";" + this.date + ";" + leg.getTriplegId() + ";";
+	    			String record = person.getKey() + ";" + this.date + ";";
+					record += leg.getUpdatedAt() + ";";
+					record += leg.getTriplegId() + ";";
 					record += leg.getMode() + ";";
 					record += leg.getDistance() + ";";
 	    			record += keys_list.stream().map(key -> String.format("%.4f", leg.get(key)))
 							.collect(Collectors.joining(";"));
 
 	    	        if (!headerWritten) {
-                        String header = "PersonId;Date;Leg;Mode;Distance;";
+                        String header = "PersonId;Date;UpdatedAt;Leg;Mode;Distance;";
                         bw.write(header + String.join(";", keys_list));
 	    				bw.newLine();
 	    	        	headerWritten = true;

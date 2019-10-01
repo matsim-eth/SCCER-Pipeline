@@ -10,10 +10,12 @@ public class LegValues {
     Map<String, Double> personId2Leg2Values = new HashMap<>();
     private String triplegId;
     private double distance;
+    private LocalDateTime updatedAt;
 
-    public LegValues(LocalDateTime timestamp, String mode) {
+    public LegValues(LocalDateTime timestamp, String mode, LocalDateTime updatedAt) {
         this.timestamp = timestamp;
         this.mode = mode;
+        this.updatedAt = updatedAt;
     }
 
     private LocalDateTime timestamp;
@@ -58,6 +60,10 @@ public class LegValues {
 
     public LocalDateTime getTimestamp() {
         return timestamp;
+    }
+
+    public LocalDateTime getUpdatedAt() {
+        return updatedAt;
     }
 
     public java.util.Set<String> keys() {

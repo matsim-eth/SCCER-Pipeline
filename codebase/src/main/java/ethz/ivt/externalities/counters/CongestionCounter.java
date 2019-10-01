@@ -85,7 +85,7 @@ public class CongestionCounter implements LinkEnterEventHandler, LinkLeaveEventH
         }
 
         double delayCaused = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(lid, time, "congestion");
-
+        log.info("for link " + lid + " at time " + (time / 3600) + " adding congestion: " + delayCaused);
         externalityCounterDelegate.incrementTempValueBy(personId, "delay_caused", delayCaused);
 
         //Now store the event for the person

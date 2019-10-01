@@ -275,7 +275,7 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     }
 
     val departureEvent = new ExtendedPersonDepartureEvent(tl.getStartedSeconds,
-      personId, departureLink, mappedMode, tl.distance, tl.leg_id)
+      personId, departureLink, mappedMode, tl.distance, tl.leg_id, tl.updated_at)
 
     val arrivalEvent = new PersonArrivalEvent(tl.getFinishedSeconds, personId, arrivalLink, mappedMode)
     departureEvent :: (linkEvents ::: List(arrivalEvent))

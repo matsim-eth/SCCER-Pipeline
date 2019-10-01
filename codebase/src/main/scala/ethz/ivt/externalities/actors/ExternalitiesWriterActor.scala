@@ -115,7 +115,9 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   var ds : HikariDataSource = _
+
   val externalities_insert_sql = s"INSERT INTO externalities_list (leg_id, key, value) values (?, ?, ?);"
+  val trip_processed_at_sql = s"UPDATE motion_tag_trips set externalities_for_update = ? where mt_trip_id = ?;"
 
   override def preStart() = {
     super.preStart
@@ -129,6 +131,7 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
         val con = ds.getConnection()
         try {
           val externalities_pst = con.prepareStatement(externalities_insert_sql)
+          val trip_processed_at_pst = con.prepareStatement(trip_processed_at_sql)
 
           val res = ec.getPersonId2Leg().asScala.map { case (pid, legValues) =>
             val insert_date = LocalDateTime.now()
@@ -142,9 +145,21 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
                 externalities_pst.setDouble(3, v)
                 externalities_pst.addBatch()
 
+                trip_processed_at_pst.setTimestamp(1, Timestamp.valueOf(leg.getUpdatedAt()))
+                trip_processed_at_pst.setString(2, leg_id)
+                trip_processed_at_pst.addBatch()
+
               }
             }
-            (pid, externalities_pst.executeBatch())
+            con.setAutoCommit(false)
+            try {
+              (pid, externalities_pst.executeBatch())
+              (pid, trip_processed_at_pst.executeBatch())
+            } catch {
+              case e :SQLException =>
+                con.rollback()
+                throw e
+            }
           }.toMap
           log.info (s"${res.values.map(_.length).sum} added to DB")
 

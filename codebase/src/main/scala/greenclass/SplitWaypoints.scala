@@ -115,6 +115,7 @@ object SplitWaypoints {
           LatLon(rs.getDouble("finish_y"), rs.getDouble("finish_x")),
           rs.getDouble("distance"),
           matsimModeMap.getOrElse(rs.getString("mode_validated"), TransportMode.other),
+          rs.getTimestamp("updated_at").toLocalDateTime,
           Nil
         )
       )
@@ -156,6 +157,7 @@ object SplitWaypoints {
 
           val chunk_folder_name = "chunk_" + chunk_i
           val sub_dir = OUTPUT_DIR.resolve(chunk_folder_name)
+          Files.createDirectories(sub_dir)
 
           trs.par.foreach { case tr =>
 
@@ -171,7 +173,6 @@ object SplitWaypoints {
             val new_tr = List(tr.copy(legs = updatedLegs))
             val tripsJSON = Serialization.writePretty(new_tr)
 
-            Files.createDirectories(sub_dir)
             val pw = new PrintWriter(outFile.toFile)
             try {
               pw.write(tripsJSON)
