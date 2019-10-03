@@ -3,7 +3,7 @@ package ethz.ivt.externalities.actors
 import java.sql.SQLException
 import java.time.LocalDate
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props, Terminated}
+import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props, Terminated}
 import akka.util.Timeout
 import org.locationtech.jts.geom.Geometry
 import ethz.ivt.externalities.MeasureExternalities
@@ -61,6 +61,13 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
 
     }
   }
+
+  override def postStop(): Unit =  {
+    log.info("Sending poison pill to externalities writer Actor")
+    writerActor ! PoisonPill
+    super.postStop()
+  }
+
 
 }
 
