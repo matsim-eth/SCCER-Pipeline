@@ -33,13 +33,18 @@ sealed trait ExternalitiesWriterActor extends Actor with ActorLogging  with Reap
 }
 
 class DefaultExtWriter(outputFolder : Path) extends ExternalitiesWriterActor {
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
   override def receive: Receive =  {
     case e : Externalities =>   {
-      log.info("writing externalities")
-      val outputFile = outputFolder.resolve(e.tr.date + "_" +  e.tr.user_id + ".csv")
-      e.externalitiesCounter.writeCsvFile(outputFile)
+      val future = Future {
+          log.info("writing externalities")
+          val outputFile = outputFolder.resolve(e.tr.date + "_" + e.tr.user_id + ".csv")
+          e.externalitiesCounter.writeCsvFile(outputFile)
+          Future.successful(0)
+        }
+      future pipeTo sender()
     }
-
   }
 }
 

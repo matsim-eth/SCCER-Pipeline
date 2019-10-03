@@ -63,6 +63,7 @@ object HelperFunctions {
       case "diesel" => DIESEL_KEY
       case "gasoline" => PETROL_KEY
       case "hybrid (gasoline/diesel + electric)" => PETROL_KEY //no hybrid in hbefa database
+      case "other" => PETROL_KEY //what is other?
     }
 
     val mapped_size = size match {

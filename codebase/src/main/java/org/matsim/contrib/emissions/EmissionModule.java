@@ -417,14 +417,6 @@ public final class EmissionModule {
 		return hbefaTrafficSituation;
 	}
 
-	protected boolean isElectricVehicle(Id<Vehicle> vehicleId) {
-		Vehicle v = vehicles.getVehicles().get(vehicleId);
-		if (v != null && v.getType().getEngineInformation().getFuelType() == EngineInformation.FuelType.electricity) {
-			return true;
-		}
-		return false;
-	}
-
 	public WarmEmissionAnalysisModule getWarmEmissionAnalysisModule() {
 		return this. warmEmissionHandler.getWarmEmissionAnalysisModule();
 	}
