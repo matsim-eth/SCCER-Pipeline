@@ -82,6 +82,7 @@ object ProcessWaypointsJson {
     else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
     val _system = ActorSystem("MainEngineActor")
+    val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
     //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
@@ -130,8 +131,6 @@ object ProcessWaypointsJson {
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
     logger.info("Preloadable Data (excluding emissions module) loaded")
-
-    val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
     val extProps = ExternalitiesActor.props(me, writerActor)
     val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")

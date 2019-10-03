@@ -152,26 +152,22 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
               }
             }
             con.setAutoCommit(false)
-            try {
-              (pid, externalities_pst.executeBatch())
-              (pid, trip_processed_at_pst.executeBatch())
-            } catch {
-              case e :SQLException =>
-                con.rollback()
-                throw e
-            }
+            val ret_vals = (pid, externalities_pst.executeBatch())
+            (pid, trip_processed_at_pst.executeBatch())
+            con.commit()
+            ret_vals
           }.toMap
           log.info (s"${res.values.map(_.length).sum} added to DB")
 
 
           res
         }
-          catch {
-            case ex : Exception => {
-              log.error(ex, "Error writing externalities")
-              Future.failed(ex)
-            }
+        catch {
+          case ex : Exception => {
+            log.error(ex, "Error writing externalities 22 ")
+            Future.failed(ex)
           }
+        }
         finally {
           con.close()
         }

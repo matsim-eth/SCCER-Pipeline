@@ -52,7 +52,7 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
       try {
         val externalities = measureExternalities.process(events, tr.date.atStartOfDay())
         writerActor ? Externalities(tr, externalities) onComplete {
-          case Failure(e: SQLException) => log.error(e, "Error writing externalities")
+          case Failure(e: Exception) => log.error(e, "Error writing externalities")
           case _ => log.info("Externalities written successfully")
         }
       } catch {
