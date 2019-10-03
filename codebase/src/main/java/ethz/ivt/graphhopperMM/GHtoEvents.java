@@ -172,8 +172,6 @@ public class GHtoEvents {
 
                 final double scaling_factor = real_travel_time / network_time;
 
-                logger.info(String.format("scaling by %f", scaling_factor));
-
                 eLink.entryTime = beginNodeTime + eLink.entryTime * scaling_factor;
 
                 currLinks.forEach(n -> n.scaleTimesBy(beginNodeTime, scaling_factor));
