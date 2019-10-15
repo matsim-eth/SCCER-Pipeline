@@ -62,6 +62,7 @@ object HelperFunctions {
     val mappedFuelType = fuelType.toLowerCase match {
       case "diesel" => DIESEL_KEY
       case "gasoline" => PETROL_KEY
+      case "other" => PETROL_KEY
       case "hybrid (gasoline/diesel + electric)" => PETROL_KEY //no hybrid in hbefa database
       case "other" => PETROL_KEY //what is other?
     }

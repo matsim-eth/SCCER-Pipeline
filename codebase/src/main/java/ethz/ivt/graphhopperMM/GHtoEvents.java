@@ -73,7 +73,6 @@ public class GHtoEvents {
         return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), vehicleId);
     }
 
-
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
         int numCandidates = Integer.MAX_VALUE;
         if (entries.size() < 2) return new ArrayList<>();
@@ -84,12 +83,21 @@ public class GHtoEvents {
             if (mr.getEdgeMatches().isEmpty()) {
                 return Collections.EMPTY_LIST;
             }
-            List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(mr.getEdgeMatches());
+            List<EdgeMatch> matches = mr.getEdgeMatches();
+
+            List<EdgeMatch> filteredMatches = matches.stream().map( m -> {
+                List<GPXExtension> new_ext = m.getGpxExtensions().stream()
+                        .filter(x -> x.getEntry().getTime() >= 0)
+                        .collect(Collectors.toList());
+                EdgeMatch m1 = new EdgeMatch(m.getEdgeState(), new_ext);
+                return m1;
+            }).collect(Collectors.toList());
+
+            List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(filteredMatches);
             assert(timed_links.stream().allMatch(l -> l.exitTime > l.entryTime));
             return timed_links;
         } catch (IllegalArgumentException ex) {
             logger.warning(ex.getMessage());
-            logger.warning(ex.toString());
             return Collections.EMPTY_LIST;
 
         }
@@ -118,6 +126,7 @@ public class GHtoEvents {
         GPXExtension path_x0 = eLink.getGpxExtensions().get(0);//get node from eLink
         GPXExtension path_x1 = null;
         //can assume that first edge has a point. add end(eLink) to n_list, time(x, end(eLink)) to t_list
+
         double unmeasuredTime = timeBetween(eLink.getLink(), path_x0);
         double travelTime = timeBetween(path_x0, eLink.getLink());
 
@@ -125,7 +134,7 @@ public class GHtoEvents {
         double firstLinkAfterGPStime = travelTime;
 
         //set entry time of first link
-        eLink.entryTime = path_x0.getEntry().getTime() - unmeasuredTime;
+        eLink.entryTime = getTimeSeconds(path_x0) - unmeasuredTime;
 
         double real_time_start = eLink.entryTime;
         double network_time = timeBetween(eLink.getLink());
@@ -164,11 +173,10 @@ public class GHtoEvents {
 
                 network_time += travelTime;
 
-                double real_time_end = path_x1.getEntry().getTime();
+                double real_time_end = getTimeSeconds(path_x1);
                 final double real_travel_time = (real_time_end -  real_time_start) /1000;
 
-                final double beginNodeTime = path_x0.getEntry().getTime();
-
+                final double beginNodeTime = getTimeSeconds(path_x0);
 
                 final double scaling_factor = real_travel_time / network_time;
 
@@ -198,19 +206,23 @@ public class GHtoEvents {
         return resultLinks;
     }
 
+    private double getTimeSeconds(GPXExtension extension) {
+        return ((double) extension.getEntry().getTime())/1000;
+    }
+
     public List<Event> linkGPXToEvents(Iterator<LinkGPXStruct> x, Id<Vehicle> vehicleId) {
         if (!x.hasNext()) return Collections.emptyList();
         List<Event> events = new ArrayList<>();
         LinkGPXStruct firstE = x.next();
-        double entryTimeSeconds = toSeconds(firstE.entryTime);
-        double exitTimeSeconds = toSeconds(firstE.exitTime);
+        double entryTimeSeconds = firstE.entryTime;
+        double exitTimeSeconds = firstE.exitTime;
 
         events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId() ));
 
         while (x.hasNext()) {
             LinkGPXStruct curr = x.next();
-            double currEntryTimeSeconds = toSeconds(curr.entryTime);
-            double currExitTimeSeconds = toSeconds(curr.exitTime);
+            double currEntryTimeSeconds = curr.entryTime;
+            double currExitTimeSeconds = curr.exitTime;
 
             if (x.hasNext()) {
                 events.add(new LinkEnterEvent(currEntryTimeSeconds, vehicleId, curr.getLink().getId()));
@@ -235,7 +247,7 @@ public class GHtoEvents {
     }
 
     private double timeBetween(GPXExtension x0, GPXExtension x1) {
-        return x1.getEntry().getTime() - x0.getEntry().getTime();
+        return getTimeSeconds(x1) - getTimeSeconds(x0);
     }
 
     private double timeBetween(GPXExtension x0, Link l) {

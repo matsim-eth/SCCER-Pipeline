@@ -71,6 +71,8 @@ package object data {
       {
         case JArray(long :: lat :: time :: acc :: Nil) =>
           new WaypointRecord(long.extract[Double], lat.extract[Double], time.extract[Long], acc.extract[Long])
+        case JArray(long :: lat :: Nil) =>
+          new WaypointRecord(long.extract[Double], lat.extract[Double], -1, 0)
       },
       {
         case w: WaypointRecord =>

@@ -28,6 +28,7 @@ import java.time.LocalDateTime;
 import java.time.temporal.TemporalAmount;
 import java.util.*;
 import java.util.stream.Collectors;
+import org.apache.commons.io.FilenameUtils;
 
 public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepartureEventHandler,
 		ExtendedPersonDepartureEventEventHandler, TeleportationArrivalEventHandler, EventHandler {
@@ -120,8 +121,19 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
     public void writeCsvFile(Path outputFileName) {
 
+		Path original_path = outputFileName;
 		File file = outputFileName.toFile();
 		file.getParentFile().mkdirs();
+		int counter = 1;
+		//add suffix to file until a new file is found
+		while (file.exists()) {
+			String filename = FilenameUtils.getBaseName(original_path.toString());
+			String extension = FilenameUtils.getExtension(original_path.toString());
+			filename += "_" + counter + FilenameUtils.EXTENSION_SEPARATOR + extension;
+			outputFileName = original_path.getParent().resolve(filename);
+			file = outputFileName.toFile();
+			counter++;
+		}
 
 
 		try {

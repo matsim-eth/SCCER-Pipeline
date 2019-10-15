@@ -228,11 +228,11 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     val personId = Id.createPersonId(tr.user_id)
     val vehicleId = determineVehicleType(tr.user_id, tl.mode)
     val (links : scala.List[LinkGPXStruct], linkEvents : List[Event])  = if (tl.mode.equals(TransportMode.car)) {
+
       val start_pt = tl.getStartPoint
       val finish_pt = tl.getFinishPoint
 
       val entries = (start_pt +: tl.waypoints.map(_.toGPX) :+ finish_pt).asJava
-
       val links = gh.mapMatchWithTravelTimes(entries)
       val events = gh.linkGPXToEvents(links.iterator, vehicleId).asScala.toList
       (links.asScala.toList, events)
