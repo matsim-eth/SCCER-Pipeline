@@ -252,7 +252,8 @@ public final class WarmEmissionAnalysisModule {
 		double ef_gpkm;
 
 		if(averageSpeed_kmh <= 0.0){
-			logger.warn("Average speed has been calculated to 0.0 or a negative value. Skipping...");
+			logger.warn(String.format("Average speed has been calculated to 0.0 %.4f / %.4f for a negative value. Skipping...",
+					linkLength_km, travelTime_h));
 			return null;
 		}
 		if ((averageSpeed_kmh - freeFlowSpeed_kmh) > 1.0){
