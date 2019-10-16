@@ -134,9 +134,9 @@ public class GHtoEvents {
         double firstLinkAfterGPStime = travelTime;
 
         //set entry time of first link
-        eLink.entryTime = getTimeSeconds(path_x0) - unmeasuredTime;
+        double real_time_start = getTimeSeconds(path_x0);
+        eLink.entryTime = real_time_start - unmeasuredTime;
 
-        double real_time_start = eLink.entryTime;
         double network_time = timeBetween(eLink.getLink());
 
         resultLinks.add(eLink);
@@ -174,7 +174,7 @@ public class GHtoEvents {
                 network_time += travelTime;
 
                 double real_time_end = getTimeSeconds(path_x1);
-                final double real_travel_time = (real_time_end -  real_time_start) /1000;
+                final double real_travel_time = (real_time_end -  real_time_start);
 
                 final double beginNodeTime = getTimeSeconds(path_x0);
 
@@ -203,6 +203,8 @@ public class GHtoEvents {
 
             }
         }
+        //set the final time of the last link
+        firstLink.exitTime = getTimeSeconds(path_x0);
         return resultLinks;
     }
 

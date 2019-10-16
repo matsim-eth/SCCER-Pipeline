@@ -259,10 +259,13 @@ public final class WarmEmissionAnalysisModule {
 		if ((averageSpeed_kmh - freeFlowSpeed_kmh) > 1.0){
 			if (ecg.handlesHighAverageSpeeds()) {
 				logger.warn("averageSpeed was capped from " + averageSpeed_kmh + " to" + freeFlowSpeed_kmh);
+				logger.warn(String.format("\tcalculated from %.4f / %.4f",
+						linkLength_km, travelTime_h));
 				averageSpeed_kmh = freeFlowSpeed_kmh;
 			} else {
 				throw new RuntimeException("Average speed has been calculated to be greater than free flow speed; this might produce negative warm emissions. Aborting...");
 			}
+
 		}
 
 		HbefaTrafficSituation trafficSituation = getTrafficSituation(efkey, averageSpeed_kmh, freeFlowSpeed_kmh);
