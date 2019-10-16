@@ -3,7 +3,7 @@ package greenclass
 import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.{Files, Paths}
 import java.sql.{DriverManager, PreparedStatement}
-import java.time.LocalDateTime
+import java.time.{LocalDateTime, ZoneId, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import java.util.Properties
 
@@ -27,7 +27,9 @@ object SplitWaypoints {
   // Setup the connection
 
   def getWaypoints(ds: HikariDataSource, waypoints_sql : String, user_id: String, leg: TripLeg): List[WaypointRecord] = {
-    val tripDayStart = leg.started_at.toLocalDate.toEpochDay * 1000
+
+    //val tripDateOffset = ZoneId.of("Europe/Zurich").getRules.getOffset(leg.started_at)
+    //val tripDayStart = leg.started_at.toLocalDate.atStartOfDay().toEpochSecond(tripDateOffset) * 1000
     val conn = ds.getConnection()
     try {
       val query = conn.prepareStatement(waypoints_sql)
@@ -37,8 +39,7 @@ object SplitWaypoints {
 
       val rs = query.executeQuery()
       val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
-        val milliSecondsFromMidnight = rs.getLong("tracked_at_millis") - tripDayStart
-        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), milliSecondsFromMidnight, rs.getLong("accuracy"))
+        WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
       }
       return results.toList
     } finally {
