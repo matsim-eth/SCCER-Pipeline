@@ -5,6 +5,7 @@ import java.nio.file.{Files, Path, Paths}
 import java.nio.file.FileSystems
 import java.nio.file.PathMatcher
 import java.time.format.DateTimeFormatter
+import java.util
 import java.util.Properties
 
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
@@ -223,6 +224,8 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     val merged = new GeometryFactory().buildGeometry(linemerger.getMergedLineStrings)
     merged
   }
+
+
 
   def tripLegToEvents(tr : TripRecord, tl : TripLeg) : (Seq[Event], Geometry) = {
     val personId = Id.createPersonId(tr.user_id)

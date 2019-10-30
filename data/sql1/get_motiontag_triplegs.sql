@@ -29,7 +29,10 @@
                  --and person_id in (select distinct participant_id from vehicle_information)
                  --and user_id in (select distinct user_id from participant_overview where time_in_survey > 26)
                  --and not exists (select  (leg_id) from externalities_list e where e.leg_id = l.mt_trip_id)
-                 and mt_trip_id	= '13274754'
+                and user_id = 'TENAR' and started_at::date >= '2019-10-29'
+
+--where leg_date > now()::date - interval '2 days'
+				and mode = 'Mode::Car'
                 and not overseas
                 and not excluded
 

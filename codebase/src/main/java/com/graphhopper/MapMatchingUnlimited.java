@@ -165,12 +165,12 @@ public class MapMatchingUnlimited extends MapMatching {
      *                of the graph specified in the constructor
      */
     public MatchResult doWork(List<GPXEntry> gpxList) {
-        return doWork(gpxList, Integer.MAX_VALUE);
+        return doWork(gpxList, Integer.MAX_VALUE, false);
     }
 
-    public MatchResult doWork(List<GPXEntry> gpxList, int numCandidates) {
+    public MatchResult doWork(List<GPXEntry> gpxList, int numCandidates, boolean keepLastEntry) {
         // filter the entries:
-        List<GPXEntry> filteredGPXEntries = filterGPXEntries(gpxList);
+        List<GPXEntry> filteredGPXEntries = filterGPXEntries(gpxList, keepLastEntry);
 
         // now find each of the entries in the graph:
         List<Collection<QueryResult>> queriesPerEntry = lookupGPXEntries(
@@ -259,14 +259,15 @@ public class MapMatchingUnlimited extends MapMatching {
      *
      * and are matchable on the network
      */
-    private List<GPXEntry> filterGPXEntries(List<GPXEntry> gpxList) {
+    private List<GPXEntry> filterGPXEntries(List<GPXEntry> gpxList, boolean keepLastEntry) {
         //filter points that are not matchable to the road network
+        //keep last gps point
         List<GPXEntry> filtered = new ArrayList<>();
         GPXEntry prevEntry = null;
         for (int i = 0; i < gpxList.size(); i++) {
             GPXEntry gpxEntry = gpxList.get(i);
             boolean first_record = i == 0;
-            boolean distance_ok = first_record || distanceCalc.calcDist(
+            boolean distance_ok = keepLastEntry || first_record || distanceCalc.calcDist(
                     prevEntry.getLat(), prevEntry.getLon(),
                     gpxEntry.getLat(), gpxEntry.getLon()
             ) > minDistanceBetweenPoints;

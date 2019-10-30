@@ -10,6 +10,7 @@ import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
+import org.apache.commons.lang3.tuple.Pair;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
 import org.locationtech.jts.linearref.LengthIndexedLine;
@@ -24,8 +25,11 @@ import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.vehicles.Vehicle;
 
 import java.util.*;
+import java.util.concurrent.atomic.AtomicInteger;
 import java.util.logging.Logger;
+import java.util.stream.Collector;
 import java.util.stream.Collectors;
+import java.util.stream.IntStream;
 
 /**
  * Created by molloyj on 07.11.2017.
@@ -73,13 +77,31 @@ public class GHtoEvents {
         return linkGPXToEvents(mapMatchWithTravelTimes(entries).iterator(), vehicleId);
     }
 
+    //drop links from start and end that don't have any gps points
+    public List<EdgeMatch> trim_links(ArrayList<EdgeMatch> links) {
+        AtomicInteger first_gps_idx = new AtomicInteger(-1);
+        AtomicInteger last_gps_idx = new AtomicInteger(-1);
+
+        links.stream().peek(x -> first_gps_idx.incrementAndGet())
+                .filter(x -> !x.isEmpty()).findFirst();
+
+        for (int i=links.size()-1; i>=0; i--) {
+            last_gps_idx.set(i+1);
+            if (!links.get(i).isEmpty()) {
+                break;
+            }
+        }
+        List<EdgeMatch> filtered = links.subList(first_gps_idx.get(), last_gps_idx.get());
+        return filtered;
+    }
+
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
         int numCandidates = Integer.MAX_VALUE;
         if (entries.size() < 2) return new ArrayList<>();
         if (entries.size() == 2) numCandidates = 1;
 
         try {
-            MatchResult mr = getMatcher().doWork(entries, numCandidates);
+            MatchResult mr = getMatcher().doWork(entries, numCandidates, true);
             if (mr.getEdgeMatches().isEmpty()) {
                 return Collections.EMPTY_LIST;
             }
@@ -92,8 +114,8 @@ public class GHtoEvents {
                 EdgeMatch m1 = new EdgeMatch(m.getEdgeState(), new_ext);
                 return m1;
             }).collect(Collectors.toList());
-
-            List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(filteredMatches);
+            List<EdgeMatch> trimmed_edges = trim_links(new ArrayList<>(filteredMatches));
+            List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(trimmed_edges);
             assert(timed_links.stream().allMatch(l -> l.exitTime > l.entryTime));
             return timed_links;
         } catch (IllegalArgumentException ex) {
