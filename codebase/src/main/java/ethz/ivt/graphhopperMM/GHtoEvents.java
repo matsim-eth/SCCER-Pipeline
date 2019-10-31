@@ -101,7 +101,7 @@ public class GHtoEvents {
         if (entries.size() == 2) numCandidates = 1;
 
         try {
-            MatchResult mr = getMatcher().doWork(entries, numCandidates, true);
+            MatchResult mr = getMatcher().doWork(entries, numCandidates, false);
             if (mr.getEdgeMatches().isEmpty()) {
                 return Collections.EMPTY_LIST;
             }

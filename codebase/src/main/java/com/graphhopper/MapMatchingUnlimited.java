@@ -267,7 +267,8 @@ public class MapMatchingUnlimited extends MapMatching {
         for (int i = 0; i < gpxList.size(); i++) {
             GPXEntry gpxEntry = gpxList.get(i);
             boolean first_record = i == 0;
-            boolean distance_ok = keepLastEntry || first_record || distanceCalc.calcDist(
+            boolean lastEntry = i == gpxList.size()-1;
+            boolean distance_ok = (keepLastEntry && lastEntry) || first_record || distanceCalc.calcDist(
                     prevEntry.getLat(), prevEntry.getLon(),
                     gpxEntry.getLat(), gpxEntry.getLon()
             ) > minDistanceBetweenPoints;
