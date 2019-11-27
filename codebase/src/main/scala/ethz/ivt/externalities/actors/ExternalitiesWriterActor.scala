@@ -38,7 +38,8 @@ class DefaultExtWriter(outputFolder : Path) extends ExternalitiesWriterActor {
   override def receive: Receive =  {
     case e : Externalities =>   {
       val future = Future {
-          val outputFile = outputFolder.resolve(e.tr.date + "_" + e.tr.user_id + ".csv")
+          val trip_id = e.tr.legs.headOption.map(l => l.leg_id).getOrElse("_None")
+          val outputFile = outputFolder.resolve(e.tr.date + "_" + e.tr.user_id + "_" + trip_id + ".csv")
           e.externalitiesCounter.writeCsvFile(outputFile)
           Future.successful(0)
         }
