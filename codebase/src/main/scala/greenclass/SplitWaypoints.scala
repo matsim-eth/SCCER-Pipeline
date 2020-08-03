@@ -2,7 +2,7 @@ package greenclass
 
 import java.io.{File, FileInputStream, PrintWriter}
 import java.nio.file.{Files, Paths}
-import java.sql.{DriverManager, PreparedStatement}
+import java.sql.Timestamp
 import java.time.{LocalDateTime, ZoneId, ZoneOffset}
 import java.time.format.DateTimeFormatter
 import java.util.Properties
@@ -35,7 +35,8 @@ object SplitWaypoints {
       val query = conn.prepareStatement(waypoints_sql)
 
       query.setString(1, user_id)
-      query.setString(2, leg.leg_id)
+      query.setTimestamp(2, Timestamp.valueOf(leg.started_at))
+      query.setTimestamp(3, Timestamp.valueOf(leg.finished_at))
 
       val rs = query.executeQuery()
       val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
