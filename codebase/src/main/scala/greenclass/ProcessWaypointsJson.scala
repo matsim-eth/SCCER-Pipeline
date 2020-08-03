@@ -158,7 +158,7 @@ object ProcessWaypointsJson {
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
     jsons.map(JsonFile).foreach(traceProcessors ! _)
 
-    traceProcessors ! PoisonPill
+    //traceProcessors ! PoisonPill
 
   }
 
