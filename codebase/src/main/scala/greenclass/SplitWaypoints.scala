@@ -24,6 +24,7 @@ object SplitWaypoints {
   Logger.getLogger("com.graphhopper.matching.MapMatchingUnlimited").setLevel(Level.WARN)
   Logger.getLogger("ethz.ivt.graphhopperMM.MATSimNetwork2graphhopper").setLevel(Level.WARN)
 
+  val logger = Logger.getLogger(this.getClass)
   // Setup the connection
 
   def getWaypoints(ds: HikariDataSource, waypoints_sql : String, user_id: String, leg: TripLeg): List[WaypointRecord] = {
@@ -35,9 +36,9 @@ object SplitWaypoints {
       val query = conn.prepareStatement(waypoints_sql)
 
       query.setString(1, user_id)
-      query.setTimestamp(2, Timestamp.valueOf(leg.started_at))
-      query.setTimestamp(3, Timestamp.valueOf(leg.finished_at))
-
+      query.setString(2, leg.leg_id)
+      //query.setTimestamp(3, Timestamp.valueOf(leg.finished_at))
+      logger.info(query.toString())
       val rs = query.executeQuery()
       val results: Iterator[WaypointRecord] = Iterator.continually(rs).takeWhile(_.next()).map { rs =>
         WaypointRecord(rs.getDouble("longitude"), rs.getDouble("latitude"), rs.getLong("tracked_at_millis"), rs.getLong("accuracy"))
