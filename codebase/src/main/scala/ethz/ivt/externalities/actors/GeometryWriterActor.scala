@@ -26,17 +26,12 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
 
   override def receive: Receive = {
     case EventList(tr, legs) => {
-      log.info(s"writing ${legs.size} on ${tr.date} for ${tr.user_id}")
-      import collection.JavaConverters._
-      //calculate externalities here
-      val events : Seq[Event] = legs.unzip3._2.flatten
+      val gf = new GeometryFactory()
+      val geojson = new GeometryJSON()
 
-      val filename : String = "events_${tr.user_id}_${tr.date}.xml"
-      val eventWriter : EventWriterXML = new EventWriterXML(filename)
-
-      events.foreach(e -> eventWriter.handleEvent(e))
-
-      eventWriter.closeFile()
+      legs.filter(_._2.nonEmpty).foreach{ case (leg_id, _, geometry) =>
+        geojson.write(geometry, traces_output_dir.resolve("geometry_" + leg_id + ".json").toFile)
+      }
     }
   }
 }

@@ -24,6 +24,8 @@ object ExternalitiesWriterActor {
 
   def buildMobis(config: HikariConfig): Props
     = Props(new MobisExtWriter(config))
+
+  def buildDummy(): Props = Props(new DummyExtWriter())
 }
 
 final case class Externalities(tr : TripRecord, externalitiesCounter : ExternalityCounter)
@@ -44,6 +46,16 @@ class DefaultExtWriter(outputFolder : Path) extends ExternalitiesWriterActor {
           Future.successful(0)
         }
       future pipeTo sender()
+    }
+  }
+}
+
+class DummyExtWriter extends ExternalitiesWriterActor {
+  implicit val executionContext: ExecutionContext = context.dispatcher
+
+  override def receive: Receive =  {
+    case e : Externalities =>   {
+      Future.successful(0) pipeTo sender()
     }
   }
 }

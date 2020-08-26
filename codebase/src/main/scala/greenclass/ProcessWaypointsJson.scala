@@ -88,10 +88,14 @@ object ProcessWaypointsJson {
     //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
-    val writerActorProps = if (props.getProperty("write.to.database", "false").equals("true")) {
+    val externalities_out_location = props.getProperty("write.externalities.to", "database")
+
+    val writerActorProps = if (externalities_out_location.equals("database")) {
       ExternalitiesWriterActor.buildMobis(dbProps)
-    } else {
+    } else if (externalities_out_location.equals("file")) {
       ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities"))
+    } else if (externalities_out_location.equals("nowhere")) {
+      ExternalitiesWriterActor.buildDummy()
     }
 
     val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
