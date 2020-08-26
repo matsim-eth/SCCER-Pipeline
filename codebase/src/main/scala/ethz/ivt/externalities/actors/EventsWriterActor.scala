@@ -1,7 +1,7 @@
 package ethz.ivt.externalities.actors
 
 import java.io.File
-import java.nio.file.{Path, Paths}
+import java.nio.file.{Files, Path, Paths}
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.locationtech.jts.geom.GeometryFactory
@@ -42,8 +42,10 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
       //calculate externalities here
       val events : Seq[Event] = legs.flatMap(_._2)
 
+      val date_folder = Files.createDirectories(traces_output_dir.resolve(s"${tr.date}"))
+
       val filename : String = s"events_${tr.user_id}_${tr.date}.xml"
-      val eventWriter : EventWriterXML = new EventWriterXML(traces_output_dir.resolve(filename).toFile.getAbsolutePath)
+      val eventWriter : EventWriterXML = new EventWriterXML(date_folder.resolve(filename).toFile.getAbsolutePath)
 
       events.map(unwrapDepartureEvents).foreach(eventWriter.handleEvent)
 
