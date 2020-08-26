@@ -11,13 +11,13 @@ import org.matsim.api.core.v01.Scenario
 
 import scala.collection.JavaConverters._
 
-object EventsWriterActor {
+object GeometryWriterActor {
   def props(scenario: Scenario, traces_output_dir:String): Props =
-    Props(new EventsWriterActor(scenario, Paths.get(traces_output_dir)))
+    Props(new GeometryWriterActor(scenario, Paths.get(traces_output_dir)))
 
 }
 
-class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
+class GeometryWriterActor (scenario: Scenario, traces_output_dir: Path)
   extends Actor with ReaperWatched {
 
   import org.geotools.feature.simple.SimpleFeatureTypeBuilder
@@ -25,13 +25,12 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
   val b = new SimpleFeatureTypeBuilder
 
   override def receive: Receive = {
-    case EventList(tr, legs) => {
-      val gf = new GeometryFactory()
+    case EventList(tr, legs) =>
       val geojson = new GeometryJSON()
 
       legs.filter(_._2.nonEmpty).foreach{ case (leg_id, _, geometry) =>
-        geojson.write(geometry, traces_output_dir.resolve("geometry_" + leg_id + ".json").toFile)
+        val filename : String = s"geometry_${tr.user_id}_${tr.date}_${leg_id}.json"
+        geojson.write(geometry, traces_output_dir.resolve(filename).toFile)
       }
-    }
   }
 }

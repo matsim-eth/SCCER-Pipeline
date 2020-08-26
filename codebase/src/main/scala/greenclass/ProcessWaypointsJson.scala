@@ -88,17 +88,25 @@ object ProcessWaypointsJson {
     //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
+    val calculate_externalities : Boolean = props.getProperty("calculate.externalities", "true") == "true"
     val externalities_out_location = props.getProperty("write.externalities.to", "database")
 
-    val writerActorProps = if (externalities_out_location.equals("database")) {
-      ExternalitiesWriterActor.buildMobis(dbProps)
-    } else if (externalities_out_location.equals("file")) {
-      ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities"))
-    } else if (externalities_out_location.equals("nowhere")) {
-      ExternalitiesWriterActor.buildDummy()
+    val writerActorProps : Option[Props] = if (calculate_externalities) {
+      if (externalities_out_location.equals("database")) {
+        Option(ExternalitiesWriterActor.buildMobis(dbProps))
+      } else if (externalities_out_location.equals("file")) {
+        Option(ExternalitiesWriterActor.buildDefault(output_dir.resolve("externalities")))
+      } else if (externalities_out_location.equals("nowhere")) {
+        Option(ExternalitiesWriterActor.buildDummy())
+      } else {
+        Option.empty
+      }
+    } else {
+      Option.empty
     }
 
-    val writerActor = _system.actorOf(writerActorProps, "DatabaseWriter")
+
+    val writerActorOption = writerActorProps.map(_system.actorOf(_, "DatabaseWriter"))
 
     implicit val ec: ExecutionContext = _system.dispatcher
 
@@ -133,12 +141,17 @@ object ProcessWaypointsJson {
     val odPairsFile = Paths.get(props.getProperty("pt.zones.od_pairs"))
     val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
 
-    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
-    logger.info("Preloadable Data (excluding emissions module) loaded")
+    val externalitiyProcessorOption = writerActorOption.map(writerActor => {
+      def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
-    val extProps = ExternalitiesActor.props(me, writerActor)
-    val externalitiyProcessor = _system.actorOf(extProps, "ExternalityProcessor")
+      val extProps = ExternalitiesActor.props(me, writerActor)
+      logger.info("Preloadable Data (excluding emissions module) loaded")
+
+      _system.actorOf(extProps, "ExternalityProcessor")
+    })
+
+
 
     val traces_output_dir = props.getProperty("traces.folder")
     val eventWriterProps = EventsWriterActor.props(scenario, traces_output_dir)
@@ -149,7 +162,7 @@ object ProcessWaypointsJson {
     }
 
 
-    val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessor, eventWriterActor)
+    val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessorOption, eventWriterActor)
     val eventsActor = _system.actorOf(eventProps, name = "EventActor")
 
     val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
