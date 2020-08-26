@@ -6,6 +6,7 @@ import java.nio.file.{Path, Paths}
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import org.locationtech.jts.geom.GeometryFactory
 import ethz.ivt.externalities.actors.ExternalitiesActor.EventList
+import ethz.ivt.externalities.counters.ExtendedPersonDepartureEvent
 import org.geotools.geojson.geom.GeometryJSON
 import org.matsim.api.core.v01.Scenario
 import org.matsim.api.core.v01.events.Event
@@ -26,19 +27,26 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
 
   val b = new SimpleFeatureTypeBuilder
 
+  def unwrapDepartureEvents(event: Event): Event = {
+    event match {
+      case event1: ExtendedPersonDepartureEvent =>
+        event1.getPersonDepartureEvent
+      case _ => event
+    }
+  }
+
   override def receive: Receive = {
-    case EventList(tr, legs) => {
+    case EventList(tr, legs) =>
       log.info(s"writing ${legs.size} on ${tr.date} for ${tr.user_id}")
       import collection.JavaConverters._
       //calculate externalities here
       val events : Seq[Event] = legs.flatMap(_._2)
 
       val filename : String = s"events_${tr.user_id}_${tr.date}.xml"
-      val eventWriter : EventWriterXML = new EventWriterXML(filename)
+      val eventWriter : EventWriterXML = new EventWriterXML(traces_output_dir.resolve(filename).toFile.getAbsolutePath)
 
-      events.foreach(eventWriter.handleEvent)
+      events.map(unwrapDepartureEvents).foreach(eventWriter.handleEvent)
 
       eventWriter.closeFile()
-    }
   }
 }

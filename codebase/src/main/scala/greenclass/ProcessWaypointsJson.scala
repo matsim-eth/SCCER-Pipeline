@@ -126,14 +126,6 @@ object ProcessWaypointsJson {
     val gh_location = base_file_location.resolve(props.getProperty("graphhopper.graph.location"))
     val processWaypointsJson = new ProcessWaypointsJson(scenario, gh_location)
 
-    logger.info("Build Congestion Module")
-    val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
-      logger.warn("Using mock aggregate congestion values - ie 0.")
-      new AggregateDataPerTimeMock()
-    } else {
-      CSVCongestionReader.forLink().read(congestion_file.toString, 900)
-    }
-
     logger.info("Build External Costs Module")
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
 
@@ -143,6 +135,15 @@ object ProcessWaypointsJson {
 
 
     val externalitiyProcessorOption = writerActorOption.map(writerActor => {
+
+      logger.info("Build Congestion Module")
+      val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
+        logger.warn("Using mock aggregate congestion values - ie 0.")
+        new AggregateDataPerTimeMock()
+      } else {
+        CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+      }
+
       def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
       val extProps = ExternalitiesActor.props(me, writerActor)
