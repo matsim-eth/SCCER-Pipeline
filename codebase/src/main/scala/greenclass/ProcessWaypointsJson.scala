@@ -41,9 +41,10 @@ import org.matsim.vehicles.{VehicleReaderV1, VehicleType, VehicleUtils, VehicleW
 
 import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
-import org.locationtech.jts.geom.{Geometry, GeometryFactory, LineString}
+import org.locationtech.jts.geom.{Coordinate, Geometry, GeometryFactory, LineString}
 import org.locationtech.jts.operation.linemerge.LineMerger
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
+import org.locationtech.jts.linearref.LengthIndexedLine
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.utils.geometry.GeometryUtils
 
@@ -248,10 +249,13 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
   def tripLegToEvents(tr : TripRecord, tl : TripLeg) : (Seq[Event], Geometry) = {
     val personId = Id.createPersonId(tr.user_id)
     val vehicleId = determineVehicleType(tr.user_id, tl.mode)
+
+    val start_pt = tl.getStartPoint
+    val finish_pt = tl.getFinishPoint
+
     val (links : scala.List[LinkGPXStruct], linkEvents : List[Event])  = if (tl.mode.equals(TransportMode.car)) {
 
-      val start_pt = tl.getStartPoint
-      val finish_pt = tl.getFinishPoint
+
 
       val entries = (start_pt +: tl.waypoints.map(_.toGPX) :+ finish_pt).asJava
       val links = gh.mapMatchWithTravelTimes(entries)
@@ -260,7 +264,7 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     } else (List.empty, List.empty)
 
 
-    val events_full = bookendEventswithDepArr(gh, tl, personId, tl.mode, linkEvents)
+    val events_full = bookendEventswithDepArr(gh, tl, personId, tl.mode, linkEvents, start_pt, finish_pt)
     val linestring = createLineString(tl, links)
     (events_full, linestring)
   }
@@ -276,13 +280,19 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
 
   def bookendEventswithDepArr(gh : GHtoEvents, tl: TripLeg,
                               personId:Id[Person], mappedMode : String,
-                              linkEvents : List[Event]) : Seq[Event] = {
+                              linkEvents : List[Event],
+                              start_pt : GPXEntry, finish_pt : GPXEntry) : Seq[Event] = {
 
+    val vehicleId = Id.createVehicleId(personId);
 
     val departureLink : Id[Link] = linkEvents.headOption.flatMap(getEventLink)
       .getOrElse(gh.getNearestLinkId(tl.start_point.toGPX))
     val arrivalLink : Id[Link] = linkEvents.lastOption.flatMap(getEventLink)
       .getOrElse(gh.getNearestLinkId(tl.finish_point.toGPX))
+
+    val relativeEntryPosition = gh.getRelativePositionOnLink(start_pt, departureLink)
+
+    val relativeExitPosition = gh.getRelativePositionOnLink(finish_pt, arrivalLink)
 
     if (departureLink == null) {
       logger.warn(s"the trip start for ${tl.leg_id} could not be matched to the matsim network")
@@ -298,7 +308,26 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
       personId, departureLink, mappedMode, tl.distance, tl.leg_id, tl.updated_at)
 
     val arrivalEvent = new PersonArrivalEvent(tl.getFinishedSeconds, personId, arrivalLink, mappedMode)
-    departureEvent :: (linkEvents ::: List(arrivalEvent))
+
+    val vehicleEntersTrafficEvent  : List[Event] = mappedMode match {
+      case "car" => List(new VehicleEntersTrafficEvent(tl.getStartedSeconds, personId, departureLink,
+        vehicleId, "car", relativeEntryPosition))
+      case _ : String => Nil
+    }
+
+    val vehicleLeavesTrafficEvent : List[Event] = mappedMode match {
+      case "car" => List(new VehicleLeavesTrafficEvent(tl.getStartedSeconds, personId, arrivalLink,
+        vehicleId, "car", relativeExitPosition))
+      case _ : String => Nil
+    }
+
+    List.concat(
+      List(departureEvent),
+      vehicleEntersTrafficEvent,
+      linkEvents,
+      vehicleLeavesTrafficEvent,
+      List(arrivalEvent)
+    )
   }
 
 

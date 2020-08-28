@@ -57,6 +57,21 @@ public class GHtoEvents {
         }
     }
 
+    public double getRelativePositionOnLink(GPXEntry x, Id<Link> linkId) {
+        Link l = getNetwork().getLinks().get(linkId);
+
+        Coordinate x_coord = new Coordinate(x.getLon(), x.getLat());
+
+        Coordinate start_coord = coordToCoordinate(getCoordinateTransform().transform(l.getFromNode().getCoord()));
+        Coordinate end_coord = coordToCoordinate(getCoordinateTransform().transform(l.getToNode().getCoord()));
+
+        LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
+        double distance_covered = (ls.project(x_coord) - ls.getStartIndex()) / ls.getEndIndex();
+
+        return distance_covered;
+
+    }
+
     public List<Link> reduceLinkGPX(List<LinkGPXStruct> points) {
         List<Link> links = points
                 .stream()
@@ -241,7 +256,9 @@ public class GHtoEvents {
         double entryTimeSeconds = firstE.entryTime;
         double exitTimeSeconds = firstE.exitTime;
 
-        events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId() ));
+        if (x.hasNext()) {
+            events.add(new LinkLeaveEvent(exitTimeSeconds, vehicleId, firstE.getLink().getId() ));
+        }
 
         while (x.hasNext()) {
             LinkGPXStruct curr = x.next();
