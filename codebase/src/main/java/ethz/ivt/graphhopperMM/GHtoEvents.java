@@ -57,9 +57,9 @@ public class GHtoEvents {
         }
     }
 
-    public double getRelativePositionOnLink(GPXEntry x, Id<Link> linkId) {
+    public OptionalDouble getRelativePositionOnLink(GPXEntry x, Id<Link> linkId) {
         Link l = getNetwork().getLinks().get(linkId);
-        if (l ==null) return 0;
+        if (l ==null) return OptionalDouble.empty();
 
         Coordinate x_coord = new Coordinate(x.getLon(), x.getLat());
 
@@ -69,7 +69,7 @@ public class GHtoEvents {
         LengthIndexedLine ls = new LengthIndexedLine( new GeometryFactory().createLineString(new Coordinate[]{start_coord,end_coord}));
         double distance_covered = (ls.project(x_coord) - ls.getStartIndex()) / ls.getEndIndex();
 
-        return distance_covered;
+        return OptionalDouble.of(distance_covered);
 
     }
 

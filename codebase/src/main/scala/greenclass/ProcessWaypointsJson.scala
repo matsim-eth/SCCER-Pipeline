@@ -290,9 +290,9 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     val arrivalLink : Id[Link] = linkEvents.lastOption.flatMap(getEventLink)
       .getOrElse(gh.getNearestLinkId(tl.finish_point.toGPX))
 
-    val relativeEntryPosition = gh.getRelativePositionOnLink(start_pt, departureLink)
+    val relativeEntryPosition = gh.getRelativePositionOnLink(start_pt, departureLink).orElse(0)
 
-    val relativeExitPosition = gh.getRelativePositionOnLink(finish_pt, arrivalLink)
+    val relativeExitPosition = gh.getRelativePositionOnLink(finish_pt, arrivalLink).orElse(1)
 
     if (departureLink == null) {
       logger.warn(s"the trip start for ${tl.leg_id} could not be matched to the matsim network")
