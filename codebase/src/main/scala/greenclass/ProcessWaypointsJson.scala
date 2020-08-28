@@ -316,7 +316,7 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
     }
 
     val vehicleLeavesTrafficEvent : List[Event] = mappedMode match {
-      case TransportMode.car => List(new VehicleLeavesTrafficEvent(tl.getStartedSeconds, personId, arrivalLink,
+      case TransportMode.car => List(new VehicleLeavesTrafficEvent(tl.getFinishedSeconds, personId, arrivalLink,
         vehicleId, "car", relativeExitPosition))
       case _ : String => Nil
     }

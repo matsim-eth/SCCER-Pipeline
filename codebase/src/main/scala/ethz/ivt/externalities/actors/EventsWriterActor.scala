@@ -31,7 +31,7 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
     event match {
       case event1: ExtendedPersonDepartureEvent =>
         event1.getPersonDepartureEvent
-      case _ => event
+      case e => e
     }
   }
 
