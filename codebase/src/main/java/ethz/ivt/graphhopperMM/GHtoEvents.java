@@ -59,6 +59,7 @@ public class GHtoEvents {
 
     public double getRelativePositionOnLink(GPXEntry x, Id<Link> linkId) {
         Link l = getNetwork().getLinks().get(linkId);
+        if (l ==null) return 0;
 
         Coordinate x_coord = new Coordinate(x.getLon(), x.getLat());
 
