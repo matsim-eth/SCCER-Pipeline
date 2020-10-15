@@ -5,7 +5,7 @@ import java.nio.file.{Path, Paths}
 
 import akka.actor.{Actor, ActorRef, Props}
 import org.locationtech.jts.geom.GeometryFactory
-import ethz.ivt.externalities.actors.ExternalitiesActor.EventList
+import ethz.ivt.externalities.actors.ExternalitiesActor.{EventList, EventTriple}
 import org.geotools.geojson.geom.GeometryJSON
 import org.matsim.api.core.v01.Scenario
 
@@ -28,7 +28,7 @@ class GeometryWriterActor (scenario: Scenario, traces_output_dir: Path)
     case EventList(tr, legs) =>
       val geojson = new GeometryJSON()
 
-      legs.filter(_._2.nonEmpty).foreach{ case (leg_id, _, geometry) =>
+      legs.filter(_.events.nonEmpty).foreach{ case EventTriple(leg_id, _, geometry) =>
         val filename : String = s"geometry_${tr.user_id}_${tr.date}_${leg_id}.json"
         geojson.write(geometry, traces_output_dir.resolve(filename).toFile)
       }

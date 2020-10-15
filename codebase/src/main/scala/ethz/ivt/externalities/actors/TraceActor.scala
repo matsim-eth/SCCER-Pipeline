@@ -12,16 +12,17 @@ import scala.concurrent.duration._
 import scala.concurrent.{ExecutionContext, Future}
 
 object TraceActor {
-  def props(waypointProcessor: ProcessWaypointsJson, eventsActor: ActorRef): Props =
-    Props(new TraceActor(waypointProcessor, eventsActor))
+  def props(waypointProcessor: ProcessWaypointsJson, eventsActorProps: Props): Props =
+    Props(new TraceActor(waypointProcessor, eventsActorProps))
 
   final case class JsonFile(jsonFile : Path)
 
 }
 
-class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef)
+class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActorProps : Props)
   extends Actor with ActorLogging with ReaperWatched {
 
+  val eventsActor = context.actorOf(eventsActorProps, "EventActor")
 
   override def receive: Receive = {
     case JsonFile(path) =>
@@ -40,9 +41,4 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson, eventsActor : ActorRef
     trList
   }
 
-  override def postStop(): Unit =  {
-    super.postStop()
-    log.info("Sending poison pill to events Actor")
-    eventsActor ! PoisonPill
-  }
 }

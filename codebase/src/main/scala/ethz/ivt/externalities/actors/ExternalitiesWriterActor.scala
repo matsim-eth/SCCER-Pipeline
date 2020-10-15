@@ -50,7 +50,7 @@ class DefaultExtWriter(outputFolder : Path) extends ExternalitiesWriterActor {
   }
 }
 
-class DummyExtWriter extends ExternalitiesWriterActor {
+class DummyExtWriter extends ExternalitiesWriterActor  with ActorLogging  with ReaperWatched {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   override def receive: Receive =  {

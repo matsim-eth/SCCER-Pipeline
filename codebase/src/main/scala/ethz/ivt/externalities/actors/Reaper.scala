@@ -30,18 +30,7 @@ class Reaper extends Actor with ActorLogging {
 
   // Watch and check for termination
   final def receive = {
-    case WatchMe(ref) =>
-      context.watch(ref)
-      watched += ref
-      log.info("added ref: " + ref.path)
-    case Terminated(ref) =>
-      watched -= ref
-      log.info("terminating ref: " + ref.path)
-      if (watched.isEmpty) allSoulsReaped()
-    case TerminateOnError(ref, ex) =>
-      context.system.registerOnTermination(System.exit(1))
-      allSoulsReaped()
-      log.error(ex, "Destroying actor system due to error on ", ref)
+    case _ => {}
   }
 
   def terminateOnError = {

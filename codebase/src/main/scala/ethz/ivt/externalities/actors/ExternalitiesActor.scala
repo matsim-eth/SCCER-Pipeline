@@ -20,16 +20,20 @@ import scala.concurrent.duration._
 import scala.util.Failure
 
 object ExternalitiesActor {
-  def props(meCreator: () => MeasureExternalities, writerActor : ActorRef): Props =
-    Props(new ExternalitiesActor(meCreator, writerActor))
+  def props(meCreator: () => MeasureExternalities, writerProps : Props): Props =
+    Props(new ExternalitiesActor(meCreator, writerProps))
 
-  final case class EventList(tr: TripRecord, events : Stream[(String, Seq[Event], Geometry)])
+  case class EventTriple(leg_id: String, events: Seq[Event], geometry: Geometry)
+
+  final case class EventList(tr: TripRecord, events : Stream[EventTriple])
 
 
 }
 
-class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : ActorRef)
+class ExternalitiesActor(meCreator: () => MeasureExternalities, writerProps : Props)
   extends Actor with ActorLogging with ReaperWatched {
+
+  val writerActor = context.actorOf(writerProps, "ExternalitiesWriter")
 
   import ExternalitiesActor._
   import akka.pattern.ask
@@ -48,7 +52,7 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
       log.info(s"processing ${legs.size} on ${tr.date} for ${tr.user_id}")
       import collection.JavaConverters._
       //calculate externalities here
-      val events : java.util.List[Event] = legs.unzip3._2.flatten.asJava
+      val events : java.util.List[Event] = legs.flatMap(_.events).asJava
       try {
         val externalities = measureExternalities.process(events, tr.date.atStartOfDay())
         writerActor ? Externalities(tr, externalities) onComplete {
@@ -61,13 +65,6 @@ class ExternalitiesActor(meCreator: () => MeasureExternalities, writerActor : Ac
 
     }
   }
-
-  override def postStop(): Unit =  {
-    log.info("Sending poison pill to externalities writer Actor")
-    writerActor ! PoisonPill
-    super.postStop()
-  }
-
 
 }
 

@@ -40,7 +40,7 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
       log.info(s"writing ${legs.size} on ${tr.date} for ${tr.user_id}")
       import collection.JavaConverters._
       //calculate externalities here
-      val events : Seq[Event] = legs.flatMap(_._2)
+      val events : Seq[Event] = legs.flatMap(_.events)
 
       val date_folder = Files.createDirectories(traces_output_dir.resolve(s"${tr.date}"))
 

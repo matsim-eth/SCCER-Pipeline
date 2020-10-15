@@ -13,6 +13,7 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
+import ethz.ivt.externalities.actors.ExternalitiesActor.EventTriple
 import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
@@ -86,13 +87,13 @@ object ProcessWaypointsJson {
     val _system = ActorSystem("MainEngineActor")
     val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
-    //val writerActorProps = ExternalitiesWriterActor.buildDefault(output_dir)
+    //val writerActorPropsOption = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
 
     val calculate_externalities : Boolean = props.getProperty("calculate.externalities", "true") == "true"
     val externalities_out_location = props.getProperty("write.externalities.to", "database")
 
-    val writerActorProps : Option[Props] = if (calculate_externalities) {
+    val writerActorPropsOption : Option[Props] = if (calculate_externalities) {
       if (externalities_out_location.equals("database")) {
         Option(ExternalitiesWriterActor.buildMobis(dbProps))
       } else if (externalities_out_location.equals("file")) {
@@ -105,9 +106,6 @@ object ProcessWaypointsJson {
     } else {
       Option.empty
     }
-
-
-    val writerActorOption = writerActorProps.map(_system.actorOf(_, "DatabaseWriter"))
 
     implicit val ec: ExecutionContext = _system.dispatcher
 
@@ -135,7 +133,7 @@ object ProcessWaypointsJson {
     val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
 
 
-    val externalitiyProcessorOption = writerActorOption.map(writerActor => {
+    val externalitiyProcessor : Option[Props] = writerActorPropsOption.map(writerActorPropsOption => {
 
       logger.info("Build Congestion Module")
       val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
@@ -147,27 +145,22 @@ object ProcessWaypointsJson {
 
       def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
-      val extProps = ExternalitiesActor.props(me, writerActor)
+      val extProps = ExternalitiesActor.props(me, writerActorPropsOption)
       logger.info("Preloadable Data (excluding emissions module) loaded")
+      extProps
 
-      _system.actorOf(extProps, "ExternalityProcessor")
     })
 
-
-
     val traces_output_dir = props.getProperty("traces.folder")
-    val eventWriterProps = EventsWriterActor.props(scenario, traces_output_dir)
-    val eventWriterActor = if (save_mapmatched_traces) {
-      Some(_system.actorOf(eventWriterProps, "EventWriterActor"))
-    } else {
-      None
-    }
+    val eventWriterPropsOption = Option(
+      EventsWriterActor.props(scenario, traces_output_dir)
+    ).filter(_ => save_mapmatched_traces)
 
+    val eventProps = EventActor.props(processWaypointsJson,
+      externalitiyProcessorPropsOption,
+      eventWriterPropsOption)
 
-    val eventProps = EventActor.props(processWaypointsJson, externalitiyProcessorOption, eventWriterActor)
-    val eventsActor = _system.actorOf(eventProps, name = "EventActor")
-
-    val traceProps = TraceActor.props(processWaypointsJson, eventsActor)
+    val traceProps = TraceActor.props(processWaypointsJson, eventProps)
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     logger.info("actor system ready")
@@ -175,9 +168,11 @@ object ProcessWaypointsJson {
 
     logger.info("processing waypoints in actor system")
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
-    jsons.map(JsonFile).foreach(traceProcessors ! _)
+    jsons.map(JsonFile).foreach(f => {
 
-    //traceProcessors ! PoisonPill
+    }
+    )
+
 
   }
 
@@ -214,22 +209,27 @@ class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
 
   }
 
-  def processJson(tr : TripRecord): Stream[(String, Seq[Event], Geometry)] = {
+  def processJson(tr : TripRecord): Stream[EventTriple] = {
 
     logger.info(s"\tprocessing ${tr.user_id}, ${tr.date}")
 
-    val futures = tr.legs.toStream
+    val event_stream = tr.legs.toStream
         .filterNot(tl => "Activity".equals(tl.mode))
         .map { tl =>
-          Try {
+          try {
             val (events, linestring) = tripLegToEvents(tr, tl)
             logger.info(s"\t\tleg ${tl.leg_id} converted to ${events.size} events")
-            (tl.leg_id, events, linestring)
-          }.recoverWith { case ex : Throwable => logger.error(s"Error on leg ${tl.leg_id}", ex); Failure(ex) }
+            Some(EventTriple(tl.leg_id, events, linestring))
+          } catch {
+            case ex: Exception => {
+              logger.error(s"Error on leg ${tl.leg_id}", ex)
+              None
+            };
+          }
         }
 
       //return successes
-      futures.flatMap(_.toOption).filterNot(_._2.isEmpty) //remove empty triplegs
+      event_stream.flatten.filterNot(_.events.isEmpty) //remove empty triplegs
 
   }
 
