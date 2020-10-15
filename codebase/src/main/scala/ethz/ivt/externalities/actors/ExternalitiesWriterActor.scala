@@ -30,7 +30,7 @@ object ExternalitiesWriterActor {
 
 final case class Externalities(tr : TripRecord, externalitiesCounter : ExternalityCounter)
 
-sealed trait ExternalitiesWriterActor extends Actor with ActorLogging  with ReaperWatched {
+sealed trait ExternalitiesWriterActor extends Actor with ActorLogging  {
 
 }
 
@@ -50,7 +50,7 @@ class DefaultExtWriter(outputFolder : Path) extends ExternalitiesWriterActor {
   }
 }
 
-class DummyExtWriter extends ExternalitiesWriterActor  with ActorLogging  with ReaperWatched {
+class DummyExtWriter extends ExternalitiesWriterActor  with ActorLogging {
   implicit val executionContext: ExecutionContext = context.dispatcher
 
   override def receive: Receive =  {

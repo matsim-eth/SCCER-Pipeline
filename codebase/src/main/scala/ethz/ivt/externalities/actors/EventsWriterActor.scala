@@ -3,16 +3,17 @@ package ethz.ivt.externalities.actors
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
 
-import akka.actor.{Actor, ActorLogging, ActorRef, Props}
-import org.locationtech.jts.geom.GeometryFactory
-import ethz.ivt.externalities.actors.ExternalitiesActor.EventList
+import akka.actor.{Actor, ActorLogging, Props}
 import ethz.ivt.externalities.counters.ExtendedPersonDepartureEvent
-import org.geotools.geojson.geom.GeometryJSON
+import ethz.ivt.externalities.data.TripRecord
+import org.locationtech.jts.geom.Geometry
 import org.matsim.api.core.v01.Scenario
 import org.matsim.api.core.v01.events.Event
 import org.matsim.core.events.algorithms.EventWriterXML
 
-import scala.collection.JavaConverters._
+
+case class EventTriple(leg_id: String, events: Seq[Event], geometry: Geometry)
+final case class EventList(tr: TripRecord, events : Stream[EventTriple])
 
 object EventsWriterActor {
   def props(scenario: Scenario, traces_output_dir:String): Props =
@@ -21,7 +22,7 @@ object EventsWriterActor {
 }
 
 class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
-  extends Actor with ReaperWatched with ActorLogging {
+  extends Actor with ActorLogging {
 
   import org.geotools.feature.simple.SimpleFeatureTypeBuilder
 

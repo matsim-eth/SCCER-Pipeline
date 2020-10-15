@@ -13,7 +13,6 @@ import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import ethz.ivt.externalities.actors.ExternalitiesActor.EventTriple
 import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
@@ -85,7 +84,6 @@ object ProcessWaypointsJson {
     else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
     val _system = ActorSystem("MainEngineActor")
-    val reaper = _system.actorOf(Props[Reaper], Reaper.name)
 
     //val writerActorPropsOption = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
@@ -132,35 +130,23 @@ object ProcessWaypointsJson {
     val odPairsFile = Paths.get(props.getProperty("pt.zones.od_pairs"))
     val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
 
-
-    val externalitiyProcessor : Option[Props] = writerActorPropsOption.map(writerActorPropsOption => {
-
-      logger.info("Build Congestion Module")
-      val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
-        logger.warn("Using mock aggregate congestion values - ie 0.")
-        new AggregateDataPerTimeMock()
-      } else {
-        CSVCongestionReader.forLink().read(congestion_file.toString, 900)
-      }
-
-      def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
-
-      val extProps = ExternalitiesActor.props(me, writerActorPropsOption)
-      logger.info("Preloadable Data (excluding emissions module) loaded")
-      extProps
-
-    })
-
     val traces_output_dir = props.getProperty("traces.folder")
     val eventWriterPropsOption = Option(
       EventsWriterActor.props(scenario, traces_output_dir)
     ).filter(_ => save_mapmatched_traces)
 
-    val eventProps = EventActor.props(processWaypointsJson,
-      externalitiyProcessorPropsOption,
-      eventWriterPropsOption)
+    logger.info("Build Congestion Module")
+    val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
+      logger.warn("Using mock aggregate congestion values - ie 0.")
+      new AggregateDataPerTimeMock()
+    } else {
+      CSVCongestionReader.forLink().read(congestion_file.toString, 900)
+    }
 
-    val traceProps = TraceActor.props(processWaypointsJson, eventProps)
+    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
+
+    val traceProps = TraceActor.props(processWaypointsJson,
+      eventWriterPropsOption, me, writerActorPropsOption)
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     logger.info("actor system ready")
@@ -168,11 +154,11 @@ object ProcessWaypointsJson {
 
     logger.info("processing waypoints in actor system")
     val jsons = processWaypointsJson.filterJsonFiles(trips_folder)
-    jsons.map(JsonFile).foreach(f => {
+    jsons.map(JsonFile).foreach(traceProcessors ! _)
 
-    }
-    )
+    Thread.sleep(5000)
 
+    traceProcessors ! PoisonPill
 
   }
 

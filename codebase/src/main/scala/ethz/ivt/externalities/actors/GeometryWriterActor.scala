@@ -3,13 +3,9 @@ package ethz.ivt.externalities.actors
 import java.io.File
 import java.nio.file.{Path, Paths}
 
-import akka.actor.{Actor, ActorRef, Props}
-import org.locationtech.jts.geom.GeometryFactory
-import ethz.ivt.externalities.actors.ExternalitiesActor.{EventList, EventTriple}
+import akka.actor.{Actor, Props}
 import org.geotools.geojson.geom.GeometryJSON
 import org.matsim.api.core.v01.Scenario
-
-import scala.collection.JavaConverters._
 
 object GeometryWriterActor {
   def props(scenario: Scenario, traces_output_dir:String): Props =
@@ -18,7 +14,7 @@ object GeometryWriterActor {
 }
 
 class GeometryWriterActor (scenario: Scenario, traces_output_dir: Path)
-  extends Actor with ReaperWatched {
+  extends Actor {
 
   import org.geotools.feature.simple.SimpleFeatureTypeBuilder
 
