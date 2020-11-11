@@ -104,11 +104,12 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 
               leg.keys().asScala.foreach{ k =>
                 val v = leg.get(k)
-                if (AutobahnSplitCounter.AUTOBAHN_KEY.equals(k) || AutobahnSplitCounter.NON_AUTOBAHN_KEY.equals(k))
-                externalities_pst.setInt(1, leg_id)
-                externalities_pst.setString(2, k)
-                externalities_pst.setDouble(3, v)
-                externalities_pst.addBatch()
+                if (AutobahnSplitCounter.AUTOBAHN_KEY.equals(k) || AutobahnSplitCounter.NON_AUTOBAHN_KEY.equals(k)) {
+                  externalities_pst.setInt(1, leg_id)
+                  externalities_pst.setString(2, k)
+                  externalities_pst.setDouble(3, v)
+                  externalities_pst.addBatch()
+                }
               }
             }
             (pid, externalities_pst.executeBatch())
@@ -156,18 +157,18 @@ class MobisExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 
             legValues.asScala.zipWithIndex.foreach { case (leg, leg_num) =>
               val leg_id = leg.getTriplegId
-              leg.keys().asScala.foreach{ k =>
+              leg.keys().asScala.foreach { k =>
                 val v = leg.get(k)
-                externalities_pst.setString(1, leg_id)
-                externalities_pst.setString(2, k)
-                externalities_pst.setDouble(3, v)
-                externalities_pst.addBatch()
-
-                trip_processed_at_pst.setTimestamp(1, Timestamp.valueOf(leg.getUpdatedAt()))
-                trip_processed_at_pst.setString(2, leg_id)
-                trip_processed_at_pst.addBatch()
-
+                if (AutobahnSplitCounter.AUTOBAHN_KEY.equals(k) || AutobahnSplitCounter.NON_AUTOBAHN_KEY.equals(k)) {
+                  externalities_pst.setString(1, leg_id)
+                  externalities_pst.setString(2, k)
+                  externalities_pst.setDouble(3, v)
+                  externalities_pst.addBatch()
+                }
               }
+              trip_processed_at_pst.setTimestamp(1, Timestamp.valueOf(leg.getUpdatedAt()))
+              trip_processed_at_pst.setString(2, leg_id)
+              trip_processed_at_pst.addBatch()
             }
             con.setAutoCommit(false)
             val ret_vals = (pid, externalities_pst.executeBatch())
