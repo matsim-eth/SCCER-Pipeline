@@ -7,7 +7,7 @@ import java.util.stream.Collectors
 
 import akka.actor.{Actor, ActorLogging, ActorRef, Props}
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import ethz.ivt.externalities.counters.{ExternalityCounter, LegValues}
+import ethz.ivt.externalities.counters.{AutobahnSplitCounter, ExternalityCounter, LegValues}
 import ethz.ivt.externalities.data.TripRecord
 
 import scala.collection.JavaConverters._
@@ -104,6 +104,7 @@ class PostgresExtWriter(config: HikariConfig) extends ExternalitiesWriterActor {
 
               leg.keys().asScala.foreach{ k =>
                 val v = leg.get(k)
+                if (AutobahnSplitCounter.AUTOBAHN_KEY.equals(k) || AutobahnSplitCounter.NON_AUTOBAHN_KEY.equals(k))
                 externalities_pst.setInt(1, leg_id)
                 externalities_pst.setString(2, k)
                 externalities_pst.setDouble(3, v)

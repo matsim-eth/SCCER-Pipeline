@@ -63,18 +63,21 @@ public class MeasureExternalities {
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
     //    ecg.setUsingDetailedEmissionCalculation(false);
 
-        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
+        //EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
 
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
 
-        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
-        eventsManager.addHandler(carExternalityCounter);
+        //CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
+        //eventsManager.addHandler(carExternalityCounter);
 
-        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
-        eventsManager.addHandler(congestionCounter);
+        AutobahnSplitCounter autobahnSplitCounter = new AutobahnSplitCounter(scenario, externalityCounter);
+        eventsManager.addHandler(autobahnSplitCounter);
 
-        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
-        eventsManager.addHandler(ptCongestionCounter);
+        //CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
+        //eventsManager.addHandler(congestionCounter);
+
+        //PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
+        //eventsManager.addHandler(ptCongestionCounter);
 
         eventsManager.addHandler(externalityCounter);
 
