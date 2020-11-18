@@ -67,8 +67,8 @@ public class MeasureExternalities {
 
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
 
-        //CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
-        //eventsManager.addHandler(carExternalityCounter);
+        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
+        eventsManager.addHandler(carExternalityCounter);
 
 //        AutobahnSplitCounter autobahnSplitCounter = new AutobahnSplitCounter(scenario, externalityCounter);
 //        eventsManager.addHandler(autobahnSplitCounter);
@@ -76,8 +76,8 @@ public class MeasureExternalities {
         CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
         eventsManager.addHandler(congestionCounter);
 
-        //PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
-        //eventsManager.addHandler(ptCongestionCounter);
+        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
+        eventsManager.addHandler(ptCongestionCounter);
 
         eventsManager.addHandler(externalityCounter);
 
