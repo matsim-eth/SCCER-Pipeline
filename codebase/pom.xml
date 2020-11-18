@@ -67,7 +67,7 @@
 		<java.version>1.8</java.version>
 		<matsim.version>11.0</matsim.version>
 		<graphhopper.version>0.12.0</graphhopper.version>
-		<geotools.version>20.2</geotools.version>
+		<geotools.version>22.4</geotools.version>
 		<scala.version>2.11</scala.version>
 		<scala.binary.version>${scala.version}.0</scala.binary.version>
     </properties>
@@ -256,10 +256,9 @@
 			<url>https://jitpack.io</url>
 		</repository>
 		<repository>
-			<!-- Geotools is not on Maven central -->
 			<id>osgeo</id>
-			<name>Geotools repository</name>
-			<url>http://download.osgeo.org/webdav/geotools</url>
+			<name>OSGeo Release Repository</name>
+			<url>https://repo.osgeo.org/repository/release/</url>
 		</repository>
 		<repository>
 			<id>matsim</id>
