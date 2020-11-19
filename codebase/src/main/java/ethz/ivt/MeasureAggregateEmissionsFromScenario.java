@@ -26,8 +26,10 @@ public class MeasureAggregateEmissionsFromScenario {
 
     public static void main(String[] args) throws CommandLine.ConfigurationException, IOException {
         CommandLine cmd = new CommandLine.Builder(args)
-                .requireOptions("config-path", "vehicle-path", "events-path", "binsize", "output-path")
+                .requireOptions("config-path", "vehicle-path", "year", "events-path", "binsize", "output-path")
                 .build();
+
+        int year = Integer.parseInt(cmd.getOptionStrict("year"));
 
         // set up scenario
         String configPath = cmd.getOptionStrict("config-path");
@@ -44,7 +46,7 @@ public class MeasureAggregateEmissionsFromScenario {
 
         // set up vehicle composition from file
         VehicleGenerator vehicleGenerator = new VehicleGenerator(scenario);
-        vehicleGenerator.read(vehicleCompositionPath, 2015);
+        vehicleGenerator.read(vehicleCompositionPath, year);
         vehicleGenerator.setUpVehicles();
 
         // process events
