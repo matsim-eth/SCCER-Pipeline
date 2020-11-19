@@ -9,7 +9,6 @@ import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.network.Link;
 
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Map;
 
 public class AggregateDataSerializer extends Serializer<AggregateDataPerTimeImpl> {

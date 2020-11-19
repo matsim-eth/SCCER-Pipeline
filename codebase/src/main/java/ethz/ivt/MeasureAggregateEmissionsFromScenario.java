@@ -16,9 +16,8 @@ import org.matsim.core.events.algorithms.Vehicle2DriverEventHandler;
 import org.matsim.core.scenario.ScenarioUtils;
 
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.HashSet;
-import java.util.Set;
 
 public class MeasureAggregateEmissionsFromScenario {
     private final static Logger log = Logger.getLogger(MeasureExternalitiesFromTraceEvents.class);
@@ -59,7 +58,7 @@ public class MeasureAggregateEmissionsFromScenario {
         this.scenario = scenario;
     }
 
-    public void run(String eventsPath, int binSize, String outputPath) throws IOException {
+    public void run(String eventsPath, int binSize, String outputPath) {
 
         // create event manager
         EventsManagerImpl eventsManager = new EventsManagerImpl();
@@ -70,11 +69,8 @@ public class MeasureAggregateEmissionsFromScenario {
 
         // setup aggregators
         EmissionModule emissionModule = new EmissionModule(this.scenario, eventsManager);
-
-        int maxTime = 30 * 3600;
-        Set<String> attributes = new HashSet<>(Arrays.asList("CO", "CO2(total)", "HC", "NMHC", "NOx", "NO2", "PM", "SO2"));
-
-        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(binSize, maxTime, attributes);
+        ArrayList<String> attributes = new ArrayList<>(Arrays.asList("CO", "CO2(total)", "FC", "HC", "NMHC", "NOx", "NO2","PM", "SO2"));
+        EmissionsAggregator emissionsAggregator = new EmissionsAggregator(binSize, attributes);
         emissionModule.getEmissionEventsManager().addHandler(emissionsAggregator);
 
         // read MATSim events
@@ -82,7 +78,7 @@ public class MeasureAggregateEmissionsFromScenario {
         reader.readFile(eventsPath);
 
         // save emissions data to csv files
-        emissionsAggregator.getAggregateEmissionsDataPerLinkPerTime().write(outputPath);
+        emissionsAggregator.getAggregateEmissionsDataPerLinkPerTime().writeDataToCsv(outputPath);
 
     }
 

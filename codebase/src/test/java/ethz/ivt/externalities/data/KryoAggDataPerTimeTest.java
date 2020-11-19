@@ -3,7 +3,6 @@ package ethz.ivt.externalities.data;
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
-import ethz.ivt.externalities.data.congestion.CongestionPerTime;
 import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.junit.Test;
 import org.matsim.api.core.v01.Id;

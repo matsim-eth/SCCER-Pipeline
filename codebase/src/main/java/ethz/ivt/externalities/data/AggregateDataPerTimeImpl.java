@@ -11,25 +11,25 @@ import org.matsim.api.core.v01.population.Person;
 
 import java.io.*;
 import java.nio.file.Path;
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.*;
 
 public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     protected static final Logger log = Logger.getLogger(AggregateDataPerTimeImpl.class);
-    final Class<T> clazz;
-    double binSize;
-    int numBins;
-    Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
-    ArrayList<String> attributes;
+    public final Class<T> clazz;
+    public double binSize;
+    public int numBins;
+    public Map<Id<T>, Map<String, double[]>> aggregateDataPerLinkPerTime = new HashMap<>();
+    public Set<String> attributes;
 
-    public AggregateDataPerTimeImpl(double binSize, ArrayList<String> attributes,
-                                    Class<T> clazz) {
+    public AggregateDataPerTimeImpl(double binSize, ArrayList<String> attributes, Class<T> clazz) {
         this.numBins = (int) (30 * 3600 / binSize);
         this.binSize = binSize;
-        this.attributes = attributes;
+        this.attributes = new HashSet<>(attributes);
         this.clazz = clazz;
+    }
 
+    public AggregateDataPerTimeImpl(double binSize, Class<T> clazz) {
+        this(binSize, new ArrayList<>(), clazz);
     }
 
     // getters
@@ -51,22 +51,11 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     }
 
     public double getValueInTimeBin(Id<T> id, int timeBin, String attribute) {
-        if (timeBin >= this.numBins) {
-//            log.warn("Time bin must be < " + this.numBins + ". Returning 0.");
-            return 0.0;
-        }
-        if (aggregateDataPerLinkPerTime.containsKey(id)) {
-            if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
-                return aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin];
-            } else {
-//                log.warn("Attribute " + attribute + " is not valid. Returning 0.");
-            }
-            return 0.0;
-        } else {
-//            log.debug("No value for " + id + ", returning 0");
-            return 0.0;
+        if (timeBin >= this.numBins) return 0.0;
+        if (!this.aggregateDataPerLinkPerTime.containsKey(id)) return 0.0;
 
-        }
+        this.aggregateDataPerLinkPerTime.get(id).putIfAbsent(attribute, new double[this.numBins]);
+        return this.aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin];
     }
 
     public void setValueAtTime(Id<T> id, double time, String attribute, double value) {
@@ -75,21 +64,13 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     }
 
     public void setValueForTimeBin(Id<T> id, int timeBin, String attribute, double value) {
-        if (timeBin >= this.numBins) {
-//            log.warn("Time bin must be < " + this.numBins + ". No value set.");
-            return;
-        }
-        setUpTimeBins(id);
-        if (aggregateDataPerLinkPerTime.containsKey(id)) {
-            if (aggregateDataPerLinkPerTime.get(id).containsKey(attribute)) {
-                aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin] = value;
-                return;
-            } else {
-//                log.warn("Attribute " + attribute + " is not valid. No value set.");
-            }return;
-        } else {
-//            log.error("Id " + id + " is not valid. A value should have been set");
-        }
+        if (timeBin >= this.numBins) return;
+        this.aggregateDataPerLinkPerTime.putIfAbsent(id, new HashMap<>());
+        this.aggregateDataPerLinkPerTime.get(id).putIfAbsent(attribute, new double[this.numBins]);
+        this.aggregateDataPerLinkPerTime.get(id).get(attribute)[timeBin] = value;
+
+        // add attribute to set
+        this.attributes.add(attribute);
     }
 
     public void addValueAtTime(Id<T> id, double time, String attribute, double value) {
@@ -182,42 +163,64 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
         File file = new File(outputPath);
         file.getParentFile().mkdirs();
 
-
         try {
-            BufferedWriter bw = new BufferedWriter(new FileWriter(file));
 
-            String header = Link.class.getSimpleName() + "id;binSize;timebin";
-            for (String attribute : this.attributes) {
-                header = header + ";" + attribute;
-            }
-            bw.write(header);
-            bw.newLine();
+            BufferedWriter writer = new BufferedWriter(new OutputStreamWriter(new FileOutputStream(outputPath)));
 
-            for (Map.Entry<Id<T>, Map<String, double[]>> e : this.aggregateDataPerLinkPerTime.entrySet()) {
-                for (int bin = 0; bin<this.numBins; bin++) {
-                    if (aggregateDataPerLinkPerTime.get(e.getKey()).get("count_entering")[bin] > 0 |
-                            aggregateDataPerLinkPerTime.get(e.getKey()).get("count_exiting")[bin] > 0) {
+            writer.write(formatHeader(this.attributes) + "\n");
+            writer.flush();
 
-                        String entry = e.getKey() + ";" + binSize + ";" + bin;
+            for (Id<T> id : this.aggregateDataPerLinkPerTime.keySet()) {
+                for (int timeBin = 0; timeBin < this.numBins; timeBin++) {
 
-                        for (String attribute : attributes) {
-                            entry = entry + ";" + e.getValue().get(attribute)[bin];
-                        }
+                    List<String> values = new LinkedList<>();
 
-                        bw.write(entry);
-                        bw.newLine();
+                    for (String key : this.attributes) {
+                        values.add(String.valueOf(getValueInTimeBin(id, timeBin, key)));
                     }
+
+                    writer.write(formatEntry(id, timeBin, values) + "\n");
+                    writer.flush();
 
                 }
             }
 
-            bw.close();
+            writer.flush();
+            writer.close();
             log.info("Output written to " + outputPath);
 
         } catch (IOException e) {
             e.printStackTrace();
         }
 
+    }
+
+    private String formatHeader(Set<String> keys) {
+
+        String baseKeys =  String.join(";", new String[] {
+                Link.class.getSimpleName().toLowerCase() + "_id",
+                "bin_size",
+                "time_bin"
+        });
+
+        String addKeys =  String.join(";", keys);
+
+        return String.join(";", new String[] { //
+                baseKeys,
+                addKeys
+        });
+    }
+
+    private String formatEntry(Id<T> id, int timeBin, List<String> values) {
+
+        String stringValues = String.join(";", values);
+
+        return String.join(";", new String[] { //
+                String.valueOf(id.toString()), //
+                String.valueOf(this.binSize), //
+                String.valueOf(timeBin), //
+                stringValues, //
+        });
     }
 
     private int getTimeBin(double time) {
@@ -267,7 +270,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     }
 
     public ArrayList<String> getAttributes() {
-        return attributes;
+        return new ArrayList<>(attributes);
     }
 
     public static AggregateDataPerTimeImpl<Link> readKryoCongestion(Path path) throws FileNotFoundException {

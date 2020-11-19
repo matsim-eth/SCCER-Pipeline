@@ -10,8 +10,8 @@ import org.matsim.contrib.emissions.events.ColdEmissionEventHandler;
 import org.matsim.contrib.emissions.events.WarmEmissionEvent;
 import org.matsim.contrib.emissions.events.WarmEmissionEventHandler;
 
+import java.util.ArrayList;
 import java.util.Map;
-import java.util.Set;
 
 /**
  * Created by molloyj on 06.10.2017.
@@ -21,8 +21,8 @@ public class EmissionsAggregator implements WarmEmissionEventHandler, ColdEmissi
     private static final Logger log = Logger.getLogger(EmissionsAggregator.class);
     private AggregateDataPerTimeImpl<Link> aggregateEmissionsDataPerLinkPerTime;
 
-    public EmissionsAggregator(int binSize, int maxTime, Set<String> attributes) {
-        this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(binSize, maxTime, attributes, Link.class);
+    public EmissionsAggregator(int binSize, ArrayList<String> attributes) {
+        this.aggregateEmissionsDataPerLinkPerTime = new AggregateDataPerTimeImpl<Link>(binSize, attributes, Link.class);
     }
 
     @Override
