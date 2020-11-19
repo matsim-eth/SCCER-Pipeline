@@ -33,15 +33,20 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         this.scenario = scenario;
         this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
         this.binSize = binSize;
-        this.numBins = (int) (30 * 3600 / binSize);
+        this.numBins = 30 * 3600 / binSize;
 
         for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()) {
             // initialize congestion data
             this.congestionPerLinkPerTimeBin.put(linkId, new Double[numBins]);
 
             // store if road type is motorway
+            System.out.print(linkId.toString());
             String roadType = (String) this.scenario.getNetwork().getLinks().get(linkId).getAttributes().getAttribute(OSM_HIGHWAY_TAG);
+            System.out.print(", ");
+            System.out.print(roadType);
             this.isMotorwayMap.put(linkId, roadType.contains("motorway"));
+            System.out.print(", ");
+            System.out.println(roadType.contains("motorway"));
         }
     }
 
