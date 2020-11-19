@@ -34,28 +34,12 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         this.aggregateCongestionDataPerLinkPerTime = aggregateCongestionDataPerLinkPerTime;
         this.binSize = binSize;
         this.numBins = 30 * 3600 / binSize;
-
-        for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()) {
-            // initialize congestion data
-            this.congestionPerLinkPerTimeBin.put(linkId, new Double[numBins]);
-
-            // store if road type is motorway
-            System.out.print(linkId.toString());
-            String roadType = (String) this.scenario.getNetwork().getLinks().get(linkId).getAttributes().getAttribute(OSM_HIGHWAY_TAG);
-            System.out.print(", ");
-            System.out.print(roadType);
-            this.isMotorwayMap.put(linkId, roadType.contains("motorway"));
-            System.out.print(", ");
-            System.out.println(roadType.contains("motorway"));
-        }
     }
 
     @Override
     public void reset(int iteration) {
-        for (Id<Link> linkId : scenario.getNetwork().getLinks().keySet()) {
-            // initialize congestion data
-            this.congestionPerLinkPerTimeBin.put(linkId, new Double[numBins]);
-        }
+        this.isMotorwayMap.clear();
+        this.congestionPerLinkPerTimeBin.clear();
     }
 
     @Override
@@ -66,10 +50,17 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         // get mean congestion on that link at that time
         double congestion = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(linkId, time, "congestion");
 
-        // add in timebin for that link
+        // get time bin
         int timeBin = TimeBinUtils.getTimeBinIndex(time, this.binSize, this.numBins);
+
+        // add value for that time bin for that link
+        this.congestionPerLinkPerTimeBin.putIfAbsent(linkId, new Double[numBins]);
         double oldValue = this.congestionPerLinkPerTimeBin.get(linkId)[timeBin];
         this.congestionPerLinkPerTimeBin.get(linkId)[timeBin] = oldValue + congestion;
+
+        // store if road type is motorway
+        String roadType = (String) this.scenario.getNetwork().getLinks().get(linkId).getAttributes().getAttribute(OSM_HIGHWAY_TAG);
+        this.isMotorwayMap.put(linkId, roadType.contains("motorway"));
     }
 
     public void write(String outputPath) throws IOException{
