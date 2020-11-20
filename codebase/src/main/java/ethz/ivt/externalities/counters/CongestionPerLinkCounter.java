@@ -27,6 +27,7 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
 
     private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
     private Map<Id<Link>, Double[]> congestionPerLinkPerTimeBin = new HashMap<>();
+    private Map<Id<Link>, Double[]> distancePerLinkPerTimeBin = new HashMap<>();
     private Map<Id<Link>, Boolean> isMotorwayMap = new HashMap<>();
 
     public CongestionPerLinkCounter(Scenario scenario, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime, int binSize) {
@@ -40,6 +41,7 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
     public void reset(int iteration) {
         this.isMotorwayMap.clear();
         this.congestionPerLinkPerTimeBin.clear();
+        this.distancePerLinkPerTimeBin.clear();
     }
 
     @Override
@@ -47,16 +49,24 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         double time = event.getTime();
         Id<Link> linkId = event.getLinkId();
 
-        // get mean congestion on that link at that time
-        double congestion = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(linkId, time, "congestion");
-
         // get time bin
         int timeBin = TimeBinUtils.getTimeBinIndex(time, this.binSize, this.numBins);
 
-        // add value for that time bin for that link
+        // get mean congestion on that link at that time
+        double congestion = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(linkId, time, "congestion");
+
+        // add congestion value for that time bin for that link
         this.congestionPerLinkPerTimeBin.putIfAbsent(linkId, new Double[numBins]);
-        double oldValue = this.congestionPerLinkPerTimeBin.get(linkId)[timeBin];
-        this.congestionPerLinkPerTimeBin.get(linkId)[timeBin] = oldValue + congestion;
+        double previousCongestion = this.congestionPerLinkPerTimeBin.get(linkId)[timeBin];
+        this.congestionPerLinkPerTimeBin.get(linkId)[timeBin] = previousCongestion + congestion;
+
+        // get link distance (we assume the agent travels across the entire link)
+        double distance = this.scenario.getNetwork().getLinks().get(linkId).getLength();
+
+        // add distance value for that time bin for that link
+        this.distancePerLinkPerTimeBin.putIfAbsent(linkId, new Double[numBins]);
+        double previousDistance = this.distancePerLinkPerTimeBin.get(linkId)[timeBin];
+        this.distancePerLinkPerTimeBin.get(linkId)[timeBin] = previousDistance + distance;
 
         // store if road type is motorway
         String roadType = null;
@@ -81,8 +91,9 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
 
             for (int timeBin = 0; timeBin < this.congestionPerLinkPerTimeBin.get(linkId).length; timeBin++) {
                 double congestion = this.congestionPerLinkPerTimeBin.get(linkId)[timeBin];
+                double distance = this.distancePerLinkPerTimeBin.get(linkId)[timeBin];
 
-                writer.write(formatEntry(linkId, timeBin, isMotorway, congestion) + "\n");
+                writer.write(formatEntry(linkId, timeBin, isMotorway, congestion, distance) + "\n");
                 writer.flush();
             }
         }
@@ -97,11 +108,12 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
                 "bin_size",
                 "time_bin",
                 "is_motorway",
-                "congestion"
+                "congestion",
+                "distance"
         });
     }
 
-    private String formatEntry(Id<Link> linkId, int timeBin, boolean isMotorway, double congestion) {
+    private String formatEntry(Id<Link> linkId, int timeBin, boolean isMotorway, double congestion, double distance) {
 
         return String.join(";", new String[] { //
                 String.valueOf(linkId.toString()), //
@@ -109,6 +121,7 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
                 String.valueOf(timeBin), //
                 String.valueOf(isMotorway), //
                 String.valueOf(congestion), //
+                String.valueOf(distance)
         });
     }
 
