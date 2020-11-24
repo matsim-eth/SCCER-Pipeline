@@ -53,16 +53,25 @@ public class ProcessNetwork {
         return String.join(";", new String[] { //
                 "link_id",
                 "x",
-                "y"
+                "y",
+                "is_motorway"
         });
     }
 
     private String formatEntry(Link link) {
 
+        // get if road type is motorway
+        String roadType = (String) link.getAttributes().getAttribute("osm:way:highway");
+        if (roadType == null) {
+            roadType = "none";
+        }
+        boolean isMotorway = roadType.contains("motorway");
+
         return String.join(";", new String[] { //
                 String.valueOf(link.getId().toString()), //
                 String.valueOf(link.getCoord().getX()), //
                 String.valueOf(link.getCoord().getY()), //
+                String.valueOf(isMotorway)
         });
     }
 
