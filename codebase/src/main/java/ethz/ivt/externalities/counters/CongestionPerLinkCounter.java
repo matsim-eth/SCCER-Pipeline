@@ -26,8 +26,8 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
     private final int numBins;
 
     private AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime;
-    private Map<Id<Link>, Double[]> congestionPerLinkPerTimeBin = new HashMap<>();
-    private Map<Id<Link>, Double[]> distancePerLinkPerTimeBin = new HashMap<>();
+    private Map<Id<Link>, double[]> congestionPerLinkPerTimeBin = new HashMap<>();
+    private Map<Id<Link>, double[]> distancePerLinkPerTimeBin = new HashMap<>();
     private Map<Id<Link>, Boolean> isMotorwayMap = new HashMap<>();
 
     public CongestionPerLinkCounter(Scenario scenario, AggregateDataPerTimeImpl<Link> aggregateCongestionDataPerLinkPerTime, int binSize) {
@@ -56,7 +56,7 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         double congestion = this.aggregateCongestionDataPerLinkPerTime.getValueAtTime(linkId, time, "congestion");
 
         // add congestion value for that time bin for that link
-        this.congestionPerLinkPerTimeBin.putIfAbsent(linkId, new Double[numBins]);
+        this.congestionPerLinkPerTimeBin.putIfAbsent(linkId, new double[numBins]);
         double previousCongestion = this.congestionPerLinkPerTimeBin.get(linkId)[timeBin];
         this.congestionPerLinkPerTimeBin.get(linkId)[timeBin] = previousCongestion + congestion;
 
@@ -64,7 +64,7 @@ public class CongestionPerLinkCounter implements LinkEnterEventHandler {
         double distance = this.scenario.getNetwork().getLinks().get(linkId).getLength();
 
         // add distance value for that time bin for that link
-        this.distancePerLinkPerTimeBin.putIfAbsent(linkId, new Double[numBins]);
+        this.distancePerLinkPerTimeBin.putIfAbsent(linkId, new double[numBins]);
         double previousDistance = this.distancePerLinkPerTimeBin.get(linkId)[timeBin];
         this.distancePerLinkPerTimeBin.get(linkId)[timeBin] = previousDistance + distance;
 
