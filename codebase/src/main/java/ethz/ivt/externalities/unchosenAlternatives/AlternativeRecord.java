@@ -12,7 +12,7 @@ public class AlternativeRecord {
 	@CsvBindByName(column="user_id", required=true)
 	String userId;
 	
-	@CsvBindByName(column="trip_id", required=true)
+	@CsvBindByName(column="trip_id")
 	String tripId;
 
 	@CsvDate(value = "yyyy-MM-dd'T'HH:mm:ss'Z'")
