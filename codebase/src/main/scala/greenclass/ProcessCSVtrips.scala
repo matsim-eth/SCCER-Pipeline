@@ -109,6 +109,7 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
     val tripRecordReader = new CsvToBeanBuilder[AlternativeRecord](reader).withType(classOf[AlternativeRecord]).build
 
     tripRecordReader.iterator().asScala.toStream
+      .par
       .flatMap(alternativeToTripRecord)
       .map(tr => (tr, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1))
       .map{case (tr, events) => me().process(events.asJava, tr.date.atStartOfDay())}
