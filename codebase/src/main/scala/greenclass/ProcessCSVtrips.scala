@@ -60,8 +60,6 @@ object ProcessCSVtrips {
     val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
     val congestion_file = base_file_location.resolve(Paths.get(props.getProperty("congestion.file")))
 
-    else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
-
     //val writerActorPropsOption = ExternalitiesWriterActor.buildDefault(output_dir)
     val dbProps = new HikariConfig(base_file_location.resolve(props.getProperty("database.properties.file")).toString)
 
