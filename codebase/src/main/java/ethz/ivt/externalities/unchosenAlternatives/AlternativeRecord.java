@@ -59,7 +59,7 @@ public class AlternativeRecord {
 	Double frequency;
 	
 	@CsvBindByName
-	Integer transfers;
+	Double transfers;
 	
 	@CsvBindByName
 	private boolean chosen = false;
