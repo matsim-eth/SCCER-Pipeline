@@ -48,7 +48,7 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson,
       log.info(s"processing folder $path")
       val trs = processJsonFile(path)
       trs
-        .filter(tr => tr.date.isBefore(LocalDate.of(2020, 9, 1)))
+      //  .filter(tr => tr.date.isBefore(LocalDate.of(2020, 9, 1)))
         .foreach(tr => {
         val jobid = tr.getIdentifier
         val legs = waypointProcessor.processJson(tr)

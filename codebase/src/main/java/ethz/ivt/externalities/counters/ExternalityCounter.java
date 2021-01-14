@@ -119,27 +119,75 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 
     }
 
-    public void writeCsvFile(Path outputFileName) {
+    private List<LegValues> simplify(List<LegValues> lv) {
+		return lv.stream().map(this::simplifyLegValues).collect(Collectors.toList());
+	}
+
+	private LegValues simplifyLegValues(LegValues lv) {
+		LegValues legValues1 = new LegValues(lv.getTimestamp(), lv.getMode(), lv.getUpdatedAt());
+
+		legValues1.setTriplegId(lv.getTriplegId());
+		legValues1.setDistance(lv.getDistance());
+
+		legValues1.put("StartTime", lv.get("StartTime"));
+		legValues1.put("EndTime", lv.get("EndTime"));
+
+		legValues1.put("health",
+				lv.get("PM_health_costs") +
+						lv.get("Noise_costs") +
+						lv.get("NOx_costs") +
+						lv.get("Active_costs")+
+						lv.get("Accident_costs")
+		);
+
+		legValues1.put("co2", lv.get("CO2_costs"));
+
+		legValues1.put("congestion", lv.get("Congestion_costs"));
+
+		return legValues1;
+	}
+
+	public ExternalityCounter simplifyExternalities() {
+		this.personId2Leg.replaceAll((p,lv) -> simplify(lv));
+		initializeFields();
+		keys.add("health");
+		keys.add("co2");
+		keys.add("congestion");
+		keys.remove("MappedDistance");
+		return this;
+	}
+
+	public void writeCsvFile(Path outputFileName) {
+		writeCsvFileInternal(outputFileName, false);
+	}
+
+	public void appendCsvFile(Path outputFileName) {
+		writeCsvFileInternal(outputFileName, true);
+	}
+
+	private void writeCsvFileInternal(Path outputFileName, Boolean append) {
 
 		Path original_path = outputFileName;
 		File file = outputFileName.toFile();
 		file.getParentFile().mkdirs();
 		int counter = 1;
 		//add suffix to file until a new file is found
-		while (file.exists()) {
-			String filename = FilenameUtils.getBaseName(original_path.toString());
-			String extension = FilenameUtils.getExtension(original_path.toString());
-			filename += "_" + counter + FilenameUtils.EXTENSION_SEPARATOR + extension;
-			outputFileName = original_path.getParent().resolve(filename);
-			file = outputFileName.toFile();
-			counter++;
+		if (!append) {
+			while (file.exists()) {
+				String filename = FilenameUtils.getBaseName(original_path.toString());
+				String extension = FilenameUtils.getExtension(original_path.toString());
+				filename += "_" + counter + FilenameUtils.EXTENSION_SEPARATOR + extension;
+				outputFileName = original_path.getParent().resolve(filename);
+				file = outputFileName.toFile();
+				counter++;
+			}
 		}
 
-
 		try {
-			BufferedWriter bw = new BufferedWriter(new FileWriter(file));
+			boolean headerWritten = file.exists();
+
+			BufferedWriter bw = new BufferedWriter(new FileWriter(file, append));
 	        // write header and records
-			boolean headerWritten = false;
 			List<String> keys_list = new ArrayList<>(keys);
 
 	    	for (Map.Entry<Id<Person>,List<LegValues>> person : personId2Leg.entrySet()  ) {
@@ -147,7 +195,7 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	    		for (LegValues leg : person.getValue()) {
 	    			legCount++;
 
-	    			String record = person.getKey() + ";" + this.date + ";";
+	    			String record = person.getKey() + ";" + this.date.toLocalDate() + ";";
 					record += leg.getUpdatedAt() + ";";
 					record += leg.getTriplegId() + ";";
 					record += leg.getMode() + ";";

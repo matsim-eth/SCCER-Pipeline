@@ -1,6 +1,10 @@
 package ethz.ivt.externalities.data;
 
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
 import org.matsim.api.core.v01.Scenario;
@@ -51,7 +55,13 @@ public class AggregateNoiseData {
     public void loadDataFromCsv(String input) {
         CSVReader reader;
         try {
-            reader = new CSVReader(new FileReader(input), ';');
+            final CSVParser parser =
+                    new CSVParserBuilder()
+                            .withSeparator(';')
+                            .build();
+
+            reader = new CSVReaderBuilder(new FileReader(input)).withCSVParser(parser).build();
+
             // read line by line
             String[] record = null;
             int line = 0;
@@ -73,7 +83,7 @@ public class AggregateNoiseData {
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            } catch (IOException e) {
+            } catch (IOException | CsvValidationException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }

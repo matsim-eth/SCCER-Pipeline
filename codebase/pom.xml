@@ -45,7 +45,7 @@
 					</descriptorRefs>
 					<archive>
 						<manifest>
-							<mainClass>greenclass.ProcessWaypointsCsv</mainClass>
+							<mainClass>greenclass.ProcessWaypointsJson</mainClass>
 						</manifest>
 					</archive>
 				</configuration>
@@ -103,6 +103,14 @@
 		  <version>${scala.binary.version}</version>
 	  </dependency>
 
+	  <!-- https://mvnrepository.com/artifact/com.opencsv/opencsv -->
+	  <dependency>
+		  <groupId>com.opencsv</groupId>
+		  <artifactId>opencsv</artifactId>
+		  <version>5.2</version>
+	  </dependency>
+
+
 	  <dependency>
   		<groupId>org.apache.commons</groupId>
   		<artifactId>commons-math</artifactId>
@@ -122,11 +130,6 @@
 		  <groupId>org.geotools</groupId>
 		  <artifactId>gt-geojson</artifactId>
 		  <version>${geotools.version}</version>
-	  </dependency>
-	  <dependency>
-		  <groupId>com.opencsv</groupId>
-		  <artifactId>opencsv</artifactId>
-		  <version>3.7</version>
 	  </dependency>
 	  <!-- https://mvnrepository.com/artifact/me.tongfei/progressbar -->
 	  <dependency>

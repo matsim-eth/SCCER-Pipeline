@@ -2,7 +2,11 @@ package ethz.ivt.externalities.data;
 
 import com.esotericsoftware.kryo.Kryo;
 import com.esotericsoftware.kryo.io.Input;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.apache.log4j.Logger;
 import org.matsim.api.core.v01.Id;
@@ -120,7 +124,12 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
     public void loadDataFromCsv(String input) {
         CSVReader reader;
         try {
-            reader = new CSVReader(new FileReader(input), ';');
+            final CSVParser parser =
+                    new CSVParserBuilder()
+                            .withSeparator(';')
+                            .build();
+
+            reader = new CSVReaderBuilder(new FileReader(input)).withCSVParser(parser).build();
 
             try {
                 String[] record = null;
@@ -159,7 +168,7 @@ public class AggregateDataPerTimeImpl<T> implements AggregateDataPerTime<T> {
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            } catch (IOException e) {
+            } catch (IOException | CsvValidationException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }

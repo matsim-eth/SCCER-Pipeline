@@ -7,7 +7,11 @@ import com.esotericsoftware.kryo.io.Input;
 import com.esotericsoftware.kryo.io.Output;
 import com.esotericsoftware.kryo.serializers.DefaultSerializers;
 import com.esotericsoftware.kryo.serializers.MapSerializer;
+import com.opencsv.CSVParser;
+import com.opencsv.CSVParserBuilder;
 import com.opencsv.CSVReader;
+import com.opencsv.CSVReaderBuilder;
+import com.opencsv.exceptions.CsvValidationException;
 import ethz.ivt.externalities.data.AggregateDataPerTime;
 import ethz.ivt.externalities.data.congestion.io.IdSerializer;
 import org.apache.log4j.Logger;
@@ -135,7 +139,12 @@ public class CongestionPerTime implements AggregateDataPerTime<Link>, KryoSerial
     public void loadDataFromCsv(String input) {
         CSVReader reader;
         try {
-            reader = new CSVReader(new FileReader(input), ';');
+            final CSVParser parser =
+                    new CSVParserBuilder()
+                            .withSeparator(';')
+                            .build();
+
+            reader = new CSVReaderBuilder(new FileReader(input)).withCSVParser(parser).build();
 
             try {
                 String[] record = null;
@@ -174,7 +183,7 @@ public class CongestionPerTime implements AggregateDataPerTime<Link>, KryoSerial
             } catch (NumberFormatException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
-            } catch (IOException e) {
+            } catch (IOException | CsvValidationException e) {
                 // TODO Auto-generated catch block
                 e.printStackTrace();
             }
