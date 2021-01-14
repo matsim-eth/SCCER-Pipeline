@@ -109,7 +109,9 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
       .flatMap(alternativeToTripRecord)
       .map(tr => (tr, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1))
       .map{case (tr, events) => me().process(events.asJava, tr.date.atStartOfDay())}
-      .map(_.simplifyExternalities()).foreach(_.appendCsvFile(outputFile))
+      .map(_.simplifyExternalities())
+      .seq
+      .foreach(_.appendCsvFile(outputFile))
   }
 
   def alternativeToTripRecord(ar : AlternativeRecord) : List[TripRecord] = {
