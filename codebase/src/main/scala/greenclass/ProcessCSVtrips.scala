@@ -59,13 +59,11 @@ object ProcessCSVtrips {
 
     val costValuesFile = base_file_location.resolve(Paths.get(props.getProperty("cost.values.file")))
     val congestion_file = base_file_location.resolve(Paths.get(props.getProperty("congestion.file")))
-    val output_dir = base_file_location.resolve(Paths.get(props.getProperty("output.dir")))
 
-    val trips_folder = if (args.length > 1) Paths.get(args(1))
     else base_file_location.resolve(Paths.get(props.getProperty("trips.folder")))
 
     //val writerActorPropsOption = ExternalitiesWriterActor.buildDefault(output_dir)
-    val dbProps = new HikariConfig(props.getProperty("database.properties.file"))
+    val dbProps = new HikariConfig(base_file_location.resolve(props.getProperty("database.properties.file")).toString)
 
     logger.info("Loading vehicles")
     HelperFunctions.loadVehiclesFromDatabase(scenario, dbProps)
@@ -73,8 +71,8 @@ object ProcessCSVtrips {
     logger.info("Build External Costs Module")
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
 
-    val zonesShpFile = Paths.get(props.getProperty("pt.zones.shapefile"))
-    val odPairsFile = Paths.get(props.getProperty("pt.zones.od_pairs"))
+    val zonesShpFile = base_file_location.resolve(props.getProperty("pt.zones.shapefile"))
+    val odPairsFile = base_file_location.resolve(props.getProperty("pt.zones.od_pairs"))
     val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
 
 
