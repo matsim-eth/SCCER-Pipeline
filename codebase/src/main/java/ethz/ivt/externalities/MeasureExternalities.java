@@ -63,21 +63,20 @@ public class MeasureExternalities {
         EmissionsConfigGroup ecg = (EmissionsConfigGroup) scenario.getConfig().getModules().get(EmissionsConfigGroup.GROUP_NAME);
     //    ecg.setUsingDetailedEmissionCalculation(false);
 
-        //EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
-
+        EmissionModule emissionModule = new EmissionModule(scenario, eventsManager);
         externalityCounter = new ExternalityCounter(scenario, eventsManager);
 
-        //CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
-        //eventsManager.addHandler(carExternalityCounter);
+        CarExternalityCounter carExternalityCounter = new CarExternalityCounter(scenario, externalityCounter);
+        eventsManager.addHandler(carExternalityCounter);
 
         AutobahnSplitCounter autobahnSplitCounter = new AutobahnSplitCounter(scenario, externalityCounter);
         eventsManager.addHandler(autobahnSplitCounter);
 
-        //CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
-        //eventsManager.addHandler(congestionCounter);
+        CongestionCounter congestionCounter = new CongestionCounter(scenario, aggregateCongestionDataPerLinkPerTime, externalityCounter);
+        eventsManager.addHandler(congestionCounter);
 
-        //PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
-        //eventsManager.addHandler(ptCongestionCounter);
+        PTCongestionCounter ptCongestionCounter = new PTCongestionCounter(scenario, externalityCounter, ptChargingZones);
+        eventsManager.addHandler(ptCongestionCounter);
 
         eventsManager.addHandler(externalityCounter);
 
@@ -88,6 +87,8 @@ public class MeasureExternalities {
     }
 
     public ExternalityCounter process(List<Event> events, LocalDateTime date) {
+        this.reset();
+
         externalityCounter.setDate(date);
         eventsManager.initProcessing();
         events.forEach(eventsManager::processEvent);

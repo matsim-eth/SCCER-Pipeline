@@ -3,7 +3,8 @@ package greenclass
 import java.io.{FileInputStream, IOException}
 import java.nio.file.{Files, Path, Paths}
 import java.time.LocalDateTime
-import java.util.Properties
+import java.util
+import java.util.{Collections, HashSet, Properties, Set}
 
 import akka.actor.{ActorSystem, PoisonPill, Props}
 import com.opencsv.bean.CsvToBeanBuilder
@@ -14,15 +15,23 @@ import ethz.ivt.externalities.actors.{EventsWriterActor, ExternalitiesWriterActo
 import ethz.ivt.externalities.counters.{ExternalityCostCalculator, ExternalityCounter}
 import ethz.ivt.externalities.data.congestion.PtChargingZones
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
-import ethz.ivt.externalities.data.{AggregateDataPerTimeMock, LatLon, TripLeg, TripRecord}
+import ethz.ivt.externalities.data.{AggregateDataPerTimeMock, JITVehicleCreator, LatLon, TripLeg, TripRecord}
 import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
 import ethz.ivt.externalities.unchosenAlternatives.AlternativeRecord
 import org.apache.log4j.{Level, Logger}
+import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
+import org.matsim.api.core.v01.network.{Link, Network}
 import org.matsim.api.core.v01.{Coord, Scenario, TransportMode}
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
-import org.matsim.core.config.ConfigUtils
+import org.matsim.core.config.{Config, ConfigUtils}
+import org.matsim.core.network.NetworkUtils
+import org.matsim.core.network.algorithms.TransportModeNetworkFilter
+import org.matsim.core.router.util.TravelTime
 import org.matsim.core.scenario.ScenarioUtils
+import org.matsim.core.trafficmonitoring.FreeSpeedTravelTime
+import org.matsim.core.utils.collections.QuadTree
 import org.matsim.core.utils.geometry.transformations.CH1903LV03PlustoWGS84
+import org.matsim.pt.transitSchedule.api.{TransitSchedule, TransitScheduleReader}
 
 import scala.collection.JavaConverters._
 import scala.concurrent.ExecutionContext
@@ -49,6 +58,7 @@ object ProcessCSVtrips {
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
     logger.info("Loading scenario")
     val scenario: Scenario = ScenarioUtils.loadScenario(config)
+    JITVehicleCreator.addDefaultVehicle(scenario)
 
     val tripsPath = "2019-09-02_2019-09-09/unchosen_alternatives.csv"
     Logger.getRootLogger.setLevel(Level.INFO)
@@ -65,6 +75,10 @@ object ProcessCSVtrips {
 
     logger.info("Loading vehicles")
     HelperFunctions.loadVehiclesFromDatabase(scenario, dbProps)
+
+    logger.info("Adding hbefa mappings")
+    val roadTypeMapping = OsmHbefaMapping.build()
+    roadTypeMapping.addHbefaMappings(scenario.getNetwork)
 
     logger.info("Build External Costs Module")
     val ecc = new ExternalityCostCalculator(costValuesFile.toString)
@@ -91,28 +105,69 @@ object ProcessCSVtrips {
         .filter(Files.isRegularFile(_))
         .filter(_.getFileName.toString.equals(input_filename))
         .toStream
-        .par
+        //.par
         .foreach(f => processor.processFile(f, f.resolveSibling(output_filename)))
 
 
   }
 }
 
-class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => MeasureExternalities ) {
+class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => MeasureExternalities) {
+
+ // val carRouterFactory = buildCarRouterFactory(scenario.getNetwork)
+/*
+  def slotInCarEvents(tr: TripRecord, events: Seq[Event]): ( TripRecord, Seq[Event]) = {
+    if (events.size > 2 || !tr.legs.headOption.map(_.mode).contains("car")) {
+      return (tr, events)
+    } else {
+      //need to add in the missing events
+      val router = carRouterFactory.create("car")
+      val startLinkId = events.head.asInstanceOf[PersonDepartureEvent].getLinkId
+      val endLinkId = events.head.asInstanceOf[PersonArrivalEvent].getLinkId
+
+      val linksTravelled = router.routeAlternative(startLinkId, endLinkId, tr.legs.head.getStartedSeconds)
+      val events = pro
+    }
+  }*/
 
   def processFile(inputFile : Path, outputFile : Path) {
     val reader = Files.newBufferedReader(inputFile)
     val tripRecordReader = new CsvToBeanBuilder[AlternativeRecord](reader).withType(classOf[AlternativeRecord]).build
 
-    tripRecordReader.iterator().asScala.toStream
-      .par
+    tripRecordReader.iterator().asScala.toStream.take(10)
+      //.par
       .flatMap(alternativeToTripRecord)
       .map(tr => (tr, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1))
-      .map{case (tr, events) => me().process(events.asJava, tr.date.atStartOfDay())}
+ //     .map{case (tr, events) => slotInCarEvents(tr, events)}
+      //.groupBy{ case (tr, events) => tr.date }
+      //.mapValues{ x => x.seq.flatMap(_._2) }
+      .map{ case (tr, events) => (tr.date, events) }
+      .map{case (date, events) => me().process(events.asJava, date.atStartOfDay())}
       .map(_.simplifyExternalities())
       .seq
       .foreach(_.appendCsvFile(outputFile))
   }
+
+  /*def buildCarRouterFactory(network : Network) : CarAlternativeRouter.Factory = {
+
+    val roadNetwork = NetworkUtils.createNetwork
+    new TransportModeNetworkFilter(network).filter(roadNetwork, Collections.singleton("car"))
+
+    val bounds = NetworkUtils.getBoundingBox(roadNetwork.getNodes.values)
+    val roadQuadTree = new QuadTree[Link](bounds(0), bounds(1), bounds(2), bounds(3))
+    roadNetwork.getLinks.values.forEach((l: Link) => roadQuadTree.put(l.getCoord.getX, l.getCoord.getY, l))
+
+    var travelTime = new FreeSpeedTravelTime
+
+    // Get car travel times from MATSim events
+    if (!config.carUseFreespeed) {
+      val travelTimesFromNetwork = new MeasureAggregateTravelTimesFromNetwork(network, config.binSize)
+      travelTimesFromNetwork.process(config.eventsPath)
+      travelTime = travelTimesFromNetwork.getLinkTravelTimes
+    }
+
+    return new CarAlternativeRouter.Factory(roadNetwork, travelTime, roadQuadTree, 300.0)
+  }*/
 
   def alternativeToTripRecord(ar : AlternativeRecord) : List[TripRecord] = {
 

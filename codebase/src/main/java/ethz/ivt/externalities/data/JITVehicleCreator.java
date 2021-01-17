@@ -17,7 +17,6 @@ public class JITVehicleCreator implements PersonDepartureEventHandler {
     public JITVehicleCreator(Scenario scenario) {
 
         this.scenario = scenario;
-        createDefaultVehicle(scenario);
     }
 
     @Override
@@ -29,23 +28,19 @@ public class JITVehicleCreator implements PersonDepartureEventHandler {
         if (!scenario.getVehicles().getVehicles().containsKey(vid)) {
             Id<VehicleType>  vt = Id.create("PASSENGER_CAR", VehicleType.class);
 
-            if(!scenario.getVehicles().getVehicleTypes().containsKey(vt)) {
-                createDefaultVehicle(scenario);
-            }
-
             VehicleType car = scenario.getVehicles().getVehicleTypes().get(vt);
             Vehicle v = scenario.getVehicles().getFactory().createVehicle(vid, car);
             scenario.getVehicles().addVehicle(v);
         }
     }
 
-    private Id<VehicleType> createDefaultVehicle(Scenario scenario) {
+    public static Id<VehicleType> addDefaultVehicle(Scenario scenario) {
 
         Id<VehicleType> vehicleId = Id.create("PASSENGER_CAR", VehicleType.class);
 
-        if(!scenario.getVehicles().getVehicleTypes().containsKey(vehicleId)) {
+        VehicleType vehicleType = VehicleUtils.getFactory().createVehicleType(vehicleId);
 
-            VehicleType vehicleType = VehicleUtils.getFactory().createVehicleType(vehicleId);
+        if(!scenario.getVehicles().getVehicleTypes().containsValue(vehicleType)) {
             vehicleType.setMaximumVelocity(100.0 / 3.6);
             vehicleType.setPcuEquivalents(1.0);
             vehicleType.setDescription("BEGIN_EMISSIONS" + vehicleId.toString() + "END_EMISSIONS");

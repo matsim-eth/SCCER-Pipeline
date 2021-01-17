@@ -1,15 +1,18 @@
 package ethz.ivt.graphhopperMM;
 
-import com.graphhopper.GraphHopper;
-import com.graphhopper.MapMatchingUnlimited;
+import com.graphhopper.*;
 import com.graphhopper.matching.EdgeMatch;
 import com.graphhopper.matching.GPXExtension;
 import com.graphhopper.matching.MapMatching;
 import com.graphhopper.matching.MatchResult;
+import com.graphhopper.routing.Path;
 import com.graphhopper.routing.util.EdgeFilter;
 import com.graphhopper.storage.index.QueryResult;
 import com.graphhopper.util.EdgeIteratorState;
 import com.graphhopper.util.GPXEntry;
+import com.graphhopper.util.Parameters;
+import com.graphhopper.util.details.EdgeIdDetails;
+import com.graphhopper.util.details.PathDetailsBuilderFactory;
 import org.apache.commons.lang3.tuple.Pair;
 import org.locationtech.jts.geom.Coordinate;
 import org.locationtech.jts.geom.GeometryFactory;
@@ -23,6 +26,7 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.vehicles.Vehicle;
+import sun.jvm.hotspot.gc_implementation.g1.G1HeapRegionTable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -114,30 +118,64 @@ public class GHtoEvents {
     public List<LinkGPXStruct> mapMatchWithTravelTimes(List<GPXEntry> entries) {
         int numCandidates = Integer.MAX_VALUE;
         if (entries.size() < 2) return new ArrayList<>();
-        if (entries.size() == 2) numCandidates = 1;
+        if (entries.size() == 2) {
+            GHRequest req = new GHRequest(entries.get(0).lat, entries.get(0).lon,
+                    entries.get(1).lat, entries.get(1).lon).setVehicle("car");
 
-        try {
-            MatchResult mr = getMatcher().doWork(entries, numCandidates, false);
-            if (mr.getEdgeMatches().isEmpty()) {
-                return Collections.EMPTY_LIST;
+            GHResponse response = new GHResponse();
+            //PathWrapper pathWrapper = response.getBest();
+
+            List<Path> paths = getHopper().calcPaths(req, response);
+
+            if (!paths.isEmpty() ) {
+                List<EdgeIteratorState> bestPathEdges = paths.get(0).calcEdges();
+
+                if (bestPathEdges.size() >= 2) {
+                    EdgeMatch first = new EdgeMatch(bestPathEdges.get(0),
+                            Collections.singletonList(new GPXExtension(entries.get(0), null)));
+                    EdgeMatch last = new EdgeMatch(bestPathEdges.get(bestPathEdges.size() - 1),
+                            Collections.singletonList(new GPXExtension(entries.get(1), null)));
+
+                    List<EdgeMatch> edges = new ArrayList<>();
+                    edges.add(first);
+                    edges.addAll(bestPathEdges.subList(1, bestPathEdges.size() - 1)
+                            .stream()
+                            .map(x -> new EdgeMatch(x, Collections.emptyList()))
+                            .collect(Collectors.toList())
+                    );
+                    edges.add(last);
+                    List<LinkGPXStruct> timed_links = calculateNodeVisitTimes(edges);
+                    return timed_links;
+                }
             }
-            List<EdgeMatch> matches = mr.getEdgeMatches();
 
-            List<EdgeMatch> filteredMatches = matches.stream().map( m -> {
-                List<GPXExtension> new_ext = m.getGpxExtensions().stream()
-                        .filter(x -> x.getEntry().getTime() >= 0)
-                        .collect(Collectors.toList());
-                EdgeMatch m1 = new EdgeMatch(m.getEdgeState(), new_ext);
-                return m1;
-            }).collect(Collectors.toList());
-            List<EdgeMatch> trimmed_edges = trim_links(new ArrayList<>(filteredMatches));
-            List<LinkGPXStruct> timed_links =  calculateNodeVisitTimes(trimmed_edges);
-            assert(timed_links.stream().allMatch(l -> l.exitTime > l.entryTime));
-            return timed_links;
-        } catch (IllegalArgumentException ex) {
-            logger.warning(ex.getMessage());
-            return Collections.EMPTY_LIST;
 
+            return new ArrayList<>();
+        } else {
+
+            try {
+                MatchResult mr = getMatcher().doWork(entries, numCandidates, false);
+                if (mr.getEdgeMatches().isEmpty()) {
+                    return Collections.EMPTY_LIST;
+                }
+                List<EdgeMatch> matches = mr.getEdgeMatches();
+
+                List<EdgeMatch> filteredMatches = matches.stream().map(m -> {
+                    List<GPXExtension> new_ext = m.getGpxExtensions().stream()
+                            .filter(x -> x.getEntry().getTime() >= 0)
+                            .collect(Collectors.toList());
+                    EdgeMatch m1 = new EdgeMatch(m.getEdgeState(), new_ext);
+                    return m1;
+                }).collect(Collectors.toList());
+                List<EdgeMatch> trimmed_edges = trim_links(new ArrayList<>(filteredMatches));
+                List<LinkGPXStruct> timed_links = calculateNodeVisitTimes(trimmed_edges);
+                assert (timed_links.stream().allMatch(l -> l.exitTime > l.entryTime));
+                return timed_links;
+            } catch (IllegalArgumentException ex) {
+                logger.warning(ex.getMessage());
+                return Collections.EMPTY_LIST;
+
+            }
         }
     }
 
