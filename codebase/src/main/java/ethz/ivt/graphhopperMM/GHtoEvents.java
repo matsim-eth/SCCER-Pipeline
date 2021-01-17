@@ -26,7 +26,6 @@ import org.matsim.api.core.v01.network.Network;
 import org.matsim.api.core.v01.population.Person;
 import org.matsim.core.utils.geometry.CoordinateTransformation;
 import org.matsim.vehicles.Vehicle;
-import sun.jvm.hotspot.gc_implementation.g1.G1HeapRegionTable;
 
 import java.util.*;
 import java.util.concurrent.atomic.AtomicInteger;
