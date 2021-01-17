@@ -46,6 +46,7 @@ object ProcessCSVtrips {
     val base_input_location = Paths.get(args(1))
     val input_filename = args(2)
     val output_filename = args(3)
+    val record_limit : Int = if (args.length == 5) args(4).toInt else 0
 
     val props = new Properties()
     props.load(new FileInputStream(props_filename))
@@ -106,7 +107,7 @@ object ProcessCSVtrips {
         .filter(_.getFileName.toString.equals(input_filename))
         .toStream
         //.par
-        .foreach(f => processor.processFile(f, f.resolveSibling(output_filename)))
+        .foreach(f => processor.processFile(f, f.resolveSibling(output_filename), record_limit))
 
 
   }
@@ -130,17 +131,19 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
     }
   }*/
 
-  def processFile(inputFile : Path, outputFile : Path) {
+  def processFile(inputFile : Path, outputFile : Path, record_limit : Int) {
     val reader = Files.newBufferedReader(inputFile)
     val tripRecordReader = new CsvToBeanBuilder[AlternativeRecord](reader).withType(classOf[AlternativeRecord]).build
 
     val cores = Runtime.getRuntime.availableProcessors
 
-    val records = tripRecordReader.iterator().asScala.toStream.take(100)
-      .flatMap(alternativeToTripRecord)
+    val records = tripRecordReader.iterator().asScala.toStream
+    val records1 = (
+        if (record_limit > 0) records.take(record_limit) else records
+      ).flatMap(alternativeToTripRecord)
       .toList
 
-    records
+    records1
       .grouped(Math.ceil(records.size / cores).intValue())
       .toStream
       .par
