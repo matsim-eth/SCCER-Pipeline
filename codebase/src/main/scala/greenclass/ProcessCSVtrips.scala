@@ -134,15 +134,21 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
     val reader = Files.newBufferedReader(inputFile)
     val tripRecordReader = new CsvToBeanBuilder[AlternativeRecord](reader).withType(classOf[AlternativeRecord]).build
 
-    tripRecordReader.iterator().asScala.toStream.take(10)
-      //.par
+    val cores = Runtime.getRuntime.availableProcessors
+
+    val records = tripRecordReader.iterator().asScala.toStream.take(100)
       .flatMap(alternativeToTripRecord)
-      .map(tr => (tr, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1))
- //     .map{case (tr, events) => slotInCarEvents(tr, events)}
-      //.groupBy{ case (tr, events) => tr.date }
-      //.mapValues{ x => x.seq.flatMap(_._2) }
-      .map{ case (tr, events) => (tr.date, events) }
-      .map{case (date, events) => me().process(events.asJava, date.atStartOfDay())}
+      .toList
+
+    records
+      .grouped(Math.ceil(records.size / cores).intValue())
+      .toStream
+      .par
+      .map(trList => trList.map( tr => (tr.date, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1)))
+      .flatMap { trEventList => {
+        val extProcessor = me()
+        trEventList.map { case (date, events) => extProcessor.process(events.asJava, date.atStartOfDay()) }
+      }}
       .map(_.simplifyExternalities())
       .seq
       .foreach(_.appendCsvFile(outputFile))
