@@ -12,7 +12,7 @@ import com.zaxxer.hikari.HikariConfig
 import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors.{EventsWriterActor, ExternalitiesWriterActor, TraceActor}
-import ethz.ivt.externalities.counters.{ExternalityCostCalculator, ExternalityCounter}
+import ethz.ivt.externalities.counters.{CongestionCounter, ExternalityCostCalculator, ExternalityCounter}
 import ethz.ivt.externalities.data.congestion.PtChargingZones
 import ethz.ivt.externalities.data.congestion.io.CSVCongestionReader
 import ethz.ivt.externalities.data.{AggregateDataPerTimeMock, JITVehicleCreator, LatLon, TripLeg, TripRecord}
@@ -22,8 +22,10 @@ import org.apache.log4j.{Level, Logger}
 import org.matsim.api.core.v01.events.{Event, PersonArrivalEvent, PersonDepartureEvent}
 import org.matsim.api.core.v01.network.{Link, Network}
 import org.matsim.api.core.v01.{Coord, Scenario, TransportMode}
+import org.matsim.contrib.emissions.WarmEmissionAnalysisModule
 import org.matsim.contrib.emissions.utils.EmissionsConfigGroup
 import org.matsim.core.config.{Config, ConfigUtils}
+import org.matsim.core.events.EventsManagerImpl
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.network.algorithms.TransportModeNetworkFilter
 import org.matsim.core.router.util.TravelTime
@@ -54,6 +56,15 @@ object ProcessCSVtrips {
     val logger = Logger.getLogger(this.getClass)
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
 
+    Logger.getLogger(classOf[EventsManagerImpl]).setLevel(Level.OFF)
+    Logger.getLogger(classOf[ExternalityCostCalculator]).setLevel(Level.OFF)
+    Logger.getLogger(classOf[ExternalityCounter]).setLevel(Level.OFF)
+    Logger.getLogger("org.matsim.contrib.emissions.WarmEmissionHandler").setLevel(Level.OFF)
+
+    Logger.getLogger("org.matsim.contrib.emissions.ColdEmissionAnalysisModule").setLevel(Level.OFF)
+
+    Logger.getLogger(classOf[WarmEmissionAnalysisModule]).setLevel(Level.OFF)
+    Logger.getLogger(classOf[CongestionCounter]).setLevel(Level.OFF)
 
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
@@ -105,8 +116,9 @@ object ProcessCSVtrips {
     Files.walk(base_input_location).iterator().asScala
         .filter(Files.isRegularFile(_))
         .filter(_.getFileName.toString.equals(input_filename))
+        .filter(f => !Files.exists(f.resolveSibling(output_filename)))
         .toStream
-        //.par
+        .par
         .foreach(f => processor.processFile(f, f.resolveSibling(output_filename), record_limit))
 
 
@@ -114,6 +126,8 @@ object ProcessCSVtrips {
 }
 
 class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => MeasureExternalities) {
+
+  val logger = Logger.getLogger(this.getClass)
 
  // val carRouterFactory = buildCarRouterFactory(scenario.getNetwork)
 /*
@@ -132,6 +146,8 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
   }*/
 
   def processFile(inputFile : Path, outputFile : Path, record_limit : Int) {
+    logger.info(s"processing $inputFile")
+
     val reader = Files.newBufferedReader(inputFile)
     val tripRecordReader = new CsvToBeanBuilder[AlternativeRecord](reader).withType(classOf[AlternativeRecord]).build
 
@@ -141,17 +157,12 @@ class ProcessCSVtrips(processWaypointsJson : ProcessWaypointsJson, me: () => Mea
     val records1 = (
         if (record_limit > 0) records.take(record_limit) else records
       ).flatMap(alternativeToTripRecord)
-      .toList
+
+    val extProcessor = me()
 
     records1
-      .grouped(Math.ceil(records.size / cores).intValue())
-      .toStream
-      .par
-      .map(trList => trList.map( tr => (tr.date, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1)))
-      .flatMap { trEventList => {
-        val extProcessor = me()
-        trEventList.map { case (date, events) => extProcessor.process(events.asJava, date.atStartOfDay()) }
-      }}
+      .map( tr => (tr.date, processWaypointsJson.tripLegToEvents(tr, tr.legs.head)._1))
+      .map { case (date, events) => extProcessor.process(events.asJava, date.atStartOfDay()) }
       .map(_.simplifyExternalities())
       .seq
       .foreach(_.appendCsvFile(outputFile))
