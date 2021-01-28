@@ -47,6 +47,7 @@ import ethz.ivt.externalities.roadTypeMapping.OsmHbefaMapping
 import org.locationtech.jts.linearref.LengthIndexedLine
 import org.matsim.core.network.NetworkUtils
 import org.matsim.core.utils.geometry.GeometryUtils
+import org.matsim.utils.gis.matsim2esri.network.{FeatureGeneratorBuilderImpl, LanesBasedWidthCalculator, LineStringBasedFeatureGenerator, Links2ESRIShape}
 
 import scala.concurrent.duration._
 import scala.util.{Failure, Success, Try}
@@ -119,6 +120,15 @@ object ProcessWaypointsJson {
 
     //  Option(gc_vehicles_file).foreach(vf => new VehicleReaderV1(scenario.getVehicles).readFile(vf.toString))
 
+    //val builder = new FeatureGeneratorBuilderImpl(scenario.getNetwork, "EPSG:2056")
+    //builder.setFeatureGeneratorPrototype(classOf[LineStringBasedFeatureGenerator])
+    //builder.setWidthCoefficient(0.5D)
+    //builder.setWidthCalculatorPrototype(classOf[LanesBasedWidthCalculator])
+
+    //(new Links2ESRIShape(scenario.getNetwork, "output/mapmatched_traces/network.shp", builder)).write()
+    //return 0
+
+
     logger.info("Build ProcessWaypoints Module (with graphhopper)")
     val gh_location = base_file_location.resolve(props.getProperty("graphhopper.graph.location"))
     val processWaypointsJson = new ProcessWaypointsJson(scenario, gh_location)
@@ -135,6 +145,10 @@ object ProcessWaypointsJson {
       EventsWriterActor.props(scenario, traces_output_dir)
     ).filter(_ => save_mapmatched_traces)
 
+    val geometryWriterOption = Option(
+      new GeometryWriterActor(scenario, Paths.get(traces_output_dir))
+    ).filter(_ => save_mapmatched_traces)
+
     logger.info("Build Congestion Module")
     val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
       logger.warn("Using mock aggregate congestion values - ie 0.")
@@ -146,7 +160,9 @@ object ProcessWaypointsJson {
     def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
 
     val traceProps = TraceActor.props(processWaypointsJson,
-      eventWriterPropsOption, me, writerActorPropsOption)
+      eventWriterPropsOption,
+      geometryWriterOption,
+      me, writerActorPropsOption)
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     logger.info("actor system ready")

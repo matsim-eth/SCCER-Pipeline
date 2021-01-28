@@ -21,10 +21,11 @@ import scala.util.Failure
 object TraceActor {
   def props(waypointProcessor: ProcessWaypointsJson,
             eventWriterProps: Option[Props],
+            geometryWriterOption: Option[GeometryWriterActor],
             meCreator: () => MeasureExternalities,
             extWriterProps : Option[Props]
            ): Props =
-    Props(new TraceActor(waypointProcessor, eventWriterProps, meCreator, extWriterProps))
+    Props(new TraceActor(waypointProcessor, eventWriterProps, geometryWriterOption, meCreator, extWriterProps))
 
   final case class JsonFile(jsonFile : Path)
 
@@ -32,6 +33,7 @@ object TraceActor {
 
 class TraceActor(waypointProcessor: ProcessWaypointsJson,
                  eventWriterProps : Option[Props],
+                 geometryWriterOption: Option[GeometryWriterActor],
                  meCreator : () => MeasureExternalities,
                  extWriterProps : Option[Props])
   extends Actor with ActorLogging with SuicideActor {
@@ -50,8 +52,10 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson,
       trs
       //  .filter(tr => tr.date.isBefore(LocalDate.of(2020, 9, 1)))
         .foreach(tr => {
-        val jobid = tr.getIdentifier
-        val legs = waypointProcessor.processJson(tr)
+          val jobid = tr.getIdentifier
+          val legs = waypointProcessor.processJson(tr)
+          eventWriterActor.foreach( w =>  w ! legs )
+          geometryWriterOption.foreach(_.write(legs))
         processExternalities(tr, legs)
 
       })
