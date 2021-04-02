@@ -2,10 +2,10 @@ package ethz.ivt.externalities.actors
 
 import java.io.File
 import java.nio.file.{Files, Path, Paths}
-
 import akka.actor.{Actor, ActorLogging, Props}
 import ethz.ivt.externalities.counters.ExtendedPersonDepartureEvent
 import ethz.ivt.externalities.data.TripRecord
+import org.apache.log4j.Logger
 import org.locationtech.jts.geom.Geometry
 import org.matsim.api.core.v01.Scenario
 import org.matsim.api.core.v01.events.Event
@@ -15,18 +15,9 @@ import org.matsim.core.events.algorithms.EventWriterXML
 case class EventTriple(leg_id: String, events: Seq[Event], geometry: Geometry)
 final case class EventList(tr: TripRecord, events : Stream[EventTriple])
 
-object EventsWriterActor {
-  def props(scenario: Scenario, traces_output_dir:String): Props =
-    Props(new EventsWriterActor(scenario, Paths.get(traces_output_dir)))
+class EventsWriterActor (scenario: Scenario, traces_output_dir: Path){
 
-}
-
-class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
-  extends Actor with ActorLogging {
-
-  import org.geotools.feature.simple.SimpleFeatureTypeBuilder
-
-  val b = new SimpleFeatureTypeBuilder
+  val logger = Logger.getLogger(this.getClass)
 
   def unwrapDepartureEvents(event: Event): Event = {
     event match {
@@ -36,9 +27,9 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path)
     }
   }
 
-  override def receive: Receive = {
+  override def write = {
     case EventList(tr, legs) =>
-      log.info(s"writing ${legs.size} on ${tr.date} for ${tr.user_id}")
+      logger.info(s"writing ${legs.size} events on ${tr.date} for ${tr.user_id}")
       import collection.JavaConverters._
       //calculate externalities here
       val events : Seq[Event] = legs.flatMap(_.events)

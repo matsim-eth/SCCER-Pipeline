@@ -31,13 +31,12 @@ object TraceActor {
 }
 
 class TraceActor(waypointProcessor: ProcessWaypointsJson,
-                 eventWriterProps : Option[Props],
+                 eventWriterOption : Option[EventsWriterActor],
                  geometryWriterOption: Option[GeometryWriterActor],
                  meCreator : () => MeasureExternalitiesInterface,
                  extWriterProps : Option[Props])
   extends Actor with ActorLogging with SuicideActor {
 
-  val eventWriterActor = eventWriterProps.map(context.actorOf(_, "EventsWriterActor"))
   val writerActor = extWriterProps.map(context.actorOf(_, "ExternalitiesWriter"))
   val measureExternalities : MeasureExternalitiesInterface = meCreator()
 
@@ -53,7 +52,7 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson,
         .foreach(tr => {
           val jobid = tr.getIdentifier
           val legs = waypointProcessor.processJson(tr)
-          eventWriterActor.foreach( w =>  w ! legs )
+          eventWriterOption.foreach(_.write(legs))
           geometryWriterOption.foreach(_.write(legs))
         processExternalities(tr, legs)
 

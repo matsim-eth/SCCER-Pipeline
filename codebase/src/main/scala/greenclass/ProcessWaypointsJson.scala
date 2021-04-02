@@ -69,7 +69,7 @@ object ProcessWaypointsJson {
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
 
     val save_mapmatched_traces = props.getProperty("save.mapmatched_traces", "false").equalsIgnoreCase("true")
-    val save_mapmatched_geometries = props.getProperty("save.mapmatched_traces", "false").equalsIgnoreCase("true")
+    val save_mapmatched_geometries = props.getProperty("save.mapmatched_geometries", "false").equalsIgnoreCase("true")
 
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
