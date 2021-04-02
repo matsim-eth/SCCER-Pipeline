@@ -2,12 +2,11 @@ package ethz.ivt.externalities.actors
 
 import java.nio.file.Path
 import java.time.LocalDate
-
 import akka.actor.{Actor, ActorLogging, ActorRef, PoisonPill, Props}
 import akka.pattern.ask
 import akka.routing.Broadcast
 import akka.util.Timeout
-import ethz.ivt.externalities.MeasureExternalities
+import ethz.ivt.externalities.{MeasureExternalities, MeasureExternalitiesInterface}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.data.TripRecord
 import greenclass.ProcessWaypointsJson
@@ -22,7 +21,7 @@ object TraceActor {
   def props(waypointProcessor: ProcessWaypointsJson,
             eventWriterProps: Option[Props],
             geometryWriterOption: Option[GeometryWriterActor],
-            meCreator: () => MeasureExternalities,
+            meCreator: () => MeasureExternalitiesInterface,
             extWriterProps : Option[Props]
            ): Props =
     Props(new TraceActor(waypointProcessor, eventWriterProps, geometryWriterOption, meCreator, extWriterProps))
@@ -34,13 +33,13 @@ object TraceActor {
 class TraceActor(waypointProcessor: ProcessWaypointsJson,
                  eventWriterProps : Option[Props],
                  geometryWriterOption: Option[GeometryWriterActor],
-                 meCreator : () => MeasureExternalities,
+                 meCreator : () => MeasureExternalitiesInterface,
                  extWriterProps : Option[Props])
   extends Actor with ActorLogging with SuicideActor {
 
   val eventWriterActor = eventWriterProps.map(context.actorOf(_, "EventsWriterActor"))
   val writerActor = extWriterProps.map(context.actorOf(_, "ExternalitiesWriter"))
-  val measureExternalities : MeasureExternalities = meCreator()
+  val MeasureExternalities : MeasureExternalitiesInterface = meCreator()
 
   implicit val timeout: Timeout = 5 minutes
   implicit val ec: ExecutionContext = context.dispatcher

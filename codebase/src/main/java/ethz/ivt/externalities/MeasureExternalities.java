@@ -34,7 +34,7 @@ import java.util.Random;
 /**
  * Created by molloyj on 17.07.2017.
  */
-public class MeasureExternalities {
+public class MeasureExternalities implements MeasureExternalitiesInterface {
     private final static Logger log = Logger.getLogger(MeasureExternalities.class);
     private final MatsimEventsReader reader;
     private final Scenario scenario;
@@ -82,10 +82,12 @@ public class MeasureExternalities {
 
     }
 
+    @Override
     public void reset() {
         eventsManager.resetHandlers(0);
     }
 
+    @Override
     public ExternalityCounter process(List<Event> events, LocalDateTime date) {
         this.reset();
 
@@ -102,6 +104,7 @@ public class MeasureExternalities {
 
     }
 
+    @Override
     public ExternalityCounter process(String events, LocalDateTime date) {
         externalityCounter.setDate(date);
         eventsManager.initProcessing();
@@ -116,6 +119,7 @@ public class MeasureExternalities {
 
     }
 
+    @Override
     public void write(Path outputFolder) {
         externalityCounter.writeCsvFile(outputFolder);
     }

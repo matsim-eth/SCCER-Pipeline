@@ -7,13 +7,12 @@ import java.nio.file.PathMatcher
 import java.time.format.DateTimeFormatter
 import java.util
 import java.util.Properties
-
 import akka.actor.{ActorRef, ActorSystem, PoisonPill, Props}
 import akka.routing.RoundRobinPool
 import akka.util.Timeout
 import com.graphhopper.util.GPXEntry
 import com.zaxxer.hikari.{HikariConfig, HikariDataSource}
-import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities}
+import ethz.ivt.externalities.{HelperFunctions, MeasureExternalities, MeasureExternalitiesInterface, MockMeasureExternalities}
 import ethz.ivt.externalities.actors.TraceActor.JsonFile
 import ethz.ivt.externalities.actors._
 import ethz.ivt.externalities.aggregation.CongestionAggregator
@@ -68,7 +67,9 @@ object ProcessWaypointsJson {
 
     val logger = Logger.getLogger(this.getClass)
     val base_file_location = Paths.get(props.getProperty("base.data.location"))
+
     val save_mapmatched_traces = props.getProperty("save.mapmatched_traces", "false").equalsIgnoreCase("true")
+    val save_mapmatched_geometries = props.getProperty("save.mapmatched_traces", "false").equalsIgnoreCase("true")
 
     val matsim_config_location = base_file_location.resolve(Paths.get(props.getProperty("matsim.config.file")))
     val config = ConfigUtils.loadConfig(matsim_config_location.toString, new EmissionsConfigGroup)
@@ -147,7 +148,7 @@ object ProcessWaypointsJson {
 
     val geometryWriterOption = Option(
       new GeometryWriterActor(scenario, Paths.get(traces_output_dir))
-    ).filter(_ => save_mapmatched_traces)
+    ).filter(_ => save_mapmatched_geometries)
 
     logger.info("Build Congestion Module")
     val congestionAggregator = if (props.getProperty("ignore.congestion", "false").equals("true")) {
@@ -157,12 +158,17 @@ object ProcessWaypointsJson {
       CSVCongestionReader.forLink().read(congestion_file.toString, 900)
     }
 
-    def me = () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
+    def me: () => MeasureExternalitiesInterface = if (calculate_externalities) {
+      () => new MeasureExternalities(scenario, congestionAggregator, ecc, ptChargingZones)
+    } else {
+      () => new MockMeasureExternalities(scenario)
+    }
 
     val traceProps = TraceActor.props(processWaypointsJson,
-      eventWriterPropsOption,
-      geometryWriterOption,
-      me, writerActorPropsOption)
+        eventWriterPropsOption,
+        geometryWriterOption,
+        me, writerActorPropsOption)
+
     val traceProcessors = _system.actorOf(traceProps, name = "TraceActor")
 
     logger.info("actor system ready")
@@ -177,9 +183,6 @@ object ProcessWaypointsJson {
     traceProcessors ! PoisonPill
 
   }
-
-
-
 }
 
 class ProcessWaypointsJson(scenario: Scenario, hopper_location: Path) {
