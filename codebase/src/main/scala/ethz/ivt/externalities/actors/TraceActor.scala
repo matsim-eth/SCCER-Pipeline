@@ -39,7 +39,7 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson,
 
   val eventWriterActor = eventWriterProps.map(context.actorOf(_, "EventsWriterActor"))
   val writerActor = extWriterProps.map(context.actorOf(_, "ExternalitiesWriter"))
-  val MeasureExternalities : MeasureExternalitiesInterface = meCreator()
+  val measureExternalities : MeasureExternalitiesInterface = meCreator()
 
   implicit val timeout: Timeout = 5 minutes
   implicit val ec: ExecutionContext = context.dispatcher
