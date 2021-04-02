@@ -142,8 +142,8 @@ object ProcessWaypointsJson {
     val ptChargingZones = new PtChargingZones(scenario, zonesShpFile, odPairsFile)
 
     val traces_output_dir = props.getProperty("traces.folder")
-    val eventWriterPropsOption = Option(
-      EventsWriterActor.props(scenario, traces_output_dir)
+    val eventWriterOption = Option(
+      new EventsWriterActor(scenario, Paths.get(traces_output_dir))
     ).filter(_ => save_mapmatched_traces)
 
     val geometryWriterOption = Option(
@@ -165,7 +165,7 @@ object ProcessWaypointsJson {
     }
 
     val traceProps = TraceActor.props(processWaypointsJson,
-        eventWriterPropsOption,
+        eventWriterOption,
         geometryWriterOption,
         me, writerActorPropsOption)
 
