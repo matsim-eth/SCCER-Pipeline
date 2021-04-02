@@ -19,12 +19,12 @@ import scala.util.Failure
 
 object TraceActor {
   def props(waypointProcessor: ProcessWaypointsJson,
-            eventWriterProps: Option[Props],
+            eventWriterOption: Option[EventsWriterActor],
             geometryWriterOption: Option[GeometryWriterActor],
             meCreator: () => MeasureExternalitiesInterface,
             extWriterProps : Option[Props]
            ): Props =
-    Props(new TraceActor(waypointProcessor, eventWriterProps, geometryWriterOption, meCreator, extWriterProps))
+    Props(new TraceActor(waypointProcessor, eventWriterOption, geometryWriterOption, meCreator, extWriterProps))
 
   final case class JsonFile(jsonFile : Path)
 
@@ -52,7 +52,7 @@ class TraceActor(waypointProcessor: ProcessWaypointsJson,
         .foreach(tr => {
           val jobid = tr.getIdentifier
           val legs = waypointProcessor.processJson(tr)
-          eventWriterOption.foreach(_.write(legs))
+          eventWriterOption.foreach(_.write(tr, legs))
           geometryWriterOption.foreach(_.write(legs))
         processExternalities(tr, legs)
 

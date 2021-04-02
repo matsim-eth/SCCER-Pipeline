@@ -27,20 +27,20 @@ class EventsWriterActor (scenario: Scenario, traces_output_dir: Path){
     }
   }
 
-  override def write = {
-    case EventList(tr, legs) =>
-      logger.info(s"writing ${legs.size} events on ${tr.date} for ${tr.user_id}")
-      import collection.JavaConverters._
-      //calculate externalities here
-      val events : Seq[Event] = legs.flatMap(_.events)
+  def write(tr: TripRecord, legs : Stream[EventTriple]) : Unit = {
 
-      val date_folder = Files.createDirectories(traces_output_dir.resolve(s"${tr.date}"))
+    logger.info(s"writing ${legs.size} events on ${tr.date} for ${tr.user_id}")
+    import collection.JavaConverters._
+    //calculate externalities here
+    val events: Seq[Event] = legs.flatMap(_.events)
 
-      val filename : String = s"events_${tr.user_id}_${tr.date}.xml"
-      val eventWriter : EventWriterXML = new EventWriterXML(date_folder.resolve(filename).toFile.getAbsolutePath)
+    val date_folder = Files.createDirectories(traces_output_dir.resolve(s"${tr.date}"))
 
-      events.map(unwrapDepartureEvents).foreach(eventWriter.handleEvent)
+    val filename: String = s"events_${tr.user_id}_${tr.date}.xml"
+    val eventWriter: EventWriterXML = new EventWriterXML(date_folder.resolve(filename).toFile.getAbsolutePath)
 
-      eventWriter.closeFile()
+    events.map(unwrapDepartureEvents).foreach(eventWriter.handleEvent)
+
+    eventWriter.closeFile()
   }
 }
