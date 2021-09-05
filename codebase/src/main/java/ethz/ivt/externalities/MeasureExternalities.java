@@ -56,6 +56,7 @@ public class MeasureExternalities {
         eventsManager = new EventsManagerImpl();
         eventsManager.addHandler(new JITVehicleCreator(scenario));
 
+
         reader = new MatsimEventsReader(eventsManager);
 
         log.info("load emissions module");
@@ -87,7 +88,6 @@ public class MeasureExternalities {
     }
 
     public ExternalityCounter process(List<Event> events, LocalDateTime date) {
-        this.reset();
 
         externalityCounter.setDate(date);
         eventsManager.initProcessing();
@@ -97,7 +97,7 @@ public class MeasureExternalities {
 
         eventsManager.finishProcessing();
         ExternalityCounter ecCopy = externalityCounter.copy();
-        eventsManager.resetHandlers(0);
+        this.reset();
         return ecCopy;
 
     }

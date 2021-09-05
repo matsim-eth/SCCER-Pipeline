@@ -253,8 +253,8 @@ public class ExternalityCounter implements PersonArrivalEventHandler, PersonDepa
 	}
 
 	public void incrementTempValueBy(Id<Person> personId, String key, Double value) {
-		if (value.isNaN() || value.isInfinite()) {
-			log.warn(String.format("Skipping attempt to add NaN or Infinity to key %s for person %s", key, personId));
+		if (key == null || value.isNaN() || value.isInfinite()) {
+			log.error(String.format("Skipping attempt to add NaN or Infinity to key %s for person %s", key, personId));
 		} else {
 			double oldValue = getTempValue(personId, key);
 			putTempValue(personId, key, oldValue + value);
