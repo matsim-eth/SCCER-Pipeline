@@ -148,6 +148,10 @@ object SplitWaypoints {
     val objects_per_group = personday_triplegs.size / max_num_chunks
     val group_size : Int = scala.math.max(objects_per_group, min_person_days_per_group)
 
+    val grouped_triplegs = personday_triplegs.grouped(group_size)
+
+    logger.info(s"${grouped_triplegs.size} groups created")
+
     /////////// steps:
     // split waypoints into user_id and date
     //they will be ordered by user_id, split into files.
@@ -155,14 +159,14 @@ object SplitWaypoints {
     // assign them to trip legs based on start and end trip_leg time.
     val pb = new ProgressBar("Test", personday_triplegs.size)
     try { // name, initial max
-      personday_triplegs.grouped(group_size).zipWithIndex.foreach {
+      grouped_triplegs.zipWithIndex.toStream.par.foreach {
         case (trs, chunk_i) =>
 
           val chunk_folder_name = "chunk_" + chunk_i
           val sub_dir = OUTPUT_DIR.resolve(chunk_folder_name)
           Files.createDirectories(sub_dir)
 
-          trs.par.foreach { case tr =>
+          trs.foreach { case tr =>
 
             val date1 = tr.date.format(dateFormatter)
             val outFile = sub_dir.resolve(s"${tr.user_id}_${date1}.json")
